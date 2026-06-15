@@ -708,6 +708,11 @@ def serve_streamdeck():
 
 @app.route('/controller')
 def serve_controller():
+    ua = request.headers.get('User-Agent', '').lower()
+    mobile_keywords = ['mobile', 'android', 'iphone', 'ipad', 'ipod', 'webos', 'blackberry', 'opera mini', 'opera mobi', 'windows phone']
+    is_mobile = any(kw in ua for kw in mobile_keywords)
+    if is_mobile:
+        return serve_html_file('mobile.html')
     return serve_html_file('controller.html')
 
 @app.route('/mobile')
