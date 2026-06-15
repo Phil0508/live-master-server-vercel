@@ -232,6 +232,7 @@
             <div class="eyebrow" style="display: flex; align-items: center; gap: 8px;">
                 <span>Live Master</span>
                 <a href="/controller?mode=desktop" style="color: rgba(255,255,255,0.5); text-decoration: none; font-size: 10px; border: 1px solid rgba(255,255,255,0.2); padding: 1px 6px; border-radius: 10px; transition: all 0.2s;"><i class="fa-solid fa-laptop"></i> PC 버전</a>
+                <a href="/logout" style="color: rgba(255,69,58,0.7); text-decoration: none; font-size: 10px; border: 1px solid rgba(255,69,58,0.3); padding: 1px 6px; border-radius: 10px; transition: all 0.2s;"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</a>
             </div>
             <h1>모바일 제어</h1>
         </div>
@@ -242,6 +243,7 @@
         </label>
     </div>
 
+    <div id="active-broadcast-area" style="display: none;">
     <div class="tabs">
         <button class="tab-btn active" onclick="openTab(event, 'tab-ranking')"><i class="fa-solid fa-ranking-star"></i><span>랭킹</span></button>
         <button class="tab-btn" onclick="openTab(event, 'tab-match')"><i class="fa-solid fa-stopwatch"></i><span>대결</span></button>
@@ -363,6 +365,20 @@
             <button style="width: 100%;" onclick="clearLogs('match')"><i class="fa-solid fa-trash-can"></i> 대결 로그 비우기</button>
         </div>
     </div>
+    </div>
+
+    <div id="setup-broadcast-area" style="display: none;">
+        <div class="group-box" style="margin: 40px 15px; padding: 30px; text-align: center; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <div style="font-size: 40px; color: var(--accent); margin-bottom: 20px; text-shadow: 0 0 10px var(--accent-glow);">
+                <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: 800; color: #fff;">방송 대기 중</h3>
+            <p style="margin: 0; font-size: 14px; color: var(--text-muted); line-height: 1.6;">
+                오늘의 방송이 아직 시작되지 않았습니다.<br>
+                PC 제어실에서 플레이어를 등록하고 방송 시작을 진행해주세요.
+            </p>
+        </div>
+    </div>
 
     <script>
         function openTab(evt, tabId) { 
@@ -380,7 +396,7 @@
             try { 
                 const res = await fetch('/api/data'); const newData = await res.json(); 
                 gd = newData;
-                if(!gd.bjs || gd.bjs.length === 0) { gd.bjs = []; for(let i=1; i<=3; i++) gd.bjs.push({name: `Player ${i}`, score: 0, contribution: 0}); }
+                if(!gd.bjs) { gd.bjs = []; }
                 else { gd.bjs.forEach(bj => { if(bj.contribution === undefined) bj.contribution = bj.score > 0 ? bj.score : 0; }); }
                 if(!gd.match_data) gd.match_data = { active: false, fire_effect: false, is_running: false, time_left_ms: 180000, end_time_ms: 0, players: [{name:'팀 A', score:0}, {name:'팀 B', score:0}] };
                 if(!gd.bottom_fixed) gd.bottom_fixed = {name: "운영비", score: 0};
@@ -408,8 +424,19 @@
         function renderUI() {
             if(document.activeElement.tagName === "INPUT" && !document.activeElement.id.startsWith("chk") || document.activeElement.tagName === "TEXTAREA") return;
             
-
-
+            let isActive = gd.broadcast_active || false;
+            document.getElementById('setup-broadcast-area').style.display = isActive ? 'none' : 'block';
+            document.getElementById('active-broadcast-area').style.display = isActive ? 'block' : 'none';
+            
+            const reactionPill = document.querySelector('.reaction-pill');
+            if (reactionPill) {
+                reactionPill.style.display = isActive ? 'flex' : 'none';
+            }
+            
+            if (!isActive) {
+                return;
+            }
+            
             const setVal = (id, val) => { let el = document.getElementById(id); if(el && el.value != val) el.value = val; };
             const setChk = (id, val) => { let el = document.getElementById(id); if(el && el.checked !== val) el.checked = val; };
             const setHtml = (id, val) => { let el = document.getElementById(id); if(el && el.innerHTML !== val) el.innerHTML = val; };
@@ -704,7 +731,14 @@
         function toggleMatchFire() { gd.match_data.fire_effect = !gd.match_data.fire_effect; pushAPI(); }
         function updateTheme() { gd.theme = document.getElementById('sel-theme').value; pushAPI(); }
         function updateGoal() { gd.target_goal = parseInt(document.getElementById('in-goal').value)||0; pushAPI(); }
-        function addRankPlayer() { gd.bjs.push({name:"새 참가자", score:0, contribution:0}); pushAPI(); }
+        function addRankPlayer() {
+            if (gd.bjs.length >= 10) {
+                alert("플레이어는 최대 10명까지만 추가할 수 있습니다.");
+                return;
+            }
+            gd.bjs.push({name:"새 참가자", score:0, contribution:0});
+            pushAPI();
+        }
         function triggerNeon(color) { if (!gd.reaction_mode && color !== 'OFF') { alert("👀 리액션 모드(눈알 아이콘)가 켜져있어야 화면에 보입니다."); return; } gd.effect_trigger = {time: Date.now(), color: color, infinite: true}; pushAPI(); }
         
         function addScore(type, idx) {

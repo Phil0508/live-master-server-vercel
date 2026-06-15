@@ -556,6 +556,15 @@
         let currentExtraActiveState = false;
         function handleData(d) {
             globalData = d;
+            
+            let isActive = d.broadcast_active || false;
+            ['ranking', 'gauge', 'account', 'match', 'roulette', 'extra-ranking'].forEach(id => {
+                const el = document.getElementById(id + '-container');
+                if (el) el.style.display = isActive ? '' : 'none';
+            });
+            
+            if (!isActive) return;
+            
             try {
                 // 🎨 실시간 테마 스위칭
                 if (d.theme === 'pink') {

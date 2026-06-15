@@ -205,6 +205,7 @@ DEFAULT_STATE = {
     "extra_game_active": False,
     "extra_bjs": [],
     "roulette_enabled": False,
+    "broadcast_active": False,
     "roulette": {
         "command": None,
         "command_time": 0,
@@ -1139,6 +1140,106 @@ def reset_server_database():
         return jsonify({"status": "success", "message": "데이터베이스가 성공적으로 완전히 리셋되었습니다."})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/server/end_broadcast', methods=['POST'])
+def end_broadcast():
+    try:
+        global MEMORY_STATE
+        with file_lock:
+            # 1. Clear database tables (donation history, snapshots, players)
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(db_query("DELETE FROM players"))
+                cursor.execute(db_query("DELETE FROM donation_history"))
+                cursor.execute(db_query("DELETE FROM snapshots"))
+                # Delete kv_store keys that are NOT persistent configurations
+                cursor.execute(
+                    db_query("DELETE FROM kv_store WHERE key NOT IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"), 
+                    ('theme', 'neon_speed', 'saved_colors', 'target_goal', 'account', 'effect_rules', 'screen_effect', 'ticker_enabled', 'ticker_speed', 'ticker_text', 'totp_secret')
+                )
+            
+            # 2. Get current state from database (which will have only configurations preserved)
+            state = load_data()
+            
+            # Reset memory state and set broadcast_active to False
+            state['broadcast_active'] = False
+            state['bjs'] = []
+            state['bottom_fixed']['score'] = 0
+            state['reaction_mode'] = False
+            state['match_data'] = {"active": False, "players": [], "time_left_ms": 180000, "is_running": False}
+            state['pending_donations'] = []
+            state['latest_donation'] = {"name": "", "amount": 0, "message": "", "time": 0}
+            state['extra_game_active'] = False
+            state['extra_bjs'] = []
+            state['roulette_enabled'] = False
+            if 'roulette' in state:
+                state['roulette']['winner_name'] = None
+                state['roulette']['is_spinning'] = False
+                state['roulette']['select_name'] = ""
+                state['roulette']['select_index'] = -1
+            state['logs'] = []
+            state['match_logs'] = []
+            
+            save_data(state)
+            broadcast_event('update', state)
+            
+        return jsonify({"status": "success", "message": "방송이 종료되고 오늘의 데이터가 리셋되었습니다."})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/server/start_broadcast', methods=['POST'])
+def start_broadcast():
+    try:
+        global MEMORY_STATE
+        req = request.json or {}
+        names = req.get('names', [])
+        if not names:
+            return jsonify({"status": "error", "message": "최소 한 명 이상의 플레이어를 등록해야 합니다."}), 400
+        if len(names) > 10:
+            return jsonify({"status": "error", "message": "플레이어는 최대 10명까지 등록할 수 있습니다."}), 400
+            
+        with file_lock:
+            # 1. Clear database tables (donation history, snapshots, players)
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(db_query("DELETE FROM players"))
+                cursor.execute(db_query("DELETE FROM donation_history"))
+                cursor.execute(db_query("DELETE FROM snapshots"))
+                # Delete kv_store keys that are NOT persistent configurations
+                cursor.execute(
+                    db_query("DELETE FROM kv_store WHERE key NOT IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"), 
+                    ('theme', 'neon_speed', 'saved_colors', 'target_goal', 'account', 'effect_rules', 'screen_effect', 'ticker_enabled', 'ticker_speed', 'ticker_text', 'totp_secret')
+                )
+            
+            # 2. Get current state from database (which will have only configurations preserved)
+            state = load_data()
+            
+            # 3. Set broadcast_active to True and initialize players
+            state['broadcast_active'] = True
+            state['bjs'] = [{"name": name.strip(), "score": 0, "contribution": 0} for name in names if name.strip()]
+            state['bottom_fixed']['score'] = 0
+            state['reaction_mode'] = False
+            state['match_data'] = {"active": False, "players": [], "time_left_ms": 180000, "is_running": False}
+            state['pending_donations'] = []
+            state['latest_donation'] = {"name": "", "amount": 0, "message": "", "time": 0}
+            state['extra_game_active'] = False
+            state['extra_bjs'] = []
+            state['roulette_enabled'] = False
+            if 'roulette' in state:
+                state['roulette']['winner_name'] = None
+                state['roulette']['is_spinning'] = False
+                state['roulette']['select_name'] = ""
+                state['roulette']['select_index'] = -1
+            state['logs'] = []
+            state['match_logs'] = []
+            
+            save_data(state)
+            broadcast_event('update', state)
+            
+        return jsonify({"status": "success", "message": "방송이 활성화되었습니다."})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 
 # ==========================================
 # 📋 수동 조작 이력 조회 API
