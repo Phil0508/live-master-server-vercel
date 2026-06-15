@@ -1,0 +1,9 @@
+*.db
+*.db-shm
+*.db-wal
+*.db.bak
+*.db.test_backup
+*.exe
+__pycache__/
+*.spec
+방송정산기록_*.csv

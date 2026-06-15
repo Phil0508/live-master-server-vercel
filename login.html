@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🔒 라이브 마스터 보안 인증</title>
+    <style>@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');</style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-body: #0d0d0f;
+            --bg-glass: rgba(22, 22, 26, 0.65);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --accent: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.3);
+            --danger: #ff453a;
+            --text-main: #f5f5f7;
+            --text-muted: #8e8e93;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            background: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Pretendard', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            letter-spacing: -0.3px;
+        }
+
+        /* 💡 럭셔리 앰비언트 아우라 백그라운드 */
+        .ambient-bg {
+            position: absolute;
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            filter: blur(80px);
+            pointer-events: none;
+            opacity: 0.85;
+            animation: pulseAmbient 6s ease-in-out infinite alternate;
+        }
+        @keyframes pulseAmbient {
+            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.6; }
+            100% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.9; }
+        }
+
+        /* 🔒 프리미엄 글래스모피즘 로그인 박스 */
+        .login-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 45px 40px;
+            width: 420px;
+            max-width: 90%;
+            box-shadow: inset 0 8px 16px rgba(255,255,255,0.03), 0 25px 50px rgba(0,0,0,0.8);
+            z-index: 10;
+            position: relative;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .login-card:hover {
+            border-color: rgba(0, 255, 204, 0.25);
+            box-shadow: inset 0 8px 16px rgba(255,255,255,0.05), 0 30px 60px rgba(0, 255, 204, 0.1);
+        }
+
+        /* 💎 로고 영역 */
+        .logo-wrap {
+            margin-bottom: 30px;
+        }
+        .logo-icon {
+            font-size: 38px;
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--accent-glow);
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+        .logo-title {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .logo-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* 📝 입력 폼 영역 */
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+            position: relative;
+        }
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            padding-left: 4px;
+            text-transform: uppercase;
+        }
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-wrapper i {
+            position: absolute;
+            left: 16px;
+            color: var(--text-muted);
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        .input-wrapper input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 14px 16px 14px 44px;
+            color: white;
+            font-size: 15px;
+            font-family: inherit;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.25s;
+        }
+        .input-wrapper input:focus {
+            border-color: var(--accent);
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        .input-wrapper input:focus + i {
+            color: var(--accent);
+        }
+
+        /* 🚀 로그인 버튼 */
+        .btn-login {
+            width: 100%;
+            background: var(--accent);
+            color: #0d0d0f;
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            background: #00cca3;
+            box-shadow: 0 6px 20px rgba(0, 255, 204, 0.5);
+        }
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        /* ⚠️ 에러 메세지 슬라이딩 애니메이션 */
+        .err-msg {
+            color: var(--danger);
+            font-size: 13px;
+            font-weight: 700;
+            margin-top: 15px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            animation: fadeInError 0.3s ease;
+        }
+        @keyframes fadeInError {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ⚡ 로그인 실패 시 흔들림 3D 셰이크 효과 */
+        .shake-active {
+            animation: cardShake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: var(--danger) !important;
+            box-shadow: 0 0 20px rgba(255, 69, 58, 0.2) !important;
+        }
+        @keyframes cardShake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+    <div class="login-card" id="login-card">
+        <div class="logo-wrap">
+            <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <h2 class="logo-title">LIVE MASTER</h2>
+            <div class="logo-subtitle">방송 제어 센터 보안 게이트웨이</div>
+        </div>
+
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="input-group">
+                <label for="password">인증 PW</label>
+                <div class="input-wrapper">
+                    <input type="password" id="password" placeholder="비밀번호 입력" required autocomplete="off" autofocus>
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+            </div>
+            <div class="input-group" style="margin-bottom: 25px;">
+                <label for="otp">모바일 OTP 번호 (6자리)</label>
+                <div class="input-wrapper">
+                    <input type="text" id="otp" placeholder="구글 OTP 6자리 입력" required autocomplete="off" maxlength="6" pattern="[0-9]{6}" inputmode="numeric">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login">
+                <i class="fa-solid fa-key"></i> 보안 인증 로그인
+            </button>
+        </form>
+
+        <div class="err-msg" id="err-msg">
+            <i class="fa-solid fa-circle-exclamation"></i> <span>인증 정보가 올바르지 않습니다.</span>
+        </div>
+    </div>
+
+    <script>
+        async function handleLogin(e) {
+            e.preventDefault();
+            const p = document.getElementById('password').value.trim();
+            const o = document.getElementById('otp').value.trim();
+            const card = document.getElementById('login-card');
+            const err = document.getElementById('err-msg');
+
+            err.style.display = 'none';
+            card.classList.remove('shake-active');
+
+            try {
+                const res = await fetch('/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({password: p, otp: o})
+                });
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    // 로그인 성공 시 조종실로 즉시 진입
+                    window.location.href = '/controller';
+                } else {
+                    triggerError(data.message || '인증 정보가 올바르지 않습니다.');
+                }
+            } catch(err) {
+                triggerError('서버와의 통신 중 오류가 발생했습니다.');
+            }
+        }
+
+        function triggerError(msg) {
+            const card = document.getElementById('login-card');
+            const err = document.getElementById('err-msg');
+            
+            err.querySelector('span').innerText = msg;
+            err.style.display = 'flex';
+            card.classList.add('shake-active');
+            
+            // OTP 입력창 비우고 포커스
+            document.getElementById('otp').value = '';
+            document.getElementById('otp').focus();
+            
+            // 진동 해제용
+            setTimeout(() => {
+                card.classList.remove('shake-active');
+            }, 500);
+        }
+    </script>
+</body>
+</html>
