@@ -1232,9 +1232,11 @@ def start_self_ping():
         return
         
     def ping_loop():
+        # 즉시 초기화 로그 출력
+        print(f"⏰ [Self-Ping] Daemon initialized for: {url}", flush=True)
         # 서버 시작 후 첫 30초 대기
         time.sleep(30)
-        print(f"⏰ [Self-Ping] Starting self-ping daemon to keep Render service awake at: {url}")
+        print(f"⏰ [Self-Ping] Starting self-ping loop...", flush=True)
         while True:
             try:
                 req = urllib.request.Request(
@@ -1242,10 +1244,9 @@ def start_self_ping():
                     headers={'User-Agent': 'LiveMaster-KeepAwake/1.0'}
                 )
                 with urllib.request.urlopen(req, timeout=15) as response:
-                    # 응답 코드가 200이든 다른 것이든 요청이 가고 돌아왔으므로 활성화 상태 유지 성공
-                    pass
+                    print(f"⏰ [Self-Ping] Ping sent successfully, response code: {response.getcode()}", flush=True)
             except Exception as e:
-                print(f"⚠️ [Self-Ping] Ping failed: {e}")
+                print(f"⚠️ [Self-Ping] Ping failed: {e}", flush=True)
             time.sleep(600)  # 10분마다 실행 (Render 무료 비활성화 임계치인 15분보다 짧음)
             
     ping_thread = threading.Thread(target=ping_loop, daemon=True)
