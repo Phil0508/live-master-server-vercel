@@ -1308,9 +1308,6 @@
             let currentVal = targetList[idx].contribution || 0;
             targetList[idx].contribution = currentVal + amount;
             
-            let currentScore = targetList[idx].score || 0;
-            targetList[idx].score = currentScore + amount;
-            
             pushAPI();
         }
 
