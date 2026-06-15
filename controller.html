@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script>
+        // 모바일 화면 자동 리다이렉트 (강제 데스크톱 모드 제외)
+        if (window.innerWidth <= 800 && !window.location.search.includes('mode=desktop')) {
+            window.location.href = '/controller?mode=mobile';
+        }
+    </script>
     <title>💻 마스터 웹 컨트롤러 V12 (다이내믹 이펙트 매니저 탑재)</title>
     <style>@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');</style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -283,6 +289,7 @@
             </button>
             <label class="toggle-row" style="border-color: #9c27b0; height: 42px; padding: 0 15px; box-sizing: border-box;"><span class="toggle-label" id="lbl-reaction" style="color:#fff; font-weight:bold; font-size: 14px;"><i class="fa-solid fa-eye"></i> 수동 리액션 모드</span><div class="apple-switch"><input type="checkbox" id="chk-reaction" onchange="toggleOption('reaction_mode')"><span class="apple-slider"></span></div></label>
             <button onclick="window.open('/admin', '_blank')" style="height: 42px;"><i class="fa-solid fa-pen-ruler"></i> 에디터</button>
+            <button onclick="window.location.href='/controller?mode=mobile'" style="height: 42px; background: rgba(0, 191, 255, 0.15); border-color: #00bfff; color: #00bfff; font-weight: bold;"><i class="fa-solid fa-mobile-screen-button"></i> 모바일 버전</button>
         </div>
     </div>
 

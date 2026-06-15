@@ -130,6 +130,8 @@ def require_login():
     if not session.get('authenticated'):
         if path.startswith('/api/'):
             return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+        if request.query_string:
+            return redirect(url_for('serve_login') + '?' + request.query_string.decode('utf-8'))
         return redirect(url_for('serve_login'))
 
 # 📡 실시간 SSE 클라이언트 관리 시스템
@@ -664,6 +666,11 @@ def serve_setup():
 
 @app.route('/login', methods=['GET', 'POST'])
 def serve_login():
+    if request.method == 'GET' and session.get('authenticated'):
+        if request.query_string:
+            return redirect(url_for('serve_controller') + '?' + request.query_string.decode('utf-8'))
+        return redirect(url_for('serve_controller'))
+        
     if request.method == 'POST':
         try:
             data = request.get_json()
@@ -708,6 +715,14 @@ def serve_streamdeck():
 
 @app.route('/controller')
 def serve_controller():
+    # 1. 쿼리 매개변수로 명시적 모드가 지정된 경우 우선 처리
+    mode = request.args.get('mode', '').lower()
+    if mode == 'mobile':
+        return serve_html_file('mobile.html')
+    elif mode == 'desktop':
+        return serve_html_file('controller.html')
+        
+    # 2. 자동으로 User-Agent 판별
     ua = request.headers.get('User-Agent', '').lower()
     mobile_keywords = ['mobile', 'android', 'iphone', 'ipad', 'ipod', 'webos', 'blackberry', 'opera mini', 'opera mobi', 'windows phone']
     is_mobile = any(kw in ua for kw in mobile_keywords)
