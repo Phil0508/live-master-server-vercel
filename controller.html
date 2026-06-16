@@ -2969,7 +2969,36 @@
             }
         }
 
+        function updateControllerTimer() {
+            if (!gd || !gd.match_data) return;
+            let md = gd.match_data;
+            
+            let timerBtn = document.getElementById('btn-timer-toggle');
+            if (timerBtn) {
+                let newTimerHtml = md.is_running ? "<i class='fa-solid fa-pause'></i> 정지" : "<i class='fa-solid fa-play'></i> 시작";
+                if (timerBtn.innerHTML !== newTimerHtml) {
+                    timerBtn.innerHTML = newTimerHtml;
+                    timerBtn.className = md.is_running ? "danger" : "primary";
+                }
+            }
+            
+            let totalSec = Math.max(0, Math.ceil((md.is_running ? Math.max(0, md.end_time_ms - (Date.now() + serverTimeOffset)) : md.time_left_ms) / 1000));
+            let dispBox = document.getElementById('disp-timer-box');
+            if (dispBox) {
+                let newHtml = "";
+                if (totalSec <= 0) {
+                    newHtml = '시간종료';
+                } else {
+                    newHtml = `<span id="disp-timer-m">${String(Math.floor(totalSec / 60)).padStart(2, '0')}</span>분 <span id="disp-timer-s">${String(totalSec % 60).padStart(2, '0')}</span>초`;
+                }
+                if (dispBox.innerHTML !== newHtml) {
+                    dispBox.innerHTML = newHtml;
+                }
+            }
+        }
+
         initSSE();
+        setInterval(updateControllerTimer, 100);
 
         document.addEventListener('mousedown', function(event) {
             let popover = document.getElementById('contrib-popover');
