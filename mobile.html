@@ -5,44 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>📱 라이브 마스터 - 모바일 (타이머 자동 동기화)</title>
-    <style>@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');</style>
+    <title>📱 라이브 마스터 - iOS 모바일 제어</title>
+    <!-- Official Apple Fonts from CDN -->
+    <link rel="stylesheet" href="https://www.apple.com/wss/fonts?family=SF+Pro+KR&v=2" type="text/css" />
+    <link rel="stylesheet" href="https://www.apple.com/wss/fonts?families=SF+Pro,v3|SF+Pro+Icons,v3">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --bg-body: #09090b; /* Dark Obsidian Black */
-            --bg-panel: rgba(18, 18, 24, 0.75); /* Frosted Obsidian Glass */
-            --bg-card: rgba(28, 28, 36, 0.85); /* Frosted Obsidian Card */
-            --bg-input: rgba(10, 10, 14, 0.8);
-            --border-light: rgba(255, 255, 255, 0.08); /* Minimal light border */
-            --text-main: #f5f5f7; /* Off-white primary text */
-            --text-muted: #8e8e93; /* Apple silver secondary text */
-            --accent: #e5c158; /* Amber slate obsidian premium accent */
-            --accent-glow: rgba(229, 193, 88, 0.15);
-            --success: #30d158; /* Apple green */
-            --danger: #ff453a; /* Apple red */
+            --bg-body: #000000; /* Pure OLED Black */
+            --bg-panel: rgba(28, 28, 30, 0.85); /* iOS Dark Mode Secondary System Background */
+            --bg-card: rgba(28, 28, 30, 0.94); /* iOS Grouped Cell Background */
+            --bg-input: rgba(120, 120, 128, 0.24); /* iOS system input fill */
+            --border-light: rgba(255, 255, 255, 0.08); /* 0.5px subtle line */
+            --text-main: #ffffff; /* iOS primary text */
+            --text-muted: #8e8e93; /* iOS secondary text (System Gray) */
+            --accent: #0a84ff; /* iOS Blue */
+            --accent-glow: rgba(10, 132, 255, 0.15);
+            --success: #30d158; /* iOS Green */
+            --danger: #ff453a; /* iOS Red */
             --danger-glow: rgba(255, 69, 58, 0.2);
-            --gold: #ffcc00;
-            --gold-glow: rgba(255, 204, 0, 0.2);
-            --radius-lg: 16px; /* High-end rounded corners */
-            --radius-md: 12px;
+            --gold: #ffd60a; /* iOS Yellow/Gold */
+            --gold-glow: rgba(255, 214, 10, 0.2);
+            --radius-lg: 12px; /* iOS standard rounded corners */
+            --radius-md: 10px;
             --radius-sm: 8px;
-            --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            --transition-smooth: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            --glass-stroke: 1px solid rgba(255, 255, 255, 0.08);
-            --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --font-sans: 'SF Pro KR', 'SF Pro Text', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif;
+            --transition-smooth: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            --glass-stroke: 0.5px solid rgba(255, 255, 255, 0.1);
+            --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         body.theme-pink {
-            --bg-body: #0d0910; /* Dark Obsidian Pink Tint */
-            --bg-panel: rgba(28, 18, 36, 0.75);
-            --bg-card: rgba(40, 24, 52, 0.85);
-            --border-light: rgba(255, 255, 255, 0.08);
-            --text-main: #f5f5f7;
-            --text-muted: #a8a1b6;
-            --accent: #ff3377; /* Deep Premium Pink Accent */
-            --accent-glow: rgba(255, 51, 119, 0.2);
-            --gold: #ff3377;
+            --bg-body: #000000;
+            --bg-panel: rgba(44, 24, 40, 0.8);
+            --bg-card: rgba(52, 32, 48, 0.94);
+            --text-muted: #d0c8d4;
+            --accent: #ff375f; /* iOS Pink */
+            --accent-glow: rgba(255, 55, 95, 0.15);
+            --gold: #ff375f;
         }
 
         * { 
@@ -53,13 +53,11 @@
         body {
             position: relative;
             background-color: var(--bg-body);
-            background-image: radial-gradient(circle at 50% -20%, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
-            background-attachment: fixed;
             color: var(--text-main);
             font-family: var(--font-sans);
             margin: 0;
             min-height: 100vh;
-            padding: env(safe-area-inset-top) 14px calc(90px + env(safe-area-inset-bottom)) 14px;
+            padding: 0 16px calc(100px + env(safe-area-inset-bottom)) 16px;
             -webkit-font-smoothing: antialiased;
             touch-action: manipulation;
             overflow-x: hidden;
@@ -68,100 +66,119 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
 
+        /* iOS Large Title Header */
         .header {
             position: sticky;
             top: 0;
             z-index: 20;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin: 0 -14px 15px -14px;
-            padding: 14px 18px;
-            background: rgba(9, 9, 11, 0.8);
+            align-items: flex-end;
+            margin: 0 -16px 16px -16px;
+            padding: calc(16px + env(safe-area-inset-top)) 20px 12px 20px;
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-bottom: var(--glass-stroke);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
         }
 
         .eyebrow { 
             color: var(--text-muted); 
-            font-size: 11px; 
-            font-weight: 600; 
-            text-transform: uppercase; 
-            letter-spacing: 0.8px;
+            font-size: 12px; 
+            font-weight: 500; 
+            letter-spacing: -0.1px;
+            margin-bottom: 4px;
         }
 
         .header h1 { 
-            margin: 2px 0 0 0; 
-            font-size: 20px; 
-            line-height: 1.1; 
-            font-weight: 700; 
-            letter-spacing: -0.3px;
+            margin: 0; 
+            font-size: 28px; 
+            line-height: 1.15; 
+            font-weight: 800; 
+            letter-spacing: -0.6px;
+        }
+
+        .ios-link-btn {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.2s ease;
+        }
+        .ios-link-btn:active {
+            opacity: 0.5;
+        }
+        .ios-link-btn.danger {
+            color: var(--danger);
         }
         
         .reaction-pill {
             display: inline-flex; 
             align-items: center; 
             gap: 8px; 
-            min-height: 38px; 
-            padding: 5px 12px;
-            color: var(--text-main); 
-            background: rgba(255, 255, 255, 0.04); 
-            border: var(--glass-stroke);
+            padding: 6px 12px;
+            background: rgba(120, 120, 128, 0.16); 
             border-radius: 20px !important;
-            box-shadow: var(--shadow-card);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            border: 0;
+            font-size: 13px;
+            font-weight: 600;
+            height: 34px;
         }
 
         .reaction-pill span { 
-            font-size: 11px; 
+            font-size: 13px; 
             font-weight: 600; 
-            text-transform: uppercase;
         }
 
+        /* iOS Native Tab Bar */
         .tabs {
             position: fixed; 
-            left: 12px; 
-            right: 12px; 
-            bottom: 12px; 
+            left: 0; 
+            right: 0; 
+            bottom: 0; 
             z-index: 50; 
             display: grid; 
-            grid-template-columns: repeat(5, minmax(0, 1fr));
-            padding: 4px;
-            background: rgba(28, 28, 36, 0.85); 
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: var(--glass-stroke);
-            border-radius: 20px !important;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            padding: 6px 10px calc(8px + env(safe-area-inset-bottom)) 10px;
+            background: rgba(20, 20, 20, 0.94); 
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-top: 0.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0 !important;
+            box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
         }
 
         .tab-btn {
-            min-height: 52px; 
-            padding: 6px 2px; 
+            min-height: 48px; 
+            padding: 4px 2px; 
             border: 0; 
             background: transparent; 
-            color: var(--text-muted);
+            color: #8e8e93;
             font-size: 10px; 
-            font-weight: 600; 
+            font-weight: 500; 
             display: flex; 
             flex-direction: column; 
             justify-content: center; 
             align-items: center; 
-            gap: 4px;
+            gap: 3px;
             font-family: var(--font-sans);
-            transition: var(--transition-smooth);
-            border-radius: 14px !important;
+            transition: opacity 0.15s ease;
+            border-radius: 0 !important;
         }
 
-        .tab-btn i { font-size: 16px; }
+        .tab-btn i { font-size: 18px; }
 
         .tab-btn.active { 
-            color: var(--text-main); 
-            background: rgba(255, 255, 255, 0.08); 
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+            color: var(--accent);
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .tab-btn:active {
+            opacity: 0.6;
         }
 
         .tab-content { 
@@ -173,7 +190,7 @@
         .tab-content.active { display: block; }
 
         @keyframes fadeIn { 
-            from { opacity: 0; transform: translateY(4px); } 
+            from { opacity: 0; transform: translateY(6px); } 
             to { opacity: 1; transform: translateY(0); } 
         }
 
@@ -181,18 +198,16 @@
             display: grid; 
             grid-template-columns: repeat(2, minmax(0, 1fr)); 
             gap: 10px; 
-            margin: 4px 0 12px 0; 
+            margin: 4px 0 16px 0; 
         }
 
         .stat-card {
-            min-height: 72px; 
-            padding: 12px 14px; 
-            background: var(--bg-card); 
+            min-height: 68px; 
+            padding: 10px 14px; 
+            background: var(--bg-panel); 
             border: var(--glass-stroke);
-            border-radius: var(--radius-md) !important;
+            border-radius: var(--radius-lg) !important;
             box-shadow: var(--shadow-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
         }
 
         .stat-card span { 
@@ -200,62 +215,96 @@
             color: var(--text-muted); 
             font-size: 11px; 
             font-weight: 600; 
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             text-transform: uppercase;
+            letter-spacing: 0.2px;
         }
 
         .stat-card strong { 
             display: block; 
             color: var(--text-main); 
-            font-size: 18px; 
+            font-size: 20px; 
             font-weight: 700; 
-            overflow-wrap: anywhere;
+            letter-spacing: -0.3px;
         }
 
+        /* iOS Grouped List Style */
         .group-box {
-            background: var(--bg-card); 
+            background: var(--bg-panel); 
             border: var(--glass-stroke); 
-            border-radius: var(--radius-lg) !important;
-            padding: 16px; 
-            margin-bottom: 12px; 
+            border-radius: 12px !important;
+            padding: 0; 
+            margin-bottom: 18px; 
             box-shadow: var(--shadow-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            overflow: hidden;
         }
-
-        .plain-section { padding: 0; margin-top: 4px; background: transparent; border: 0; box-shadow: none; }
 
         .group-title { 
-            color: var(--text-main); 
-            font-weight: 700; 
-            font-size: 14px; 
-            margin-bottom: 12px; 
+            color: var(--text-muted); 
+            font-weight: 400; 
+            font-size: 13px; 
+            margin: 18px 16px 6px 16px; 
+            text-transform: uppercase;
+            letter-spacing: -0.1px;
             display: flex; 
             align-items: center; 
-            gap: 8px; 
-            text-transform: uppercase;
-            border-bottom: 1px solid var(--border-light);
-            padding-bottom: 8px;
+            gap: 6px;
+            border-bottom: 0;
+            padding-bottom: 0;
         }
 
-        .group-title i { color: var(--accent); }
+        .group-title i { color: var(--accent); font-size: 14px; }
 
         .control-group { display: flex; flex-direction: column; gap: 8px; }
         .control-row { display: flex; gap: 8px; align-items: center; width: 100%; }
-        .launch-row input { min-width: 0; }
-        .launch-btn { flex: none; width: 75px; white-space: nowrap; }
-        .section-head { display: flex; align-items: center; gap: 8px; margin: 15px 0 8px 0; border-bottom: 1px solid var(--border-light); padding-bottom: 6px; }
-        .section-head h3 { flex: 1; margin: 0; font-size: 14px; font-weight: 700; text-transform: uppercase; color: var(--text-main); }
+        
+        /* iOS List Rows */
+        .ios-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 48px;
+            padding: 8px 16px;
+            background: transparent;
+            border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+        }
 
+        .ios-row:last-child {
+            border-bottom: 0;
+        }
+
+        .ios-row-label {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ios-row-label i {
+            width: 20px;
+            text-align: center;
+            color: var(--accent);
+        }
+
+        .ios-row-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        /* iOS Pill Buttons */
         button {
-            min-height: 40px; 
-            background: rgba(255, 255, 255, 0.05); 
-            color: var(--text-main); 
-            border: var(--glass-stroke);
-            border-radius: var(--radius-sm) !important;
-            padding: 10px 14px; 
+            min-height: 44px; 
+            background: rgba(255, 255, 255, 0.08); 
+            color: var(--accent); 
+            border: 0;
+            border-radius: 10px !important;
+            padding: 10px 16px; 
             font-weight: 600; 
-            font-size: 13px; 
+            font-size: 15px; 
             display: inline-flex; 
             justify-content: center; 
             align-items: center; 
@@ -267,165 +316,91 @@
         }
 
         button:active { 
-            background: rgba(255, 255, 255, 0.12); 
-            transform: scale(0.98); 
+            background: rgba(255, 255, 255, 0.16); 
+            transform: scale(0.97); 
         }
 
         button.primary { 
-            background: var(--text-main) !important; 
-            color: var(--bg-body) !important; 
-            border-color: var(--text-main) !important;
-            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1) !important;
+            background: var(--accent) !important; 
+            color: #ffffff !important; 
+            border: 0 !important;
+            box-shadow: 0 2px 8px rgba(10, 132, 255, 0.25) !important;
         }
 
         button.primary:active {
-            background: rgba(255, 255, 255, 0.85) !important;
+            opacity: 0.85;
+            transform: scale(0.97);
         }
 
         button.danger { 
-            background: rgba(255, 69, 58, 0.1) !important; 
-            color: var(--danger) !important; 
-            border-color: rgba(255, 69, 58, 0.3) !important;
+            background: var(--danger) !important; 
+            color: #ffffff !important; 
+            border: 0 !important;
+            box-shadow: 0 2px 8px rgba(255, 69, 58, 0.25) !important;
         }
 
         button.danger:active {
-            background: rgba(255, 69, 58, 0.2) !important;
+            opacity: 0.85;
+            transform: scale(0.97);
         }
 
-        button.icon-only { flex: none; width: 40px; padding: 0; border-radius: 50% !important; }
+        button.icon-only { flex: none; width: 44px; padding: 0; border-radius: 50% !important; }
 
+        /* iOS Inputs */
         input[type="text"], input[type="number"], select, textarea {
-            background: var(--bg-input); 
-            border: var(--glass-stroke); 
-            border-radius: var(--radius-sm) !important;
+            background: rgba(120, 120, 128, 0.24); 
+            border: 0; 
+            border-radius: 10px !important;
             padding: 10px 12px; 
             color: var(--text-main);
-            font-size: 14px !important; 
-            font-weight: 500; 
+            font-size: 16px !important; /* Prevents auto-zoom on Safari iOS */
+            font-weight: 400; 
             width: 100%; 
             box-sizing: border-box; 
             font-family: var(--font-sans);
             transition: var(--transition-smooth);
         }
 
-        textarea { min-height: 120px; resize: vertical; line-height: 1.4; }
+        textarea { min-height: 100px; resize: vertical; line-height: 1.4; }
 
         input:focus, select:focus, textarea:focus { 
             outline: none; 
-            border-color: rgba(255, 255, 255, 0.24); 
-            background: rgba(15, 15, 20, 0.9);
+            background: rgba(120, 120, 128, 0.32);
         }
 
-        .toggle-row {
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            gap: 10px; 
-            width: 100%; 
-            min-height: 46px; 
-            background: rgba(255, 255, 255, 0.02);
-            padding: 10px 14px; 
-            border: var(--glass-stroke);
-            border-radius: var(--radius-sm) !important;
-        }
-
-        .toggle-row span { color: var(--text-main); font-size: 13px; font-weight: 500; }
-
-        /* Premium iOS style switches */
-        .apple-switch { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
+        /* iOS Switches */
+        .apple-switch { position: relative; display: inline-block; width: 51px; height: 31px; flex-shrink: 0; }
         .apple-switch input { opacity: 0; width: 0; height: 0; }
-        .apple-slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.12); border-radius: 13px !important; transition: .25s cubic-bezier(0.16, 1, 0.3, 1); }
-        .apple-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; top: 3px; background-color: #ffffff; border-radius: 50% !important; transition: .25s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
+        .apple-slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(120, 120, 128, 0.36); border-radius: 16px !important; transition: .2s cubic-bezier(0.16, 1, 0.3, 1); }
+        .apple-slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; top: 2px; background-color: #ffffff; border-radius: 50% !important; transition: .2s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
         .apple-switch input:checked + .apple-slider { background-color: var(--success); }
         body.theme-pink .apple-switch input:checked + .apple-slider { background-color: var(--accent); }
-        .apple-switch input:checked + .apple-slider:before { transform: translateX(22px); }
-
-        .m-card {
-            position: relative; 
-            background: var(--bg-card); 
-            border: var(--glass-stroke); 
-            border-radius: var(--radius-md) !important;
-            padding: 14px; 
-            margin-bottom: 10px; 
-            box-shadow: var(--shadow-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-
-        .m-card-top { display: flex; gap: 8px; margin-bottom: 10px; }
-        .m-card-mid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; font-size: 12px; font-weight: 600; background: transparent !important; padding: 0 !important; }
-        
-        .metric { 
-            min-width: 0; 
-            padding: 10px; 
-            background: rgba(255, 255, 255, 0.02); 
-            border: var(--glass-stroke); 
-            border-radius: var(--radius-sm) !important;
-        }
-
-        .metric span { 
-            display: block; 
-            margin-top: 4px; 
-            color: var(--text-main) !important; 
-            font-size: 16px !important; 
-            font-weight: 700; 
-            overflow-wrap: anywhere;
-        }
-
-        .metric.gold { color: var(--gold); }
-        .metric.accent { color: var(--accent); }
-        .metric.full { grid-column: 1 / -1; }
-        .m-card-bot { display: flex; gap: 6px; }
-        .m-card-bot input { flex: 2; min-width: 0; }
-        .m-card-bot button { flex: 1; }
-        
-        .locked-card { 
-            background: rgba(255, 255, 255, 0.02); 
-            border-style: dashed;
-        }
-
-        .inline-edit { 
-            width: 100%; 
-            min-width: 0; 
-            text-align: center; 
-            color: var(--gold) !important; 
-            border: 1px solid rgba(255, 204, 0, 0.24) !important; 
-            border-radius: var(--radius-sm) !important;
-            padding: 6px !important; 
-            font-size: 14px !important; 
-            font-weight: 700 !important; 
-            background: var(--bg-input) !important; 
-        }
+        .apple-switch input:checked + .apple-slider:before { transform: translateX(20px); }
 
         .color-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
         
-        .color-slot { 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            background: rgba(255, 255, 255, 0.02); 
-            padding: 8px; 
-            border: var(--glass-stroke); 
-            border-radius: var(--radius-sm) !important;
-        }
-
-        .color-slot input[type="color"] { 
-            flex: none; 
-            width: 32px; 
-            height: 32px; 
-            padding: 0; 
-            border: 0; 
+        /* Color input overrides */
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 32px;
+            height: 32px;
             border-radius: 50% !important;
             cursor: pointer;
-            overflow: hidden;
+            background: none;
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 50% !important;
         }
 
-        .color-slot button { min-height: 32px; padding: 6px 10px; font-size: 11px; }
-
         .log-box { 
-            background: rgba(0, 0, 0, 0.2); 
-            border: var(--glass-stroke); 
-            border-radius: var(--radius-md) !important;
+            background: rgba(0, 0, 0, 0.3); 
+            border-radius: 8px !important;
             padding: 12px; 
             height: 200px; 
             overflow-y: auto; 
@@ -437,7 +412,7 @@
 
         .log-item { 
             padding: 6px 0; 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04); 
+            border-bottom: 0.5px solid rgba(255, 255, 255, 0.06); 
         }
 
         .log-item:last-child { border-bottom: 0; }
@@ -448,8 +423,8 @@
         <div>
             <div class="eyebrow" style="display: flex; align-items: center; gap: 8px;">
                 <span>Live Master</span>
-                <a href="/controller?mode=desktop" style="color: rgba(255,255,255,0.5); text-decoration: none; font-size: 10px; border: 1px solid rgba(255,255,255,0.2); padding: 1px 6px; border-radius: 10px; transition: all 0.2s;"><i class="fa-solid fa-laptop"></i> PC 버전</a>
-                <a href="/logout" style="color: rgba(255,69,58,0.7); text-decoration: none; font-size: 10px; border: 1px solid rgba(255,69,58,0.3); padding: 1px 6px; border-radius: 10px; transition: all 0.2s;"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</a>
+                <a href="/controller?mode=desktop" class="ios-link-btn"><i class="fa-solid fa-laptop"></i> PC 버전</a>
+                <a href="/logout" class="ios-link-btn danger"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</a>
             </div>
             <h1>모바일 제어</h1>
         </div>
@@ -461,139 +436,177 @@
     </div>
 
     <div id="active-broadcast-area" style="display: none;">
-    <div class="tabs">
-        <button class="tab-btn active" onclick="openTab(event, 'tab-match')"><i class="fa-solid fa-stopwatch"></i><span>대결 제어</span></button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-neon')"><i class="fa-solid fa-wand-magic-sparkles"></i><span>조명 & 이펙트</span></button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-news')"><i class="fa-solid fa-bullhorn"></i><span>설정 & 로그</span></button>
-    </div>
-
-    <!-- 1. 대결 제어 탭 (기본 활성화) -->
-    <div id="tab-match" class="tab-content active">
-        <div class="status-grid">
-            <div class="stat-card"><span>타이머</span><strong id="stat-timer">00:00</strong></div>
-            <div class="stat-card"><span>대결 상태</span><strong id="stat-match-state">대기</strong></div>
-            <div class="stat-card"><span>총합 점수</span><strong id="stat-total">0</strong></div>
-            <div class="stat-card"><span>방송 목표</span><strong id="stat-goal">0</strong></div>
-        </div>
-        
-        <div class="group-box">
-            <div class="group-title"><i class="fa-solid fa-stopwatch"></i> 타이머 제어</div>
-            
-            <!-- 원터치 퀵 프리셋 설정 -->
-            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px;">시간 퀵 설정</div>
-            <div class="control-row" style="margin-bottom: 15px; flex-wrap: wrap; gap: 6px;">
-                <button type="button" onclick="quickSetTimer(3)" style="padding: 8px 0;">3분</button>
-                <button type="button" onclick="quickSetTimer(5)" style="padding: 8px 0;">5분</button>
-                <button type="button" onclick="quickSetTimer(10)" style="padding: 8px 0;">10분</button>
-                <button type="button" onclick="quickSetTimer(1)" style="padding: 8px 0;">1분</button>
-            </div>
-            
-            <!-- 시간 추가 제어 -->
-            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px;">시간 추가</div>
-            <div class="control-row" style="margin-bottom: 20px; gap: 6px;">
-                <button type="button" onclick="addTimerTime(30)" style="padding: 8px 0; background: rgba(229,193,88,0.1); color: var(--accent); border-color: rgba(229,193,88,0.2);">+30초</button>
-                <button type="button" onclick="addTimerTime(60)" style="padding: 8px 0; background: rgba(229,193,88,0.1); color: var(--accent); border-color: rgba(229,193,88,0.2);">+1분</button>
-            </div>
-            
-            <!-- 수동 입력 제어 -->
-            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px;">수동 시간 설정</div>
-            <div class="control-row" style="margin-bottom: 15px;">
-                <input type="number" id="in-timer-m" value="3" placeholder="분" style="text-align: center;"> <span style="font-weight:bold;">분</span>
-                <input type="number" id="in-timer-s" value="0" placeholder="초" style="text-align: center;"> <span style="font-weight:bold;">초</span>
-            </div>
-            
-            <div class="control-row">
-                <button onclick="setTimer()"><i class="fa-solid fa-rotate-right"></i> 시간 적용</button>
-                <button class="primary" onclick="toggleTimer()" id="btn-timer-toggle"><i class="fa-solid fa-play"></i> 시작</button>
-            </div>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab(event, 'tab-match')"><i class="fa-solid fa-stopwatch"></i><span>대결 제어</span></button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-neon')"><i class="fa-solid fa-wand-magic-sparkles"></i><span>조명 & 이펙트</span></button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-news')"><i class="fa-solid fa-bullhorn"></i><span>설정 & 로그</span></button>
         </div>
 
-        <div class="group-box">
-            <div class="group-title"><i class="fa-solid fa-tv"></i> 대결 화면 설정</div>
-            <div class="control-row" style="margin-bottom: 10px;">
-                <label class="toggle-row" style="flex: 1;"><span>위젯 표시</span><div class="apple-switch"><input type="checkbox" id="chk-match" onchange="toggleMatch()"><span class="apple-slider"></span></div></label>
+        <!-- 1. 대결 제어 탭 -->
+        <div id="tab-match" class="tab-content active">
+            <div class="status-grid">
+                <div class="stat-card"><span>타이머</span><strong id="stat-timer">00:00</strong></div>
+                <div class="stat-card"><span>대결 상태</span><strong id="stat-match-state">대기</strong></div>
+                <div class="stat-card"><span>총합 점수</span><strong id="stat-total">0</strong></div>
+                <div class="stat-card"><span>방송 목표</span><strong id="stat-goal">0</strong></div>
             </div>
-            <div class="control-row" style="margin-bottom: 15px;">
-                <label class="toggle-row" style="flex: 1;"><span><i class="fa-solid fa-fire" style="color:var(--danger);"></i> 불꽃 효과</span><div class="apple-switch"><input type="checkbox" id="chk-match-fire" onchange="toggleMatchFire()"><span class="apple-slider"></span></div></label>
-            </div>
-            <input type="text" id="in-match-title" placeholder="대결 타이틀 (선택)" oninput="updateMatchTitle()">
-        </div>
-    </div>
-
-    <!-- 2. 조명 & 이펙트 탭 -->
-    <div id="tab-neon" class="tab-content">
-        <div class="group-box">
-            <div class="group-title"><i class="fa-solid fa-lightbulb"></i> 리액션 조명 제어</div>
-            <div class="control-group">
-                <button id="btn-rainbow" onclick="triggerNeon('RAINBOW')" style="background: linear-gradient(90deg, #ff453a, #ff9f0a, #ffd60a, #34c759, #007aff, #5856d6); color: #fff;"><i class="fa-solid fa-rainbow"></i> 무지개 네온</button>
-                <div class="control-row">
-                    <button onclick="triggerNeon('AUDI')"><i class="fa-solid fa-car"></i> 아우디 빔</button>
-                    <button onclick="triggerNeon('OFF')" class="danger"><i class="fa-solid fa-power-off"></i> 전체 끄기</button>
+            
+            <div class="group-box">
+                <div class="group-title"><i class="fa-solid fa-stopwatch"></i> 타이머 제어</div>
+                
+                <div style="padding: 16px;">
+                    <!-- 원터치 퀵 프리셋 설정 -->
+                    <div style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px;">시간 퀵 설정</div>
+                    <div class="control-row" style="margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+                        <button type="button" onclick="quickSetTimer(3)">3분</button>
+                        <button type="button" onclick="quickSetTimer(5)">5분</button>
+                        <button type="button" onclick="quickSetTimer(10)">10분</button>
+                        <button type="button" onclick="quickSetTimer(1)">1분</button>
+                    </div>
+                    
+                    <!-- 시간 추가 제어 -->
+                    <div style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px;">시간 추가</div>
+                    <div class="control-row" style="margin-bottom: 20px; gap: 8px;">
+                        <button type="button" onclick="addTimerTime(30)" style="background: rgba(10,132,255,0.1); color: var(--accent);">+30초</button>
+                        <button type="button" onclick="addTimerTime(60)" style="background: rgba(10,132,255,0.1); color: var(--accent);">+1분</button>
+                    </div>
+                    
+                    <!-- 수동 입력 제어 -->
+                    <div style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px;">수동 시간 설정</div>
+                    <div class="control-row" style="margin-bottom: 16px; gap: 8px;">
+                        <input type="number" id="in-timer-m" value="3" placeholder="분" style="text-align: center;"> <span style="font-weight:600; font-size:15px;">분</span>
+                        <input type="number" id="in-timer-s" value="0" placeholder="초" style="text-align: center;"> <span style="font-weight:600; font-size:15px;">초</span>
+                    </div>
+                    
+                    <div class="control-row" style="gap: 8px;">
+                        <button onclick="setTimer()"><i class="fa-solid fa-rotate-right"></i> 시간 적용</button>
+                        <button class="primary" onclick="toggleTimer()" id="btn-timer-toggle"><i class="fa-solid fa-play"></i> 시작</button>
+                    </div>
                 </div>
             </div>
-            <div style="height: 1px; background: var(--border-light); margin: 20px 0;"></div>
-            <div id="color-slots" class="color-grid"></div>
-        </div>
 
-        <div class="group-box">
-            <div class="group-title"><i class="fa-solid fa-rocket"></i> 특수 자막 발사기</div>
-            <div class="control-group">
-                <div class="control-row launch-row">
-                    <input type="text" id="in-up-text" placeholder="화면 중앙 발사 문구" onkeydown="if(event.key==='Enter') triggerUpText()">
-                    <button class="primary" style="flex: none; width: 85px;" onclick="triggerUpText()"><i class="fa-solid fa-paper-plane"></i> 발사</button>
+            <div class="group-box">
+                <div class="group-title"><i class="fa-solid fa-tv"></i> 대결 화면 설정</div>
+                
+                <div class="ios-row">
+                    <div class="ios-row-label"><i class="fa-solid fa-square-poll-horizontal"></i><span>위젯 표시</span></div>
+                    <div class="ios-row-control">
+                        <div class="apple-switch"><input type="checkbox" id="chk-match" onchange="toggleMatch()"><span class="apple-slider"></span></div>
+                    </div>
+                </div>
+                <div class="ios-row">
+                    <div class="ios-row-label"><i class="fa-solid fa-fire" style="color:var(--danger);"></i><span>불꽃 효과</span></div>
+                    <div class="ios-row-control">
+                        <div class="apple-switch"><input type="checkbox" id="chk-match-fire" onchange="toggleMatchFire()"><span class="apple-slider"></span></div>
+                    </div>
+                </div>
+                <div style="padding: 16px;">
+                    <input type="text" id="in-match-title" placeholder="대결 타이틀 입력 (선택)" oninput="updateMatchTitle()">
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- 3. 설정 & 로그 탭 -->
-    <div id="tab-news" class="tab-content">
-        <div class="group-box">
-            <div class="group-title"><i class="fa-solid fa-sliders"></i> 기능 & 환경 설정</div>
-            <div class="control-row" style="margin-bottom: 12px;">
-                <label style="flex: none; font-size: 13px; font-weight:600; color:var(--text-muted); width: 70px;">테마 설정:</label>
-                <select id="sel-theme" onchange="updateTheme()"><option value="default">기본 다크</option><option value="pink">네온 핑크</option></select>
+        <!-- 2. 조명 & 이펙트 탭 -->
+        <div id="tab-neon" class="tab-content">
+            <div class="group-box">
+                <div class="group-title"><i class="fa-solid fa-lightbulb"></i> 리액션 조명 제어</div>
+                
+                <div style="padding: 16px;">
+                    <div class="control-group" style="gap: 10px;">
+                        <button id="btn-rainbow" onclick="triggerNeon('RAINBOW')" style="background: linear-gradient(90deg, #ff453a, #ff9f0a, #ffd60a, #34c759, #007aff, #5856d6); color: #fff; border-radius: 20px !important;"><i class="fa-solid fa-rainbow"></i> 무지개 네온</button>
+                        <div class="control-row" style="gap: 8px;">
+                            <button onclick="triggerNeon('AUDI')"><i class="fa-solid fa-car"></i> 아우디 빔</button>
+                            <button onclick="triggerNeon('OFF')" class="danger"><i class="fa-solid fa-power-off"></i> 전체 끄기</button>
+                        </div>
+                    </div>
+                    <div style="height: 0.5px; background: rgba(255,255,255,0.1); margin: 16px 0;"></div>
+                    <div id="color-slots" class="color-grid"></div>
+                </div>
             </div>
-            <div class="control-row" style="margin-bottom: 12px;">
-                <label style="flex: none; font-size: 13px; font-weight:600; color:var(--text-muted); width: 70px;">목표 설정:</label>
-                <input type="number" id="in-goal" placeholder="목표 점수" onchange="updateGoal()">
-            </div>
-            <div class="control-row">
-                <label class="toggle-row" style="flex: 1;"><span>점수 팝업</span><div class="apple-switch"><input type="checkbox" id="chk-popup" onchange="toggleOption('popup_enabled')"><span class="apple-slider"></span></div></label>
-                <label class="toggle-row" style="flex: 1;"><span>1등 탈환</span><div class="apple-switch"><input type="checkbox" id="chk-takeover" onchange="toggleOption('takeover_enabled')"><span class="apple-slider"></span></div></label>
+
+            <div class="group-box">
+                <div class="group-title"><i class="fa-solid fa-rocket"></i> 특수 자막 발사기</div>
+                <div style="padding: 16px;">
+                    <div class="control-row launch-row" style="gap: 8px;">
+                        <input type="text" id="in-up-text" placeholder="화면 중앙 발사 문구" onkeydown="if(event.key==='Enter') triggerUpText()">
+                        <button class="primary" style="flex: none; width: 85px;" onclick="triggerUpText()"><i class="fa-solid fa-paper-plane"></i> 발사</button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="group-box">
-            <div class="group-title"><i class="fa-solid fa-bullhorn"></i> 전광판 설정</div>
-            <label class="toggle-row" style="margin-bottom: 15px;"><span style="font-weight:bold;">화면에 표시하기</span><div class="apple-switch"><input type="checkbox" id="chk-ticker" onchange="toggleOption('ticker_enabled')"><span class="apple-slider"></span></div></label>
-            <div style="margin-bottom: 15px;">
-                <label style="font-size: 13px; font-weight:bold; color:var(--text-muted);">스크롤 속도: <span id="lbl-speed">70</span></label>
-                <input type="range" id="in-speed" min="1" max="100" onchange="updateSpeed(this.value)" style="width:100%; margin-top:10px; accent-color: var(--accent);">
+        <!-- 3. 설정 & 로그 탭 -->
+        <div id="tab-news" class="tab-content">
+            <div class="group-box">
+                <div class="group-title"><i class="fa-solid fa-sliders"></i> 기능 & 환경 설정</div>
+                
+                <div class="ios-row">
+                    <div class="ios-row-label"><span>테마 설정</span></div>
+                    <div class="ios-row-control" style="width: 140px;">
+                        <select id="sel-theme" onchange="updateTheme()"><option value="default">기본 다크</option><option value="pink">네온 핑크</option></select>
+                    </div>
+                </div>
+                <div class="ios-row">
+                    <div class="ios-row-label"><span>목표 설정</span></div>
+                    <div class="ios-row-control" style="width: 140px;">
+                        <input type="number" id="in-goal" placeholder="목표 점수" onchange="updateGoal()" style="text-align: right; background: transparent; padding: 4px;">
+                    </div>
+                </div>
+                <div class="ios-row">
+                    <div class="ios-row-label"><span>점수 팝업 표시</span></div>
+                    <div class="ios-row-control">
+                        <div class="apple-switch"><input type="checkbox" id="chk-popup" onchange="toggleOption('popup_enabled')"><span class="apple-slider"></span></div>
+                    </div>
+                </div>
+                <div class="ios-row">
+                    <div class="ios-row-label"><span>1등 탈환 알림</span></div>
+                    <div class="ios-row-control">
+                        <div class="apple-switch"><input type="checkbox" id="chk-takeover" onchange="toggleOption('takeover_enabled')"><span class="apple-slider"></span></div>
+                    </div>
+                </div>
             </div>
-            <textarea id="in-ticker" placeholder="문구를 입력하세요. (엔터로 구분)" style="height: 120px;" oninput="updateTickerText()"></textarea>
-        </div>
 
-        <div class="group-box">
-            <div class="group-title"><i class="fa-solid fa-list-ol"></i> 실시간 로그</div>
-            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px;">랭킹 로그</div>
-            <div id="log-box-ranking" class="log-box" style="height: 120px;"></div>
-            <button style="width: 100%; margin-bottom: 15px; padding: 6px;" onclick="clearLogs('rank')"><i class="fa-solid fa-trash-can"></i> 랭킹 로그 비우기</button>
-            
-            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px;">대결 로그</div>
-            <div id="log-box-match" class="log-box" style="height: 120px;"></div>
-            <button style="width: 100%; padding: 6px;" onclick="clearLogs('match')"><i class="fa-solid fa-trash-can"></i> 대결 로그 비우기</button>
+            <div class="group-box">
+                <div class="group-title"><i class="fa-solid fa-bullhorn"></i> 전광판 설정</div>
+                
+                <div class="ios-row">
+                    <div class="ios-row-label"><span>화면에 표시하기</span></div>
+                    <div class="ios-row-control">
+                        <div class="apple-switch"><input type="checkbox" id="chk-ticker" onchange="toggleOption('ticker_enabled')"><span class="apple-slider"></span></div>
+                    </div>
+                </div>
+                <div style="padding: 16px;">
+                    <div style="margin-bottom: 16px;">
+                        <label style="font-size: 13px; font-weight:bold; color:var(--text-muted);">스크롤 속도: <span id="lbl-speed">70</span></label>
+                        <input type="range" id="in-speed" min="1" max="100" onchange="updateSpeed(this.value)" style="width:100%; margin-top:10px; accent-color: var(--accent); background: transparent;">
+                    </div>
+                    <textarea id="in-ticker" placeholder="문구를 입력하세요. (엔터로 구분)" style="height: 100px;" oninput="updateTickerText()"></textarea>
+                </div>
+            </div>
+
+            <div class="group-box">
+                <div class="group-title"><i class="fa-solid fa-list-ol"></i> 실시간 로그</div>
+                
+                <div style="padding: 16px;">
+                    <div style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px;">랭킹 로그</div>
+                    <div id="log-box-ranking" class="log-box" style="height: 120px;"></div>
+                    <button style="width: 100%; margin-bottom: 16px; padding: 8px; font-size: 13px; background: rgba(255,69,58,0.15); color: var(--danger);" onclick="clearLogs('rank')"><i class="fa-solid fa-trash-can"></i> 랭킹 로그 비우기</button>
+                    
+                    <div style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px;">대결 로그</div>
+                    <div id="log-box-match" class="log-box" style="height: 120px;"></div>
+                    <button style="width: 100%; padding: 8px; font-size: 13px; background: rgba(255,69,58,0.15); color: var(--danger);" onclick="clearLogs('match')"><i class="fa-solid fa-trash-can"></i> 대결 로그 비우기</button>
+                </div>
+            </div>
         </div>
-    </div>
     </div>
 
     <div id="setup-broadcast-area" style="display: none;">
-        <div class="group-box" style="margin: 40px 15px; padding: 30px; text-align: center; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-            <div style="font-size: 40px; color: var(--accent); margin-bottom: 20px; text-shadow: 0 0 10px var(--accent-glow);">
+        <div style="margin: 80px 16px; padding: 40px 24px; text-align: center; background: var(--bg-panel); border: var(--glass-stroke); border-radius: 16px; box-shadow: var(--shadow-card);">
+            <div style="font-size: 48px; color: var(--accent); margin-bottom: 24px;">
                 <i class="fa-solid fa-hourglass-half"></i>
             </div>
-            <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: 800; color: #fff;">방송 대기 중</h3>
-            <p style="margin: 0; font-size: 14px; color: var(--text-muted); line-height: 1.6;">
+            <h3 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.4px;">방송 대기 중</h3>
+            <p style="margin: 0; font-size: 14px; color: var(--text-muted); line-height: 1.6; word-break: keep-all;">
                 오늘의 방송이 아직 시작되지 않았습니다.<br>
                 PC 제어실에서 플레이어를 등록하고 방송 시작을 진행해주세요.
             </p>
@@ -668,6 +681,13 @@
             setVal('sel-theme', gd.theme || 'default');
             setVal('in-goal', gd.target_goal);
             
+            // Handle body theme dynamically
+            if (gd.theme === 'pink') {
+                document.body.className = 'theme-pink';
+            } else {
+                document.body.className = '';
+            }
+            
             setChk('chk-reaction', gd.reaction_mode);
             document.getElementById('icon-reaction').style.color = gd.reaction_mode ? "var(--danger)" : "var(--text-main)";
             document.getElementById('icon-reaction').className = gd.reaction_mode ? "fa-solid fa-eye-slash" : "fa-solid fa-eye";
@@ -700,8 +720,8 @@
             gd.saved_colors.forEach((col, i) => { 
                 let isAct = (currentNeon === col); 
                 let textCol = readableTextColor(col);
-                let btnStyle = isAct ? `background:#1d1d1f; color:#fff; border-color:${col};` : `background:${col}; color:${textCol}; border-color:${col};`; 
-                colorHtml += `<div class="color-slot"><input type="color" value="${col}" onchange="gd.saved_colors[${i}]=this.value; pushAPI();"><button style="${btnStyle}" onclick="triggerNeon('${col}')">${isAct ? '<i class="fa-solid fa-check"></i> ON' : '적용'}</button></div>`; 
+                let btnStyle = isAct ? `background:rgba(255,255,255,0.08); color:var(--text-main);` : `background:${col}; color:${textCol};`; 
+                colorHtml += `<div class="color-slot" style="background: rgba(120, 120, 128, 0.12); border: 0; border-radius: 10px; padding: 6px 10px; display: flex; align-items: center; gap: 8px;"><input type="color" value="${col}" onchange="gd.saved_colors[${i}]=this.value; pushAPI();" style="width: 28px; height: 28px; border-radius: 50% !important; border: 0; cursor: pointer; padding: 0; overflow: hidden; flex: none;"><button style="${btnStyle}; font-size: 13px; min-height: 28px; padding: 4px 8px; border-radius: 6px !important; flex: 1; border: 0;" onclick="triggerNeon('${col}')">${isAct ? '<i class="fa-solid fa-check"></i> ON' : '적용'}</button></div>`; 
             }); 
             if (lastColorHtml !== colorHtml) { document.getElementById('color-slots').innerHTML = colorHtml; lastColorHtml = colorHtml; }
 
