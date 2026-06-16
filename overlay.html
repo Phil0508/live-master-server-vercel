@@ -552,9 +552,13 @@
         let isFirstLoadOverlay = true; // 💡 여기에 방어막 변수 추가!
         let matchData = null;
         let globalData = null;
+        let serverTimeOffset = 0;
         
         let currentExtraActiveState = false;
         function handleData(d) {
+            if (d && d.server_time) {
+                serverTimeOffset = d.server_time - Date.now();
+            }
             globalData = d;
             
             let isActive = d.broadcast_active || false;
@@ -948,7 +952,7 @@
             if (!matchData || !matchData.active) return;
             
             let md = matchData;
-            let left = md.is_running ? Math.max(0, md.end_time_ms - Date.now()) : (md.time_left_ms || 0); 
+            let left = md.is_running ? Math.max(0, md.end_time_ms - (Date.now() + serverTimeOffset)) : (md.time_left_ms || 0); 
             let sec = Math.ceil(left/1000); 
             let timerEl = document.getElementById('m-timer');
             if (!timerEl) return;

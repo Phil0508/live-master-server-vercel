@@ -141,6 +141,9 @@ sse_clients = []
 sse_lock = threading.Lock()
 
 def broadcast_event(event_name, data):
+    if isinstance(data, dict):
+        data = data.copy()
+        data['server_time'] = int(time.time() * 1000)
     with sse_lock:
         message = f"event: {event_name}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
         for client_q in sse_clients:
@@ -890,7 +893,11 @@ def api_data():
             save_data(state)
             broadcast_event('update', state)
         return jsonify({"status": "success"})
-    return jsonify(load_data())
+    state = load_data()
+    if isinstance(state, dict):
+        state = state.copy()
+        state['server_time'] = int(time.time() * 1000)
+    return jsonify(state)
 
 @app.route('/api/roulette/winner', methods=['POST'])
 def api_roulette_winner():

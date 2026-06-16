@@ -307,7 +307,19 @@
         .badge-2nd { background: linear-gradient(135deg, #C0C0C0, #808080); color: #000; box-shadow: 0 0 10px rgba(192,192,192,0.3); }
         .badge-3rd { background: linear-gradient(135deg, #CD7F32, #8B4513); color: #fff; box-shadow: 0 0 10px rgba(205,127,50,0.3); }
         .badge-normal { background: rgba(255,255,255,0.08); color: #aaa; }
-        .log-box { background: var(--bg-input); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 15px; height: 250px; overflow-y: auto; font-size: 13px; color: #aaa; line-height: 1.8; }
+        .log-box {
+            background: #08080a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            height: 250px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 12.5px;
+            color: #e5e5e7;
+            line-height: 1.7;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.25);
+        }
         .ml-filter-btn { padding: 6px 14px; font-size: 12px; font-weight: 600; background: transparent; border: none; color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all 0.2s; } .ml-filter-btn:hover { background: rgba(255,255,255,0.06); color: #fff; } .ml-filter-active { background: rgba(0, 255, 204, 0.15) !important; color: var(--accent) !important; }
         .ml-row { transition: background 0.15s; } .ml-row:hover { background: rgba(255,255,255,0.04) !important; } .ml-row td { padding: 9px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); } .ml-amount-plus { color: #4caf50; font-weight: 700; } .ml-amount-minus { color: #ff5252; font-weight: 700; } .ml-source-mobile { background: rgba(255, 152, 0, 0.12); color: #ff9800; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; } .ml-source-toonation { background: rgba(0, 191, 255, 0.12); color: #00bfff; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
         
@@ -520,6 +532,91 @@
             border-color: var(--accent) !important;
             transform: translateY(-1px);
         }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes rainbowFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .btn-rainbow-animated {
+            background: linear-gradient(90deg, #ff4d4d, #ffa64d, #ffff4d, #4dff4d, #4d4dff, #b34dff, #ff4dff) !important;
+            background-size: 300% 300% !important;
+            animation: rainbowFlow 4s linear infinite !important;
+            color: #000 !important;
+            font-weight: 800 !important;
+            text-shadow: none !important;
+            border: none !important;
+        }
+        .btn-rainbow-animated:hover {
+            box-shadow: 0 0 15px rgba(255, 77, 127, 0.6) !important;
+        }
+        .color-slot-btn {
+            transition: var(--transition-smooth);
+            cursor: pointer;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 13.5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+        .color-slot-btn:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+        
+        /* 🎰 Retro-Cyberpunk Roulette Winner Display & Danger Zone pulse */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.65; }
+        }
+        .roulette-winner-arcade {
+            background: rgba(0, 255, 204, 0.05) !important;
+            border: 1.5px solid var(--accent) !important;
+            border-radius: var(--radius-md) !important;
+            box-shadow: 0 0 15px var(--accent-glow), inset 0 0 10px rgba(0, 255, 204, 0.1) !important;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px !important;
+            font-weight: 900 !important;
+            color: var(--accent) !important;
+            text-shadow: 0 0 8px var(--accent-glow) !important;
+            animation: blink 2s infinite ease-in-out;
+            letter-spacing: 0.5px;
+            padding: 14px !important;
+            text-align: center;
+            margin-top: 10px;
+        }
+        @keyframes dangerPulse {
+            0%, 100% {
+                box-shadow: 0 0 5px rgba(255, 69, 58, 0.3);
+                border-color: rgba(255, 69, 58, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 15px rgba(255, 69, 58, 0.7);
+                border-color: rgba(255, 69, 58, 1);
+            }
+        }
+        .btn-danger-pulsate {
+            background: rgba(255, 69, 58, 0.08) !important;
+            border: 1.5px dashed rgba(255, 69, 58, 0.45) !important;
+            color: var(--danger) !important;
+            animation: dangerPulse 2s infinite ease-in-out !important;
+            font-weight: 800 !important;
+        }
+        .btn-danger-pulsate:hover {
+            background: rgba(255, 69, 58, 0.2) !important;
+            border-style: solid !important;
+            transform: scale(1.02) translateY(-1px);
+            box-shadow: 0 0 20px rgba(255, 69, 58, 0.8) !important;
+        }
     </style>
 </head>
 <body>
@@ -674,27 +771,101 @@
     </div>
     
     <div id="tab-neon" class="tab-content">
-
-
-
-        <div class="group-box" style="margin-top: 15px;">
+        <div class="group-box" style="max-width: 600px; margin: 0 auto;">
             <div class="group-title"><i class="fa-solid fa-lightbulb"></i> 수동 리액션 조명 제어</div>
-            <div class="control-group"><button onclick="triggerNeon('OFF')" class="danger" style="flex: 1; justify-content: center;"><i class="fa-solid fa-power-off"></i> 끄기</button><button id="btn-rainbow" onclick="triggerNeon('RAINBOW')" style="flex: 1; justify-content: center; background: linear-gradient(90deg, #ff4d4d, #ffa64d, #ffff4d, #4dff4d, #4d4dff, #b34dff, #ff4dff); color: #000;"><i class="fa-solid fa-rainbow"></i> 무지개 (ON)!</button><button onclick="triggerNeon('AUDI')" style="flex: 1; justify-content: center; background: #e0e0e0; color: #000;"><i class="fa-solid fa-car"></i> 아우디 라이트</button></div>
+            
+            <div class="control-group" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px;">
+                <button onclick="triggerNeon('OFF')" class="danger" style="justify-content: center; height: 46px; border-radius: 12px; font-size: 14px;"><i class="fa-solid fa-power-off"></i> 끄기</button>
+                <button id="btn-rainbow" onclick="triggerNeon('RAINBOW')" class="btn-rainbow-animated" style="justify-content: center; height: 46px; border-radius: 12px; font-size: 14px;"><i class="fa-solid fa-rainbow"></i> 무지개 (ON)!</button>
+                <button onclick="triggerNeon('AUDI')" style="justify-content: center; height: 46px; border-radius: 12px; font-size: 14px; background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.15); color: #fff;"><i class="fa-solid fa-car"></i> 아우디 라이트</button>
+            </div>
             
             <div style="height: 1px; background: var(--border-light); margin: 20px 0;"></div>
-            <div class="control-group" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-                <label style="color:var(--text-muted); font-size: 13px;"><i class="fa-solid fa-gauge-high"></i> 조명 회전/체이스 스피드: <span id="lbl-neon-speed" style="color:var(--accent); font-weight:bold;">1.5초</span></label>
-                <input type="range" id="in-neon-speed" min="0.3" max="5.0" step="0.1" value="1.5" onchange="updateNeonSpeed(this.value)" style="width:100%; accent-color: var(--accent);">
+            
+            <div class="control-group" style="flex-direction: column; align-items: flex-start; gap: 8px; background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 12px; border: 1px solid var(--border-light);">
+                <label style="color: var(--text-muted); font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; width: 100%;">
+                    <span><i class="fa-solid fa-gauge-high" style="color: var(--accent); margin-right: 6px;"></i> 조명 회전/체이스 스피드</span>
+                    <span id="lbl-neon-speed" style="color: var(--accent); font-weight: 800; text-shadow: 0 0 5px var(--accent-glow);">1.5초</span>
+                </label>
+                <input type="range" id="in-neon-speed" min="0.3" max="5.0" step="0.1" value="1.5" onchange="updateNeonSpeed(this.value)" oninput="document.getElementById('lbl-neon-speed').innerText = this.value + '초'" style="width: 100%; accent-color: var(--accent); height: 6px; cursor: pointer;">
             </div>
 
-            <div style="height: 1px; background: var(--border-light); margin: 20px 0;"></div>
-            <p style="font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 15px;"><i class="fa-solid fa-palette"></i> 단색 슬롯</p>
+            <div style="height: 1px; background: var(--border-light); margin: 25px 0;"></div>
+            
+            <p style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 15px;"><i class="fa-solid fa-palette" style="color: var(--accent); margin-right: 6px;"></i> 단색 슬롯 프리셋</p>
             <div id="color-slots" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;"></div>
         </div>
     </div>
 
-    <div id="tab-news" class="tab-content"><div class="group-box"><div class="group-title"><i class="fa-solid fa-bullhorn"></i> 전광판 설정</div><div class="control-group"><label class="toggle-row" style="flex: 1;"><span class="toggle-label">화면에 표시하기</span><div class="apple-switch"><input type="checkbox" id="chk-ticker" onchange="toggleOption('ticker_enabled')"><span class="apple-slider"></span></div></label></div><div class="control-group" style="flex-direction: column; align-items: flex-start; gap: 8px;"><label style="color:var(--text-muted); font-size: 13px;">스크롤 속도: <span id="lbl-speed" style="color:#fff; font-weight:bold;">70</span></label><input type="range" id="in-speed" min="1" max="100" onchange="updateSpeed(this.value)" style="width:100%; accent-color: var(--accent);"></div><textarea id="in-ticker" placeholder="전광판 문구를 입력하세요. (엔터로 구분)" style="width: 100%; height: 120px; margin-top: 15px; resize: none;" oninput="updateTickerText()"></textarea></div></div>
-    <div id="tab-bgm" class="tab-content"><div class="group-box" style="text-align: center;"><div class="group-title" style="justify-content: center;"><i class="fa-solid fa-music"></i> 오디오 플레이어</div><input type="file" id="bgm-file" accept="audio/*" onchange="loadBGM(event)" style="margin-bottom: 20px; width:100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px dashed #555; border-radius: var(--radius-sm); cursor: pointer;"><audio id="bgm-audio" loop></audio><div class="control-group" style="justify-content: center; background: rgba(0,0,0,0.2); padding: 15px; border-radius: var(--radius-md);"><button class="primary" onclick="document.getElementById('bgm-audio').play()"><i class="fa-solid fa-play"></i> 재생</button><button onclick="document.getElementById('bgm-audio').pause()"><i class="fa-solid fa-pause"></i> 정지</button><i class="fa-solid fa-volume-high" style="color: #666; margin-left: 10px;"></i><input type="range" min="0" max="1" step="0.05" value="0.5" onchange="document.getElementById('bgm-audio').volume = this.value" style="width: 120px;"></div></div></div>
+    <div id="tab-news" class="tab-content">
+        <div class="group-box" style="max-width: 600px; margin: 0 auto;">
+            <div class="group-title"><i class="fa-solid fa-bullhorn"></i> 전광판 설정 및 송출</div>
+            
+            <div class="control-group" style="margin-bottom: 20px;">
+                <label class="toggle-row" style="flex: 1; height: 46px; border-radius: 12px;">
+                    <span class="toggle-label" style="font-weight: 700;"><i class="fa-solid fa-desktop" style="margin-right: 6px; color: var(--accent);"></i> 전광판 위젯 송출</span>
+                    <div class="apple-switch">
+                        <input type="checkbox" id="chk-ticker" onchange="toggleOption('ticker_enabled')">
+                        <span class="apple-slider"></span>
+                    </div>
+                </label>
+            </div>
+            
+            <div class="control-group" style="flex-direction: column; align-items: flex-start; gap: 8px; background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 12px; border: 1px solid var(--border-light);">
+                <label style="color: var(--text-muted); font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; width: 100%;">
+                    <span><i class="fa-solid fa-gauge-high" style="margin-right: 6px; color: var(--accent);"></i> 자막 이동 속도</span>
+                    <span id="lbl-speed" style="color: var(--accent); font-weight: 800; text-shadow: 0 0 5px var(--accent-glow);">70</span>
+                </label>
+                <input type="range" id="in-speed" min="1" max="100" onchange="updateSpeed(this.value)" oninput="document.getElementById('lbl-speed').innerText = this.value" style="width: 100%; accent-color: var(--accent); height: 6px; cursor: pointer;">
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <label style="color: var(--text-muted); font-size: 13.5px; font-weight: 700; display: block; margin-bottom: 8px;"><i class="fa-solid fa-keyboard" style="margin-right: 6px;"></i> 송출 텍스트 편집 (엔터로 문구 구분)</label>
+                <textarea id="in-ticker" placeholder="전광판 문구를 입력하세요.&#10;예:&#10;홍길동님이 10,000원을 후원하셨습니다!&#10;룰렛 돌려돌려~" style="width: 100%; height: 150px; resize: none; box-sizing: border-box; background: var(--bg-input); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-md); padding: 12px 16px; color: #fff; font-size: 14px; font-family: inherit; line-height: 1.6; transition: var(--transition-smooth);" oninput="updateTickerText()"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-bgm" class="tab-content">
+        <div class="group-box" style="text-align: center; max-width: 600px; margin: 0 auto;">
+            <div class="group-title" style="justify-content: center;"><i class="fa-solid fa-music"></i> 오디오 플레이어</div>
+            
+            <!-- Modern dashed dropzone file input wrapper -->
+            <div style="position: relative; margin-bottom: 25px; border: 2px dashed rgba(255, 255, 255, 0.12); border-radius: var(--radius-lg); padding: 30px 20px; background: rgba(255, 255, 255, 0.01); transition: var(--transition-smooth); cursor: pointer;" onmouseover="this.style.borderColor='var(--accent)'; this.style.background='rgba(0, 255, 204, 0.02)';" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.12)'; this.style.background='rgba(255, 255, 255, 0.01)';" onclick="document.getElementById('bgm-file').click()">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 32px; color: var(--text-muted); margin-bottom: 10px; display: block;"></i>
+                <span style="font-size: 14px; font-weight: bold; color: #fff; display: block; margin-bottom: 4px;">여기를 클릭하여 음악 파일 업로드</span>
+                <span style="font-size: 12px; color: var(--text-muted); display: block;">MP3, WAV, M4A 등 오디오 파일 지원</span>
+                <input type="file" id="bgm-file" accept="audio/*" onchange="loadBGM(event)" style="display: none;">
+            </div>
+            
+            <audio id="bgm-audio" loop></audio>
+            
+            <!-- Metallic vinyl player deck -->
+            <div style="background: rgba(0, 0, 0, 0.35); padding: 25px; border-radius: var(--radius-lg); border: 1px solid var(--border-light); display: flex; flex-direction: column; align-items: center; gap: 20px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);">
+                <!-- Spinning Vinyl disc illustration -->
+                <div id="bgm-vinyl-disc" style="width: 100px; height: 100px; background: radial-gradient(circle, #000 20%, #222 21%, #111 40%, #222 41%, #000 60%, #111 61%, #000 80%), url('/money.png'); background-size: cover; border-radius: 50%; border: 4px solid #141416; box-shadow: 0 4px 15px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05); position: relative; transition: transform 0.5s ease;">
+                    <div style="position: absolute; width: 20px; height: 20px; background: #0d0d0f; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 3px solid var(--accent); box-shadow: 0 0 5px var(--accent-glow);"></div>
+                </div>
+                
+                <!-- Play status and file name -->
+                <div style="text-align: center; width: 100%;">
+                    <div id="bgm-filename" style="font-size: 14.5px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; margin: 0 auto 5px auto;">선택된 오디오 파일 없음</div>
+                    <div id="bgm-status-text" style="font-size: 12px; color: var(--text-muted); font-weight: 600;">대기 중</div>
+                </div>
+                
+                <!-- Sleek control dials bar -->
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; width: 100%;">
+                    <button class="primary" onclick="playBgmAudio()" style="width: 90px; height: 42px; justify-content: center; font-size: 14px; font-weight: 800; border-radius: 20px;"><i class="fa-solid fa-play"></i> 재생</button>
+                    <button class="danger" onclick="pauseBgmAudio()" style="width: 90px; height: 42px; justify-content: center; font-size: 14px; font-weight: 800; border-radius: 20px;"><i class="fa-solid fa-pause"></i> 정지</button>
+                    
+                    <div style="display: flex; align-items: center; gap: 8px; margin-left: 10px; background: rgba(255,255,255,0.02); padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border-light);">
+                        <i class="fa-solid fa-volume-high" style="color: var(--accent); font-size: 12px; filter: drop-shadow(0 0 3px var(--accent-glow));"></i>
+                        <input type="range" min="0" max="1" step="0.05" value="0.5" oninput="document.getElementById('bgm-audio').volume = this.value" class="ios-slider-volume" style="width: 100px; height: 8px; cursor: pointer;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <div id="tab-youtube" class="tab-content">
         <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start;">
@@ -708,7 +879,7 @@
                 </div>
                 
                 <!-- 검색 결과 리스트 스크롤 영역 -->
-                <div id="yt-search-results" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px;">
+                <div id="yt-search-results" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: rgba(0,0,0,0.15); box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);">
                     <div style="color: #666; font-size: 13px; text-align: center; padding: 50px 0;">
                         <i class="fa-brands fa-youtube" style="font-size: 40px; color: #444; margin-bottom: 10px; display: block;"></i>
                         검색어를 입력하시면 광고 없는 고속 리스트가 나타납니다.
@@ -718,7 +889,7 @@
 
             <!-- 플레이어 자체 화면 영역 -->
             <div class="group-box" style="display: flex; flex-direction: column; gap: 15px; min-height: 520px; height: calc(100vh - 200px); max-height: 650px; box-sizing: border-box;">
-                <div class="group-title"><i class="fa-solid fa-tv" style="color: #ff0000;"></i> 재생 모니터</div>
+                <div class="group-title"><i class="fa-solid fa-tv" style="color: var(--danger);"></i> 재생 모니터</div>
                 <div style="aspect-ratio: 16/9; background: #000; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-light); box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; width: 100%;">
                     <div id="yt-tab-player-element" style="width: 100%; height: 100%;">
                         <div style="color: #666; font-size: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 15px;">
@@ -729,9 +900,9 @@
                 </div>
                 
                 <!-- 영상 세부정보 확인용 iOS 미니 카드 -->
-                <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: 14px; padding: 15px; display: flex; align-items: center; gap: 12px; margin-top: 10px; box-shadow: inset 0 1px 3px rgba(255,255,255,0.02);">
-                    <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05);">
-                        <i class="fa-solid fa-compact-disc" id="yt-disc-icon" style="font-size: 16px; color: var(--accent);"></i>
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-light); border-radius: 14px; padding: 15px; display: flex; align-items: center; gap: 12px; margin-top: 10px; box-shadow: inset 0 1px 3px rgba(255,255,255,0.02);">
+                    <div style="width: 40px; height: 40px; background: rgba(0,0,0,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-light);">
+                        <i class="fa-solid fa-compact-disc" id="yt-disc-icon" style="font-size: 16px; color: var(--accent); filter: drop-shadow(0 0 3px var(--accent-glow));"></i>
                     </div>
                     <div style="flex: 1; min-width: 0;">
                         <div id="yt-tab-video-title" style="font-weight: bold; font-size: 14px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">선택된 동영상 없음</div>
@@ -741,6 +912,7 @@
             </div>
         </div>
     </div>
+
     <div id="tab-roulette" class="tab-content">
         <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; align-items: start;">
             <!-- 룰렛 제어/설정 카드 -->
@@ -782,7 +954,7 @@
                     </select>
                 </div>
 
-                <div id="roulette-winner-display" style="display: none; background: rgba(0, 255, 204, 0.1); border: 1px solid var(--accent); border-radius: var(--radius-md); padding: 12px; font-size: 14px; text-align: center; margin-top: 10px;">
+                <div id="roulette-winner-display" class="roulette-winner-arcade" style="display: none;">
                     최근 당첨자: -
                 </div>
 
@@ -875,7 +1047,7 @@
     </div>
 
     <div id="tab-system" class="tab-content">
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
             <div class="group-box" style="margin-bottom: 0;">
                 <div class="group-title"><i class="fa-solid fa-shield-halved"></i> OTP 보안 설정</div>
                 <div style="display: flex; flex-direction: column; gap: 15px;">
@@ -974,16 +1146,29 @@
                             </button>
                         </div>
                         
-                        <button onclick="triggerDatabaseReset()" style="width: 100%; justify-content: center; height: 38px; display: inline-flex; align-items: center; gap: 8px; font-weight: bold; background: rgba(255, 69, 58, 0.12); border: 1px solid rgba(255, 69, 58, 0.35); color: var(--danger); border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 13px; margin-top: 15px;" onmouseover="this.style.background='rgba(255,69,58,0.2)';" onmouseout="this.style.background='rgba(255,69,58,0.12)';">
+                        <button onclick="triggerDatabaseReset()" class="btn-danger-pulsate" style="width: 100%; justify-content: center; height: 38px; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 13px; margin-top: 15px;">
                             <i class="fa-solid fa-triangle-exclamation"></i> 전체 데이터베이스 공장 초기화
                         </button>
                     </div>
                 </div>
                 
                 <!-- Live Log Console -->
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;"><i class="fa-solid fa-terminal"></i> 서버 트랜잭션 로그 콘솔 (최근 30건)</div>
-                    <div id="sys-console-logs" style="flex: 1; min-height: 180px; height: 180px; background: #08080a; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 15px; font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; overflow-y: auto; color: #00ffcc; white-space: pre-wrap; line-height: 1.5; box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);">[대기 중] 서버 데이터를 불러오고 있습니다...</div>
+                <div style="display: flex; flex-direction: column; gap: 10px; height: 230px;">
+                    <div style="font-size: 13px; color: var(--text-muted); font-weight: bold; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-terminal"></i> 서버 트랜잭션 로그 콘솔 (최근 30건)</div>
+                    <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); overflow: hidden; background: #08080a; box-shadow: inset 0 2px 8px rgba(0,0,0,0.8), 0 10px 20px rgba(0,0,0,0.35);">
+                        <!-- Terminal Header -->
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding: 8px 15px; font-family: 'Consolas', monospace; font-size: 11px; color: var(--text-muted);">
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff453a;"></span>
+                                <span style="width: 10px; height: 10px; border-radius: 50%; background: #ffcc00;"></span>
+                                <span style="width: 10px; height: 10px; border-radius: 50%; background: #34c759;"></span>
+                                <span style="margin-left: 10px; font-weight: bold; color: #aaa;">sh - transaction.log</span>
+                            </div>
+                            <div>UTF-8</div>
+                        </div>
+                        <!-- Console area -->
+                        <div id="sys-console-logs" style="flex: 1; padding: 15px; font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; overflow-y: auto; color: #00ffcc; white-space: pre-wrap; line-height: 1.5; outline: none; border: none; background: transparent;">[대기 중] 서버 데이터를 불러오고 있습니다...</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1025,6 +1210,7 @@
         function openTab(evt, tabId) { document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(tabId).classList.add('active'); evt.currentTarget.classList.add('active'); if (tabId === 'tab-system') { refreshSystemStatus(); } if (tabId === 'tab-logs') { loadManualLogs(1); } }
         let gd = null; let isPushing = false; let lastPushTime = 0;
         let lastReactionToastTime = 0;
+        let serverTimeOffset = 0;
         function showReactionToast() {
             if (Date.now() - lastReactionToastTime < 1000) return;
             lastReactionToastTime = Date.now();
@@ -1044,6 +1230,9 @@
             if (isPushing || (Date.now() - lastPushTime < 200)) return; 
             try { 
                 const res = await fetch('/api/data'); const newData = await res.json(); 
+                if (newData && newData.server_time) {
+                    serverTimeOffset = newData.server_time - Date.now();
+                }
                 if (gd && gd.reaction_mode !== newData.reaction_mode) {
                     let audio = document.getElementById('bgm-audio');
                     if (newData.reaction_mode) { 
@@ -1301,7 +1490,7 @@
                 timerBtn.className = md.is_running ? "danger" : "primary";
             }
             
-            let totalSec = Math.max(0, Math.floor((md.is_running ? Math.max(0, md.end_time_ms - Date.now()) : md.time_left_ms) / 1000)); 
+            let totalSec = Math.max(0, Math.ceil((md.is_running ? Math.max(0, md.end_time_ms - (Date.now() + serverTimeOffset)) : md.time_left_ms) / 1000)); 
             if (totalSec <= 0) {
                 setHtml('disp-timer-box', '시간종료');
             } else {
@@ -1326,11 +1515,11 @@
             setVal('in-ticker', (gd.ticker_text||'').replace(/ \/ /g, '\n')); 
 
             if (gd.logs) {
-                let rankLogHtml = gd.logs.map(log => `<div style="margin-bottom:6px;"><span style="color:#666;">[${log.time}]</span> <span style="color:#fff; font-weight:bold;">${log.name}</span>님 <span style="color:var(--accent);">${log.val > 0 ? '+'+log.val.toLocaleString() : log.val.toLocaleString()}점</span></div>`).join('');
+                let rankLogHtml = gd.logs.map(log => `<div style="margin-bottom:6px; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 4px; display: flex; align-items: center; gap: 8px;"><span style="color:#888;">&gt;</span> <span style="color:#666; font-size: 11px;">[${log.time}]</span> <span style="color:#fff; font-weight: bold;">${log.name}</span>님 <span style="color:var(--accent); font-weight: bold;">${log.val > 0 ? '+'+log.val.toLocaleString() : log.val.toLocaleString()}점</span></div>`).join('');
                 if (lastRankLogHtml !== rankLogHtml) { document.getElementById('log-box-ranking').innerHTML = rankLogHtml; lastRankLogHtml = rankLogHtml; }
             }
             if (gd.match_logs) {
-                let matchLogHtml = gd.match_logs.map(log => `<div style="margin-bottom:6px;"><span style="color:#666;">[${log.time}]</span> <i class="fa-solid fa-bolt" style="color:var(--gold); font-size:10px;"></i> <span style="color:#fff; font-weight:bold;">${log.name}</span> <span style="color:var(--accent);">${log.val > 0 ? '+'+log.val.toLocaleString() : log.val.toLocaleString()}점</span></div>`).join('');
+                let matchLogHtml = gd.match_logs.map(log => `<div style="margin-bottom:6px; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 4px; display: flex; align-items: center; gap: 8px;"><span style="color:#888;">&gt;</span> <span style="color:#666; font-size: 11px;">[${log.time}]</span> <i class="fa-solid fa-bolt" style="color:var(--gold); font-size: 10px;"></i> <span style="color:#fff; font-weight: bold;">${log.name}</span> <span style="color:var(--accent); font-weight: bold;">${log.val > 0 ? '+'+log.val.toLocaleString() : log.val.toLocaleString()}점</span></div>`).join('');
                 if (lastMatchLogHtml !== matchLogHtml) { document.getElementById('log-box-match').innerHTML = matchLogHtml; lastMatchLogHtml = matchLogHtml; }
             }
             renderRouletteTab();
@@ -1410,13 +1599,14 @@
             
             // 🎯 랜덤 (무조작) 옵션
             let isRandomChecked = (gd.roulette.select_index === -1) ? 'checked' : '';
-            let randomBorder = (gd.roulette.select_index === -1) ? 'var(--accent)' : 'var(--border-light)';
-            let randomText = (gd.roulette.select_index === -1) ? 'var(--accent)' : '#ccc';
-            let randomBg = (gd.roulette.select_index === -1) ? 'rgba(0, 255, 204, 0.05)' : 'transparent';
+            let randomBorder = (gd.roulette.select_index === -1) ? 'var(--accent)' : 'rgba(255, 255, 255, 0.08)';
+            let randomText = (gd.roulette.select_index === -1) ? 'var(--accent)' : '#aaa';
+            let randomBg = (gd.roulette.select_index === -1) ? 'rgba(0, 255, 204, 0.1)' : 'rgba(255, 255, 255, 0.02)';
+            let randomShadow = (gd.roulette.select_index === -1) ? '0 0 10px var(--accent-glow)' : 'none';
             
             targetListHtml += `
-                <label class="toggle-row" style="padding: 10px; font-size: 13px; cursor: pointer; border-color: ${randomBorder}; background: ${randomBg};" onclick="setRouletteTarget(-1, '')">
-                    <span style="color: ${randomText}; font-weight: bold;">🎯 랜덤 (무조작)</span>
+                <label class="toggle-row" style="padding: 12px; font-size: 13.5px; cursor: pointer; border-color: ${randomBorder}; background: ${randomBg}; box-shadow: ${randomShadow}; transition: all 0.2s;" onmouseover="if(gd.roulette.select_index !== -1) {this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='scale(1.03)';}" onmouseout="if(gd.roulette.select_index !== -1) {this.style.borderColor='rgba(255,255,255,0.08)'; this.style.transform='none';}" onclick="setRouletteTarget(-1, '')">
+                    <span style="color: ${randomText}; font-weight: bold; display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-crosshairs"></i> 랜덤 (무조작)</span>
                     <input type="radio" name="roulette-target" value="-1" ${isRandomChecked} style="display: none;">
                 </label>
             `;
@@ -1437,19 +1627,21 @@
                 let percent = weightSum > 0 ? ((weight / weightSum) * 100).toFixed(1) : 0;
                 let dispText = `${bj.name} (${percent}%)`;
                 
-                let borderCol = (gd.roulette.select_index === idx) ? 'var(--accent)' : 'var(--border-light)';
+                let borderCol = (gd.roulette.select_index === idx) ? 'var(--accent)' : 'rgba(255, 255, 255, 0.08)';
                 let textCol = (gd.roulette.select_index === idx) ? 'var(--accent)' : '#fff';
-                let itemBg = (gd.roulette.select_index === idx) ? 'rgba(0, 255, 204, 0.05)' : 'transparent';
+                let itemBg = (gd.roulette.select_index === idx) ? 'rgba(0, 255, 204, 0.1)' : 'rgba(255, 255, 255, 0.02)';
+                let itemShadow = (gd.roulette.select_index === idx) ? '0 0 10px var(--accent-glow)' : 'none';
                 
                 targetListHtml += `
-                    <label class="toggle-row" style="padding: 10px; font-size: 13px; cursor: pointer; border-color: ${borderCol}; background: ${itemBg};" onclick="setRouletteTarget(${idx}, '${bj.name}')">
-                        <span style="color: ${textCol}; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${dispText}</span>
+                    <label class="toggle-row" style="padding: 12px; font-size: 13.5px; cursor: pointer; border-color: ${borderCol}; background: ${itemBg}; box-shadow: ${itemShadow}; transition: all 0.2s;" onmouseover="if(gd.roulette.select_index !== ${idx}) {this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='scale(1.03)';}" onmouseout="if(gd.roulette.select_index !== ${idx}) {this.style.borderColor='rgba(255,255,255,0.08)'; this.style.transform='none';}" onclick="setRouletteTarget(${idx}, '${bj.name}')">
+                        <span style="color: ${textCol}; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><i class="fa-solid fa-user-tag" style="margin-right: 5px; opacity: 0.7;"></i> ${dispText}</span>
                         <input type="radio" name="roulette-target" value="${idx}" ${isChecked} style="display: none;">
                     </label>
                 `;
             });
             
             document.getElementById('roulette-target-list').innerHTML = targetListHtml;
+
             
             // 당첨자 렌더링
             const winDisplay = document.getElementById('roulette-winner-display');
@@ -1509,7 +1701,7 @@
                 gd.roulette.select_index = -1;
                 gd.roulette.select_name = '';
             } else if (cmd === 'stop') {
-                // Keep is_spinning as true until overlay tells us it ended
+                gd.roulette.is_spinning = false;
             }
             pushAPI();
         }
@@ -1828,12 +2020,12 @@
         function toggleTimer() { 
             let md = gd.match_data; 
             if(md.is_running) { 
-                md.time_left_ms = Math.max(0, md.end_time_ms - Date.now()); 
+                md.time_left_ms = Math.max(0, md.end_time_ms - (Date.now() + serverTimeOffset)); 
                 md.is_running = false; 
                 md.was_running_before_reaction = false; 
             } else { 
                 if(md.time_left_ms <= 0) md.time_left_ms = md.paused_time_left; 
-                md.end_time_ms = Date.now() + md.time_left_ms; 
+                md.end_time_ms = (Date.now() + serverTimeOffset) + md.time_left_ms; 
                 md.is_running = true; 
                 md.was_running_before_reaction = false; 
             } 
@@ -1847,7 +2039,29 @@
 
         function updateSpeed(val) { gd.ticker_speed = parseInt(val); document.getElementById('lbl-speed').innerText = val; pushAPI(); }
         function updateTickerText() { gd.ticker_text = document.getElementById('in-ticker').value.replace(/\n/g, ' / '); pushAPI(); }
-        function loadBGM(event) { const file = event.target.files[0]; if (file) { document.getElementById('bgm-audio').src = URL.createObjectURL(file); document.getElementById('bgm-audio').play(); } }
+        function playBgmAudio() {
+            const audio = document.getElementById('bgm-audio');
+            audio.play().catch(e => console.error("BGM Play Error:", e));
+            document.getElementById('bgm-vinyl-disc').style.animation = 'spin 3s linear infinite';
+            document.getElementById('bgm-status-text').innerText = '재생 중';
+            document.getElementById('bgm-status-text').style.color = 'var(--accent)';
+        }
+        function pauseBgmAudio() {
+            const audio = document.getElementById('bgm-audio');
+            audio.pause();
+            document.getElementById('bgm-vinyl-disc').style.animation = '';
+            document.getElementById('bgm-status-text').innerText = '정지됨';
+            document.getElementById('bgm-status-text').style.color = 'var(--text-muted)';
+        }
+        function loadBGM(event) { 
+            const file = event.target.files[0]; 
+            if (file) { 
+                document.getElementById('bgm-audio').src = URL.createObjectURL(file); 
+                playBgmAudio();
+                document.getElementById('bgm-filename').innerText = file.name;
+            } 
+        }
+
 
         function assignSplitEqual(donId) {
             let donIdx = gd.pending_donations.findIndex(d => d.id === donId);
@@ -2011,6 +2225,9 @@
         }
 
         function handleStreamData(newData) {
+            if (newData && newData.server_time) {
+                serverTimeOffset = newData.server_time - Date.now();
+            }
             if (gd && gd.reaction_mode !== newData.reaction_mode) {
                 let audio = document.getElementById('bgm-audio');
                 if (newData.reaction_mode) { 
