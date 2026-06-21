@@ -655,7 +655,6 @@
                 </div>
             </div>
 
-            <button id="btn-end-broadcast" onclick="endBroadcast()" style="display: none; background: var(--danger); border-color: var(--danger); color: #fff; height: 42px; font-weight: bold;"><i class="fa-solid fa-power-off"></i> 방송 종료</button>
             <label class="toggle-row" id="lbl-reaction-wrapper" style="border-color: rgba(156, 39, 176, 0.4); background: rgba(156, 39, 176, 0.05); height: 42px; padding: 0 15px; box-sizing: border-box;"><span class="toggle-label" id="lbl-reaction" style="color:#fff; font-weight:bold; font-size: 14px;"><i class="fa-solid fa-eye"></i> 수동 리액션 모드</span><div class="apple-switch"><input type="checkbox" id="chk-reaction" onchange="toggleOption('reaction_mode')"><span class="apple-slider"></span></div></label>
             <button id="btn-editor" onclick="window.open('/admin', '_blank')" style="height: 42px; background: rgba(255,255,255,0.05); color: #fff; border-color: var(--border-light);"><i class="fa-solid fa-pen-ruler"></i> 에디터</button>
             <button onclick="window.location.href='/controller?mode=mobile'" style="height: 42px; background: rgba(0, 191, 255, 0.1); border-color: rgba(0, 191, 255, 0.3); color: #00bfff; font-weight: bold;"><i class="fa-solid fa-mobile-screen-button"></i> 모바일 버전</button>
@@ -667,10 +666,8 @@
     <div class="tabs">
         <button class="tab-btn active" onclick="openTab(event, 'tab-ranking')"><i class="fa-solid fa-ranking-star"></i> 랭킹</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-match')"><i class="fa-solid fa-gamepad"></i> 대결</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-neon')"><i class="fa-solid fa-wand-magic-sparkles"></i> 이펙트/조명</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-news')"><i class="fa-solid fa-bullhorn"></i> 전광판</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-bgm')"><i class="fa-solid fa-music"></i> BGM</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-youtube')"><i class="fa-brands fa-youtube"></i> 유튜브</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-neon')"><i class="fa-solid fa-wand-magic-sparkles"></i> 이펙트/전광판</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-youtube')"><i class="fa-brands fa-youtube"></i> BGM / 유튜브</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-roulette')"><i class="fa-solid fa-circle-notch"></i> 룰렛</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-logs')"><i class="fa-solid fa-list-ul"></i> 로그</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-system')"><i class="fa-solid fa-server"></i> 시스템</button>
@@ -771,7 +768,7 @@
     </div>
     
     <div id="tab-neon" class="tab-content">
-        <div class="group-box" style="max-width: 600px; margin: 0 auto;">
+        <div class="group-box" style="max-width: 600px; margin: 0 auto 20px auto;">
             <div class="group-title"><i class="fa-solid fa-lightbulb"></i> 수동 리액션 조명 제어</div>
             
             <div class="control-group" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px;">
@@ -795,9 +792,7 @@
             <p style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 15px;"><i class="fa-solid fa-palette" style="color: var(--accent); margin-right: 6px;"></i> 단색 슬롯 프리셋</p>
             <div id="color-slots" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;"></div>
         </div>
-    </div>
 
-    <div id="tab-news" class="tab-content">
         <div class="group-box" style="max-width: 600px; margin: 0 auto;">
             <div class="group-title"><i class="fa-solid fa-bullhorn"></i> 전광판 설정 및 송출</div>
             
@@ -826,47 +821,6 @@
         </div>
     </div>
 
-    <div id="tab-bgm" class="tab-content">
-        <div class="group-box" style="text-align: center; max-width: 600px; margin: 0 auto;">
-            <div class="group-title" style="justify-content: center;"><i class="fa-solid fa-music"></i> 오디오 플레이어</div>
-            
-            <!-- Modern dashed dropzone file input wrapper -->
-            <div style="position: relative; margin-bottom: 25px; border: 2px dashed rgba(255, 255, 255, 0.12); border-radius: var(--radius-lg); padding: 30px 20px; background: rgba(255, 255, 255, 0.01); transition: var(--transition-smooth); cursor: pointer;" onmouseover="this.style.borderColor='var(--accent)'; this.style.background='rgba(0, 255, 204, 0.02)';" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.12)'; this.style.background='rgba(255, 255, 255, 0.01)';" onclick="document.getElementById('bgm-file').click()">
-                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 32px; color: var(--text-muted); margin-bottom: 10px; display: block;"></i>
-                <span style="font-size: 14px; font-weight: bold; color: #fff; display: block; margin-bottom: 4px;">여기를 클릭하여 음악 파일 업로드</span>
-                <span style="font-size: 12px; color: var(--text-muted); display: block;">MP3, WAV, M4A 등 오디오 파일 지원</span>
-                <input type="file" id="bgm-file" accept="audio/*" onchange="loadBGM(event)" style="display: none;">
-            </div>
-            
-            <audio id="bgm-audio" loop></audio>
-            
-            <!-- Metallic vinyl player deck -->
-            <div style="background: rgba(0, 0, 0, 0.35); padding: 25px; border-radius: var(--radius-lg); border: 1px solid var(--border-light); display: flex; flex-direction: column; align-items: center; gap: 20px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);">
-                <!-- Spinning Vinyl disc illustration -->
-                <div id="bgm-vinyl-disc" style="width: 100px; height: 100px; background: radial-gradient(circle, #000 20%, #222 21%, #111 40%, #222 41%, #000 60%, #111 61%, #000 80%), url('/money.png'); background-size: cover; border-radius: 50%; border: 4px solid #141416; box-shadow: 0 4px 15px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05); position: relative; transition: transform 0.5s ease;">
-                    <div style="position: absolute; width: 20px; height: 20px; background: #0d0d0f; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 3px solid var(--accent); box-shadow: 0 0 5px var(--accent-glow);"></div>
-                </div>
-                
-                <!-- Play status and file name -->
-                <div style="text-align: center; width: 100%;">
-                    <div id="bgm-filename" style="font-size: 14.5px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; margin: 0 auto 5px auto;">선택된 오디오 파일 없음</div>
-                    <div id="bgm-status-text" style="font-size: 12px; color: var(--text-muted); font-weight: 600;">대기 중</div>
-                </div>
-                
-                <!-- Sleek control dials bar -->
-                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; width: 100%;">
-                    <button class="primary" onclick="playBgmAudio()" style="width: 90px; height: 42px; justify-content: center; font-size: 14px; font-weight: 800; border-radius: 20px;"><i class="fa-solid fa-play"></i> 재생</button>
-                    <button class="danger" onclick="pauseBgmAudio()" style="width: 90px; height: 42px; justify-content: center; font-size: 14px; font-weight: 800; border-radius: 20px;"><i class="fa-solid fa-pause"></i> 정지</button>
-                    
-                    <div style="display: flex; align-items: center; gap: 8px; margin-left: 10px; background: rgba(255,255,255,0.02); padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border-light);">
-                        <i class="fa-solid fa-volume-high" style="color: var(--accent); font-size: 12px; filter: drop-shadow(0 0 3px var(--accent-glow));"></i>
-                        <input type="range" min="0" max="1" step="0.05" value="0.5" oninput="document.getElementById('bgm-audio').volume = this.value" class="ios-slider-volume" style="width: 100px; height: 8px; cursor: pointer;">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
     <div id="tab-youtube" class="tab-content">
         <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start;">
             <!-- 유튜브 검색창 및 리스트 영역 -->
@@ -887,26 +841,68 @@
                 </div>
             </div>
 
-            <!-- 플레이어 자체 화면 영역 -->
-            <div class="group-box" style="display: flex; flex-direction: column; gap: 15px; min-height: 520px; height: calc(100vh - 200px); max-height: 650px; box-sizing: border-box;">
-                <div class="group-title"><i class="fa-solid fa-tv" style="color: var(--danger);"></i> 재생 모니터</div>
-                <div style="aspect-ratio: 16/9; background: #000; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-light); box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; width: 100%;">
-                    <div id="yt-tab-player-element" style="width: 100%; height: 100%;">
-                        <div style="color: #666; font-size: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 15px;">
-                            <i class="fa-solid fa-video-slash" style="font-size: 32px; color: #444;"></i>
-                            <span>연결된 유튜브 영상이 없습니다.</span>
+            <!-- 우측 영역 (유튜브 플레이어 + BGM 통합) -->
+            <div style="display: flex; flex-direction: column; gap: 20px; box-sizing: border-box;">
+                <!-- 유튜브 재생 모니터 -->
+                <div class="group-box" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 0; min-height: unset; height: auto;">
+                    <div class="group-title"><i class="fa-solid fa-tv" style="color: var(--danger);"></i> 재생 모니터</div>
+                    <div style="aspect-ratio: 16/9; background: #000; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-light); box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; width: 100%;">
+                        <div id="yt-tab-player-element" style="width: 100%; height: 100%;">
+                            <div style="color: #666; font-size: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 15px;">
+                                <i class="fa-solid fa-video-slash" style="font-size: 32px; color: #444;"></i>
+                                <span>연결된 유튜브 영상이 없습니다.</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 영상 세부정보 확인용 iOS 미니 카드 -->
+                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-light); border-radius: 14px; padding: 15px; display: flex; align-items: center; gap: 12px; margin-top: 10px; box-shadow: inset 0 1px 3px rgba(255,255,255,0.02);">
+                        <div style="width: 40px; height: 40px; background: rgba(0,0,0,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-light);">
+                            <i class="fa-solid fa-compact-disc" id="yt-disc-icon" style="font-size: 16px; color: var(--accent); filter: drop-shadow(0 0 3px var(--accent-glow));"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div id="yt-tab-video-title" style="font-weight: bold; font-size: 14px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">선택된 동영상 없음</div>
+                            <div id="yt-tab-video-author" style="font-size: 12px; color: #8e8e93; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px;">연결 대기 중</div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- 영상 세부정보 확인용 iOS 미니 카드 -->
-                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-light); border-radius: 14px; padding: 15px; display: flex; align-items: center; gap: 12px; margin-top: 10px; box-shadow: inset 0 1px 3px rgba(255,255,255,0.02);">
-                    <div style="width: 40px; height: 40px; background: rgba(0,0,0,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-light);">
-                        <i class="fa-solid fa-compact-disc" id="yt-disc-icon" style="font-size: 16px; color: var(--accent); filter: drop-shadow(0 0 3px var(--accent-glow));"></i>
+                <!-- 오디오 플레이어 (BGM) -->
+                <div class="group-box" style="margin-bottom: 0; text-align: center; display: flex; flex-direction: column; gap: 12px;">
+                    <div class="group-title" style="justify-content: center;"><i class="fa-solid fa-music"></i> 오디오 플레이어 (BGM)</div>
+                    
+                    <!-- Modern dashed dropzone file input wrapper -->
+                    <div style="position: relative; border: 2px dashed rgba(255, 255, 255, 0.12); border-radius: var(--radius-lg); padding: 15px 10px; background: rgba(255, 255, 255, 0.01); transition: var(--transition-smooth); cursor: pointer;" onmouseover="this.style.borderColor='var(--accent)'; this.style.background='rgba(0, 255, 204, 0.02)';" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.12)'; this.style.background='rgba(255, 255, 255, 0.01)';" onclick="document.getElementById('bgm-file').click()">
+                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 24px; color: var(--text-muted); margin-bottom: 6px; display: block;"></i>
+                        <span style="font-size: 13px; font-weight: bold; color: #fff; display: block; margin-bottom: 2px;">클릭하여 음악 파일 업로드</span>
+                        <span style="font-size: 11px; color: var(--text-muted); display: block;">MP3, WAV, M4A 등 오디오 파일 지원</span>
+                        <input type="file" id="bgm-file" accept="audio/*" onchange="loadBGM(event)" style="display: none;">
                     </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <div id="yt-tab-video-title" style="font-weight: bold; font-size: 14px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">선택된 동영상 없음</div>
-                        <div id="yt-tab-video-author" style="font-size: 12px; color: #8e8e93; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px;">연결 대기 중</div>
+                    
+                    <audio id="bgm-audio" loop></audio>
+                    
+                    <!-- Metallic vinyl player deck -->
+                    <div style="background: rgba(0, 0, 0, 0.35); padding: 15px; border-radius: var(--radius-lg); border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);">
+                        <!-- Spinning Vinyl disc illustration -->
+                        <div id="bgm-vinyl-disc" style="width: 50px; height: 50px; background: radial-gradient(circle, #000 20%, #222 21%, #111 40%, #222 41%, #000 60%, #111 61%, #000 80%), url('/money.png'); background-size: cover; border-radius: 50%; border: 3px solid #141416; position: relative; transition: transform 0.5s ease; flex-shrink: 0;">
+                            <div style="position: absolute; width: 10px; height: 10px; background: #0d0d0f; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1.5px solid var(--accent);"></div>
+                        </div>
+                        
+                        <!-- Play status and file name -->
+                        <div style="text-align: left; flex: 1; min-width: 0;">
+                            <div id="bgm-filename" style="font-size: 13px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">선택된 오디오 파일 없음</div>
+                            <div id="bgm-status-text" style="font-size: 11px; color: var(--text-muted); font-weight: 600;">대기 중</div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                            <button class="primary" onclick="playBgmAudio()" style="width: 54px; height: 32px; justify-content: center; font-size: 11px; font-weight: bold; border-radius: 12px; padding: 0;"><i class="fa-solid fa-play"></i> 재생</button>
+                            <button class="danger" onclick="pauseBgmAudio()" style="width: 54px; height: 32px; justify-content: center; font-size: 11px; font-weight: bold; border-radius: 12px; padding: 0;"><i class="fa-solid fa-pause"></i> 정지</button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(255,255,255,0.02); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-light); width: fit-content; margin: 0 auto;">
+                        <i class="fa-solid fa-volume-high" style="color: var(--accent); font-size: 11px;"></i>
+                        <input type="range" min="0" max="1" step="0.05" value="0.5" oninput="document.getElementById('bgm-audio').volume = this.value" class="ios-slider-volume" style="width: 80px; height: 6px; cursor: pointer;">
                     </div>
                 </div>
             </div>
@@ -1086,6 +1082,7 @@
                             <span style="color: #fff; font-weight: bold;" id="sys-player-count">0명</span>
                         </div>
                     </div>
+                    <button id="btn-end-broadcast" onclick="endBroadcast()" style="display: none; width: 100%; justify-content: center; background: var(--danger); border-color: var(--danger); color: #fff; height: 42px; font-weight: bold; margin-bottom: 10px;"><i class="fa-solid fa-power-off"></i> 방송 종료</button>
                     <button style="width: 100%; justify-content: center; background: rgba(255, 69, 58, 0.1); border-color: rgba(255, 69, 58, 0.3); color: var(--danger);" onclick="triggerServerLogout()"><i class="fa-solid fa-right-from-bracket"></i> 제어 센터 로그아웃</button>
                 </div>
             </div>
@@ -1361,7 +1358,7 @@
                 }
             }
 
-            if (!gd.saved_colors) gd.saved_colors = ['#ff0055', '#00e5ff', '#ff9100', '#d500f9', '#00ff00', '#ffff00']; 
+            if (!gd.saved_colors) gd.saved_colors = ['#ff0055', '#00e5ff', '#ff9100', '#d500f9', '#00ff00', '#ffff00', '#ff0000', '#0000ff', '#ffffff']; 
             let colorHtml = ''; 
             gd.saved_colors.forEach((col, i) => { let isAct = (currentNeon === col); let btnText = isAct ? "현재 ON" : "켜기"; let btnStyle = isAct ? `background:#222; color:${col}; border: 1px solid ${col};` : `background:${col}; color:#fff; border: none;`; colorHtml += `<div style="display:flex; flex-direction:column; align-items:center; gap:8px; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; border:1px solid #333;"><input type="color" value="${col}" onchange="gd.saved_colors[${i}]=this.value; pushAPI();"><button style="${btnStyle} width:100%; justify-content:center; padding:8px 0; font-size:12px;" onclick="triggerNeon('${col}')">${btnText}</button></div>`; }); 
             if (lastColorHtml !== colorHtml) { document.getElementById('color-slots').innerHTML = colorHtml; lastColorHtml = colorHtml; }

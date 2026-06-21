@@ -214,6 +214,7 @@ DEFAULT_STATE = {
     "extra_bjs": [],
     "roulette_enabled": False,
     "broadcast_active": False,
+    "saved_colors": ['#ff0055', '#00e5ff', '#ff9100', '#d500f9', '#00ff00', '#ffff00', '#ff0000', '#0000ff', '#ffffff'],
     "roulette": {
         "command": None,
         "command_time": 0,
@@ -330,6 +331,17 @@ def load_data():
             state[key] = kv_data[key]
         else: 
             state[key] = default_val
+            
+    # saved_colors 보정 (6개 -> 9개로 확장 및 하위 호환 마이그레이션)
+    default_colors = ['#ff0055', '#00e5ff', '#ff9100', '#d500f9', '#00ff00', '#ffff00', '#ff0000', '#0000ff', '#ffffff']
+    if 'saved_colors' in state:
+        if not isinstance(state['saved_colors'], list):
+            state['saved_colors'] = default_colors
+        elif len(state['saved_colors']) < 9:
+            for i in range(len(state['saved_colors']), 9):
+                state['saved_colors'].append(default_colors[i])
+    else:
+        state['saved_colors'] = default_colors
     
     MEMORY_STATE = state
     return MEMORY_STATE
