@@ -888,8 +888,9 @@ def receive_donation():
                 
             for bj in state.get(target_list_key, []):
                 if bj['name'] == parsed_name:
-                    bj['score'] += amount
-                    bj['contribution'] = bj.get('contribution', 0) + amount
+                    add_point = round(amount / 10000)
+                    bj['score'] += add_point
+                    bj['contribution'] = bj.get('contribution', 0) + add_point
                     current_total = bj['score']
                     break
                     
