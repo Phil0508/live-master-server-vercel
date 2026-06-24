@@ -826,8 +826,8 @@ def receive_donation():
         amount = int(new_don.get('amount', 0))
         tx_id = new_don.get('tx_id')
         
-        # 1. 음수(0원 이하) 후원 금액 차단
-        if amount <= 0:
+        # 1. 음수(0원 미만) 후원 금액 차단 (0원 시그니처 후원 등 허용)
+        if amount < 0:
             return jsonify({"status": "error", "message": "Invalid amount"}), 400
             
         # 2. tx_id 중복 검사로 중복 처리 차단

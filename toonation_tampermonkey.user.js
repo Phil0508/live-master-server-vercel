@@ -106,6 +106,14 @@
 
         let amount = parseInt(amountText.replace(/[^\d]/g, '')) || 0;
 
+        // [신규] 만약 금액 자리에 숫자가 전혀 없는 텍스트(예: "닭비트")가 들어왔다면 이를 0원짜리 시그니처 신청으로 우회 판정합니다.
+        let isZeroAmountSignature = false;
+        let zeroAmountSigProduct = "";
+        if (amount === 0 && amountText && !/\d/.test(amountText)) {
+            isZeroAmountSignature = true;
+            zeroAmountSigProduct = amountText.trim();
+        }
+
         // 4. 메시지 파싱
         let message = "";
         const msgSpan = document.querySelector('.template-content span') || document.querySelector('.text-content span');
@@ -115,11 +123,14 @@
 
         if (isSignature && sigProduct) {
             message = `[시그니처 신청: ${sigProduct}]` + (message ? ` ${message}` : "");
+        } else if (isZeroAmountSignature && zeroAmountSigProduct) {
+            message = `[시그니처 신청: ${zeroAmountSigProduct}]` + (message ? ` ${message}` : "");
         }
 
         console.log(`  📝 [최종 파싱 데이터] 이름: ${name} | 금액: ${amount}원 | 메시지: "${message}"`);
 
-        if (amount <= 0 || !name) {
+        // 금액이 0원 이하이더라도 시그니처 신청인 경우 통과시킵니다.
+        if (!name || (amount <= 0 && !isZeroAmountSignature)) {
             console.log(`  ❌ [데이터 오류] 금액 또는 이름이 올바르지 않아 중단합니다.`);
             return;
         }
@@ -146,8 +157,9 @@
             return; 
         }
 
-        // 7. 후원 필터링 (1만원 미만 무시)
-        if (amount < 10000) {
+        // 7. 후원 필터링 (1만원 미만 무시 - 단, 시그니처 신청은 0원이라도 필터 통과)
+        const isSig = isSignature || isZeroAmountSignature;
+        if (!isSig && amount < 10000) {
             console.log(`  🗑️ [필터 컷] 1만원 미만 후원은 서버로 전송하지 않고 필터 락 처리합니다. (금액: ${amount}원)`);
             lastFilteredState = currentTextState; 
             return;
