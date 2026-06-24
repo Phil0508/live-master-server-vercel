@@ -850,9 +850,9 @@ def receive_donation():
             parsed_name = name.strip()
             cleaned_msg = msg.strip()
             
-            # 💡 [핵심] 메시지 내 콜론(:)을 감지하여 이름과 메시지를 분리해주는 오토 파서
+            # 💡 [핵심] 메시지 내 콜론(:)을 감지하여 이름과 메시지를 분리해주는 오토 파서 (시그니처 신청 태그는 제외)
             cleaned_msg_for_split = cleaned_msg.replace('：', ':')
-            if cleaned_msg_for_split and ':' in cleaned_msg_for_split:
+            if cleaned_msg_for_split and ':' in cleaned_msg_for_split and not cleaned_msg.startswith("[시그니처 신청:"):
                 split_char = ':' if ':' in cleaned_msg else '：'
                 parts = cleaned_msg.split(split_char, 1)
                 potential_name = parts[0].strip()
