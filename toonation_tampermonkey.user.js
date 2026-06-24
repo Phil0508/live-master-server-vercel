@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         🎯 투네이션 마스터 V11.2 (실시간 정밀 디버깅 로그 탑재)
+// @name         🎯 투네이션 마스터 V11.3 (실시간 정밀 디버깅 로그 탑재)
 // @namespace    http://tampermonkey.net/
-// @version      11.2
+// @version      11.3
 // @description  시그니처 및 일반 캐시 후원 감지 시 디버그 로그를 상세히 출력하여 인식이 안 되는 구간을 명확히 추적합니다.
 // @match        https://toon.at/widget/alertbox/14460fd01a5dfbeca46ec0bf85263efc*
 // @noframes
@@ -28,7 +28,7 @@
         }
     }
 
-    console.log("🎯 [투네이션 마스터] V11.2 (상세 로그 비활성화 모드 - 서버 전송 결과만 기록) 가동 완료!");
+    console.log("🎯 [투네이션 마스터] V11.3 (상세 로그 비활성화 모드 - 서버 전송 결과만 기록) 가동 완료!");
 
     let lastSentState = "";      
     let lastFilteredState = "";  
@@ -49,6 +49,17 @@
             log(`🔍 [감지 로그] 텍스트 노드 개수: ${animTexts.length} | 시그니처 돔 존재: ${!!sigCashEl} ("${sigCashText}")`);
             log(`  ▶ 텍스트 목록:`, animTexts);
         } else {
+            // 💡 [락 자동 해제] 화면에 알림창이 닫혀 텍스트가 감지되지 않으면 이전 후원 상태 캐시를 클리어합니다.
+            // 이를 통해 완전히 동일한 후원이 연달아 오더라도 차단되지 않고 정상 전송됩니다.
+            if (lastSentState !== "") {
+                log("  🔓 [락 해제] 알림창이 닫혔으므로 이전 전송 상태 락을 초기화합니다.");
+                lastSentState = "";
+                lastFilteredState = "";
+                sendingState = "";
+                lastLoggedLockState = "";
+                lastSeenState = "";
+                stableTicks = 0;
+            }
             return;
         }
 
