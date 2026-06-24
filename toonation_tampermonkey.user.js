@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         🎯 투네이션 마스터 V10.9 (실시간 정밀 디버깅 로그 탑재)
+// @name         🎯 투네이션 마스터 V11.0 (실시간 정밀 디버깅 로그 탑재)
 // @namespace    http://tampermonkey.net/
-// @version      10.9
+// @version      11.0
 // @description  시그니처 및 일반 캐시 후원 감지 시 디버그 로그를 상세히 출력하여 인식이 안 되는 구간을 명확히 추적합니다.
 // @match        https://toon.at/widget/alertbox/14460fd01a5dfbeca46ec0bf85263efc*
 // @noframes
@@ -18,11 +18,12 @@
         return;
     }
 
-    console.log("🎯 [투네이션 마스터] V10.9 (실시간 디버깅 모드) 가동 완료!");
+    console.log("🎯 [투네이션 마스터] V11.0 (실시간 디버깅 모드) 가동 완료!");
 
     let lastSentState = "";      
     let lastFilteredState = "";  
     let sendingState = "";       
+    let lastLoggedLockState = ""; // 콘솔 로그 도배 방지용 변수
     
     let lastSeenState = "";      
     let stableTicks = 0;         
@@ -139,7 +140,10 @@
 
         // 5. 전송 락 및 중복 정산 검증 (메모리 락 검사)
         if (currentTextState === lastSentState || currentTextState === lastFilteredState || currentTextState === sendingState) {
-            console.log(`  🔒 [락 검증] 이미 처리되었거나 처리 중인 상태입니다. 무시합니다. (State: ${currentTextState})`);
+            if (lastLoggedLockState !== currentTextState) {
+                console.log(`  🔒 [락 검증] 이미 처리되었거나 처리 중인 상태입니다. 무시합니다. (State: ${currentTextState})`);
+                lastLoggedLockState = currentTextState;
+            }
             return;
         }
 
