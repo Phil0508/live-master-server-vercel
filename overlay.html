@@ -777,7 +777,7 @@
 
                     // 📡 반각(:) 및 전각(：) 콜론 통합 분리 대응
                     let hasColon = finalMsg.includes(":") || finalMsg.includes("：");
-                    if (hasColon) {
+                    if (hasColon && !finalMsg.startsWith("[시그니처 신청:")) {
                         let splitChar = finalMsg.includes(":") ? ":" : "：";
                         let parts = finalMsg.split(splitChar);
                         let potentialName = parts[0].trim();
