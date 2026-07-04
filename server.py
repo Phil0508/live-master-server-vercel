@@ -955,7 +955,9 @@ def receive_donation():
                                 "title": r_title,
                                 "audio_url": audio_url,
                                 "image_url": image_url,
-                                "amount": amount
+                                "amount": amount,
+                                "donator": parsed_name,
+                                "message": cleaned_msg
                             })
                             state['reaction_mode'] = True
                             print(f"  🎵 [자동 리액션 발동] 후원금액 {amount}원 매칭 ➡️ '{r_title}' 큐 추가 완료")
@@ -1755,7 +1757,9 @@ def play_reaction(item_id):
                     "item_id": item_id,
                     "title": title,
                     "audio_url": audio_url,
-                    "image_url": image_url
+                    "image_url": image_url,
+                    "donator": "수동송출",
+                    "message": ""
                 })
                 state['reaction_mode'] = True
                 save_data(state)

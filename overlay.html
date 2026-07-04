@@ -311,13 +311,7 @@
             left: 50%;
             transform: translate(-50%, -50%) scale(0.8);
             width: 500px;
-            height: 500px;
-            background: rgba(10, 10, 12, 0.4);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 2px solid rgba(0, 255, 204, 0.3);
-            box-shadow: 0 0 40px rgba(0, 255, 204, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.05);
-            border-radius: 24px;
+            background: transparent;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -326,39 +320,46 @@
             visibility: hidden;
             transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 100010;
-            padding: 20px;
+            padding: 0;
             box-sizing: border-box;
         }
         .reaction-screen-overlay.show {
             opacity: 1;
             visibility: visible;
             transform: translate(-50%, -50%) scale(1);
-            border-color: rgba(0, 255, 204, 0.8);
-            box-shadow: 0 0 50px rgba(0, 255, 204, 0.4), inset 0 0 30px rgba(255, 255, 255, 0.1);
         }
         .reaction-screen-overlay.show.minimize {
             left: 180px;
             top: 600px;
             transform: translate(-50%, -50%) scale(0.6);
-            box-shadow: 0 0 30px rgba(0, 255, 204, 0.3);
-            border-color: rgba(0, 255, 204, 0.5);
         }
         .reaction-screen-overlay img {
             max-width: 100%;
-            max-height: 80%;
+            max-height: 380px;
             object-fit: contain;
             border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
         }
-        .reaction-screen-title {
+        .reaction-text-donator {
             margin-top: 15px;
-            font-size: 24px;
-            font-weight: 800;
-            color: #ffffff;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 15px rgba(0, 255, 204, 0.6);
+            font-size: 28px;
+            font-weight: 900;
+            color: #000000;
+            text-shadow: -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff, 1.5px 1.5px 0 #fff;
             font-family: 'Malgun Gothic', sans-serif;
             text-align: center;
+        }
+        .reaction-text-message {
+            margin-top: 8px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #000000;
+            text-shadow: -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff, 1.5px 1.5px 0 #fff;
+            font-family: 'Malgun Gothic', sans-serif;
+            text-align: center;
+            max-width: 480px;
+            word-break: break-all;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -369,7 +370,8 @@
     <!-- 🎵 리액션 음원/사진 송출 전광판 및 오디오 객체 -->
     <div id="reaction-screen-overlay" class="reaction-screen-overlay">
         <img id="reaction-screen-image" src="" alt="Reaction Image">
-        <div id="reaction-screen-title" class="reaction-screen-title"></div>
+        <div id="reaction-donator-info" class="reaction-text-donator"></div>
+        <div id="reaction-message-info" class="reaction-text-message"></div>
     </div>
     <audio id="reaction-audio" style="display:none;"></audio>
     
@@ -1637,10 +1639,11 @@
             
             const overlay = document.getElementById('reaction-screen-overlay');
             const img = document.getElementById('reaction-screen-image');
-            const titleEl = document.getElementById('reaction-screen-title');
+            const donatorEl = document.getElementById('reaction-donator-info');
+            const messageEl = document.getElementById('reaction-message-info');
             const audio = document.getElementById('reaction-audio');
             
-            if (!overlay || !img || !titleEl || !audio) return;
+            if (!overlay || !img || !audio) return;
             
             // 1. 기존 진행 중인 리액션 및 오디오 강제 중지
             if (reactionTimeout) clearTimeout(reactionTimeout);
@@ -1648,8 +1651,22 @@
             audio.pause();
             audio.src = "";
             
-            // 2. 새로운 리액션 데이터 입력
-            titleEl.innerText = data.title || "리액션!";
+            // 2. 새로운 리액션 데이터 입력 (후원자명 + 금액 / 메시지)
+            let donatorName = data.donator || "익명";
+            let donationAmount = data.amount ? formatNum(data.amount) + '원' : '';
+            if (donatorEl) {
+                donatorEl.innerText = donatorName + (donationAmount ? ' · ' + donationAmount : '');
+            }
+            let msgText = data.message || "";
+            if (messageEl) {
+                if (msgText && msgText !== "수동 후원 송출") {
+                    messageEl.innerText = msgText;
+                    messageEl.style.display = 'block';
+                } else {
+                    messageEl.innerText = "";
+                    messageEl.style.display = 'none';
+                }
+            }
             
             if (data.image_url) {
                 img.src = data.image_url;
