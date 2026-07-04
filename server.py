@@ -180,7 +180,12 @@ def require_login():
         '/setup'
     ]
     
-    if path in exempt_routes or path.startswith('/uploads/'):
+    decoded_path = urllib.parse.unquote(path)
+    if (path in exempt_routes or 
+        path.startswith('/uploads/') or 
+        path == '/upload' or 
+        decoded_path == '/노래등록' or 
+        path == '/api/reaction/add'):
         return
          
     # HTTP Authorization Bearer 토큰 및 ?token= 파라미터 검증 지원
@@ -829,7 +834,10 @@ def serve_mobile():
 def serve_admin():
     return serve_html_file('admin.html')
 
-
+@app.route('/upload')
+@app.route('/노래등록')
+def serve_upload():
+    return serve_html_file('upload.html')
 
 @app.route('/<path:filename>')
 def serve_dynamic_file(filename):
