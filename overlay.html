@@ -1591,8 +1591,10 @@
         function checkReactionQueue() {
             if (isDonationPopupShowing) return;
             
-            if (!globalData || !globalData.reaction_queue || globalData.reaction_queue.length === 0) {
+            // 💡 [개조] 리액션 모드(reaction_mode)가 꺼져있거나 대기열이 비었으면 리액션 화면을 즉시 내립니다.
+            if (!globalData || !globalData.reaction_mode || !globalData.reaction_queue || globalData.reaction_queue.length === 0) {
                 if (currentPlayingId !== null) {
+                    console.log("checkReactionQueue: Reaction mode OFF or queue empty. Stopping visuals.");
                     currentPlayingId = null;
                     stopReactionVisuals();
                 }
@@ -1670,6 +1672,11 @@
             if (data.audio_url) {
                 audio.src = data.audio_url;
                 audio.onended = function() {
+                    console.log("Audio play ended naturally.");
+                    onReactionEnded();
+                };
+                audio.onerror = function(err) {
+                    console.error("Audio error event triggered, popping current reaction:", err);
                     onReactionEnded();
                 };
                 audio.play().catch(err => {
