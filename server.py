@@ -1633,13 +1633,21 @@ def get_reaction_file(file_id):
             filename, content_type, file_data = row
             data_bytes = bytes(file_data)
             
-            import io
+            import os
             from flask import send_file
             
-            # Use send_file with BytesIO and conditional=True to support HTTP range requests (206 Partial Content)
-            # This is critical for HTML5 audio/video buffering and streaming!
+            # Save file to a local cache directory to serve as a real static file.
+            # This perfectly resolves HTML5 audio Range requests and buffering stream aborts.
+            cache_dir = os.path.join(app.root_path, 'media_cache')
+            os.makedirs(cache_dir, exist_ok=True)
+            cache_path = os.path.join(cache_dir, file_id)
+            
+            if not os.path.exists(cache_path):
+                with open(cache_path, 'wb') as f:
+                    f.write(data_bytes)
+            
             response = send_file(
-                io.BytesIO(data_bytes),
+                cache_path,
                 mimetype=content_type,
                 as_attachment=False,
                 download_name=filename,
