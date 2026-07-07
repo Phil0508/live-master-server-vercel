@@ -361,6 +361,11 @@
             word-break: break-all;
             line-height: 1.4;
         }
+        @keyframes pulse {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.03); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -415,6 +420,12 @@
 
     <div id="fire-vignette" class="fire-vignette"></div>
     <div id="neon-overlay" class="neon-layer"></div>
+    
+    <!-- ⚠️ 자동재생 차단 경고 배너 -->
+    <div id="autoplay-warning-banner" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(255,59,48,0.95); color:white; padding:12px 24px; font-weight:bold; font-size:16px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.3); z-index:9999999; border:2px solid #ff453a; text-align:center; animation: pulse 1.5s infinite; font-family: sans-serif;">
+        ⚠️ 브라우저 소리 자동재생이 차단되었습니다!<br>
+        <span style="font-size:13px; font-weight:normal; opacity:0.9;">소리를 켜려면 화면 아무 곳이나 클릭(크롬 창 클릭 또는 OBS 소스 우클릭 -> 상호작용)해 주세요.</span>
+    </div>
     
     <!-- 🎵 리액션 음원/사진 송출 전광판 및 오디오 객체 -->
     <div id="reaction-screen-overlay" class="reaction-screen-overlay">
@@ -1752,6 +1763,7 @@
                 };
                 audio.play().catch(err => {
                     console.error("Audio autoplay block fallback (local cleanup only):", err);
+                    showAutoplayWarning();
                     // 오디오 자동재생 제한 우회 타이머 - 전체 큐를 팝하지 않고 이 로컬 클라이언트에서만 화면을 닫아줍니다.
                     reactionTimeout = setTimeout(() => {
                         stopReactionVisuals();
@@ -1770,6 +1782,34 @@
                 console.error("Failed to pop reaction:", err);
             });
         }
+
+        function showAutoplayWarning() {
+            const banner = document.getElementById('autoplay-warning-banner');
+            if (banner) banner.style.display = 'block';
+        }
+
+        function hideAutoplayWarning() {
+            const banner = document.getElementById('autoplay-warning-banner');
+            if (banner) banner.style.display = 'none';
+        }
+
+        // 화면 클릭(상호작용) 발생 시 자동재생 차단을 해제하고 음원 즉시 재생 시도
+        window.addEventListener('click', () => {
+            console.log("User clicked screen. Attempting to clear autoplay warning and resume audio.");
+            hideAutoplayWarning();
+            const audio = document.getElementById('reaction-audio');
+            if (audio && audio.src && audio.paused) {
+                audio.play().then(() => {
+                    console.log("Audio successfully resumed after user click interaction.");
+                    if (reactionTimeout) {
+                        clearTimeout(reactionTimeout);
+                        reactionTimeout = null;
+                    }
+                }).catch(e => {
+                    console.error("Failed to play audio even after click interaction:", e);
+                });
+            }
+        });
 
         let sseSource = null;
         function initSSE() {
