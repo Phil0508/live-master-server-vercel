@@ -1687,7 +1687,8 @@
             
             // 5. 음원 재생 및 종료 콜백 설정
             if (data.audio_url) {
-                audio.src = data.audio_url;
+                // Add a cache buster parameter to bypass OBS/browser caching of previously broken streams
+                audio.src = data.audio_url + '?t=' + (data.id || Date.now());
                 audio.onended = function() {
                     console.log("Audio play ended naturally.");
                     onReactionEnded();
