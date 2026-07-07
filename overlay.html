@@ -364,6 +364,55 @@
     </style>
 </head>
 <body>
+    <!-- 🛑 디버깅 용도: 화면 하단에 실시간 웹 콘솔 로그 표출 (나중에 삭제 가능) -->
+    <div id="debug-log-console" style="position:fixed; bottom:0; left:0; width:100%; max-height:200px; background:rgba(0,0,0,0.85); color:#00ffcc; font-family:monospace; font-size:12px; z-index:999999; overflow-y:auto; padding:5px; pointer-events:none; border-top:2px solid #00ffcc;">
+        <div>📟 [오버레이 실시간 로그 전광판]</div>
+    </div>
+    <script>
+        (function() {
+            const consoleDiv = document.getElementById('debug-log-console');
+            function logToScreen(type, args) {
+                const msg = args.map(arg => {
+                    try {
+                        return typeof arg === 'object' ? JSON.stringify(arg) : arg;
+                    } catch(e) {
+                        return String(arg);
+                    }
+                }).join(' ');
+                const item = document.createElement('div');
+                item.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+                item.style.padding = '2px 0';
+                item.innerHTML = `[${new Date().toLocaleTimeString()}] [${type}] ${msg}`;
+                consoleDiv.appendChild(item);
+                consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            }
+            
+            const originalLog = console.log;
+            const originalError = console.error;
+            const originalWarn = console.warn;
+            
+            console.log = function(...args) {
+                originalLog.apply(console, args);
+                logToScreen('LOG', args);
+            };
+            console.error = function(...args) {
+                originalError.apply(console, args);
+                logToScreen('ERROR', args);
+            };
+            console.warn = function(...args) {
+                originalWarn.apply(console, args);
+                logToScreen('WARN', args);
+            };
+            
+            window.addEventListener('error', function(e) {
+                logToScreen('UNHANDLED', [e.message, e.filename, e.lineno]);
+            });
+            window.addEventListener('unhandledrejection', function(e) {
+                logToScreen('UNHANDLED_REJECTION', [e.reason]);
+            });
+        })();
+    </script>
+
     <div id="fire-vignette" class="fire-vignette"></div>
     <div id="neon-overlay" class="neon-layer"></div>
     
