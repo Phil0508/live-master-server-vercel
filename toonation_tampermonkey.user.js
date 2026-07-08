@@ -201,10 +201,10 @@
             return; 
         }
 
-        // 7. 후원 필터링 (1만원 미만 무시 - 단, 시그니처 신청은 0원이라도 필터 통과)
+        // 7. 후원 필터링 (1천원 미만 무시 - 단, 시그니처 신청은 0원이라도 필터 통과)
         const isSig = isSignature || isZeroAmountSignature;
-        if (!isSig && amount < 10000) {
-            log(`  🗑️ [필터 컷] 1만원 미만 후원은 서버로 전송하지 않고 필터 락 처리합니다. (금액: ${amount}원)`);
+        if (!isSig && amount < 1000) {
+            log(`  🗑️ [필터 컷] 1천원 미만 후원은 서버로 전송하지 않고 필터 락 처리합니다. (금액: ${amount}원)`);
             lastFilteredState = currentTextState; 
             return;
         }
