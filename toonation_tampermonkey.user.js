@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      11.4
 // @description  시그니처 및 일반 캐시 후원 감지 시 디버그 로그를 상세히 출력하여 인식이 안 되는 구간을 명확히 추적합니다.
-// @match        https://toon.at/widget/alertbox/0ff7d51634720c364b007009dd564dff*
+// @match        https://toon.at/widget/alertbox/*
 // @noframes
 // @grant        GM_xmlhttpRequest
 // @connect      live-master-server.onrender.com
