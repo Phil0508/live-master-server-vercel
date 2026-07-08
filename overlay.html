@@ -596,6 +596,7 @@
         let globalNeon = 'OFF';
         let globalAudi = false;
         let toonPopupTimer = null;
+        let isDonationPopupShowing = false;
 
         let lastRosterStr = ""; 
         let lastExtraRosterStr = "";  
@@ -901,78 +902,22 @@
 
                 // 🎁 투네이션 팝업
                 if (d.latest_donation && d.latest_donation.time !== lastDonationTime && d.popup_enabled) { 
-                    isDonationPopupShowing = true;
-                    console.log("🎯 [투네이션 팝업 트리거 수신]:", d.latest_donation);
                     lastDonationTime = d.latest_donation.time;
                     
-                    let finalName = d.latest_donation.name;
-                    let finalMsg = d.latest_donation.message || "";
-
-                    // 📡 반각(:) 및 전각(：) 콜론 통합 분리 대응
-                    let hasColon = finalMsg.includes(":") || finalMsg.includes("：");
-                    if (hasColon && !finalMsg.startsWith("[시그니처 신청:")) {
-                        let splitChar = finalMsg.includes(":") ? ":" : "：";
-                        let parts = finalMsg.split(splitChar);
-                        let potentialName = parts[0].trim();
-                        if (potentialName.length > 0 && potentialName.length <= 15) {
-                            finalName = potentialName; 
-                            finalMsg = parts.slice(1).join(splitChar).trim(); 
-                        }
-                    }
-
-                    document.getElementById('toon-name').innerText = finalName;
+                    // 리액션 대기열에 포함된 후원인지 검사
+                    const hasReaction = d.reaction_queue && d.reaction_queue.some(item => 
+                        item.donator === d.latest_donation.name && 
+                        item.amount === d.latest_donation.amount
+                    );
                     
-                    const actionTextEl = document.getElementById('toon-action-text');
-                    const amountEl = document.getElementById('toon-amount');
-                    
-                    if (finalMsg.startsWith("[시그니처 신청:")) {
-                        let match = finalMsg.match(/^\[시그니처 신청:\s*(.*?)\]/);
-                        let prod = match ? match[1] : "시그니처";
-                        if (actionTextEl) actionTextEl.innerText = "님이 신청하셨습니다!";
-                        amountEl.innerText = `"${prod}"`;
-                        // 본문 메시지에서 시그니처 태그 삭제
-                        finalMsg = finalMsg.replace(/^\[시그니처 신청:\s*.*?\]\s*/, '');
+                    if (hasReaction) {
+                        console.log("Donation has matching reaction. Delaying popup to playReaction.");
                     } else {
-                        if (actionTextEl) actionTextEl.innerText = "님이 후원하셨습니다!";
-                        if (d.latest_donation.amount === 0) {
-                            amountEl.innerText = '후원';
-                        } else {
-                            amountEl.innerText = formatNum(d.latest_donation.amount) + '원';
-                        }
+                        // 일반 후원(리액션 없는 후원)인 경우 즉시 노출
+                        showToonPopup(d.latest_donation, () => {
+                            checkReactionQueue();
+                        });
                     }
-                    
-                    let msgEl = document.getElementById('toon-msg');
-                    if (finalMsg) { 
-                        msgEl.innerText = finalMsg; 
-                        msgEl.style.display = 'block'; 
-                    } else { 
-                        msgEl.style.display = 'none'; 
-                    }
-
-                    const p = document.getElementById('toon-popup'); 
-                    p.classList.remove('show'); 
-                    void p.offsetWidth; 
-                    p.classList.add('show'); 
-                    
-                    try {
-                        let end = Date.now() + 1500; 
-                        (function f() { 
-                            if (typeof confetti === 'function') {
-                                confetti({ particleCount: 7, angle: 60, spread: 80, origin: { x: 0.2, y: 0.8 }, zIndex: 100000 }); 
-                                confetti({ particleCount: 7, angle: 120, spread: 80, origin: { x: 0.8, y: 0.8 }, zIndex: 100000 }); 
-                                if (Date.now() < end) requestAnimationFrame(f); 
-                            }
-                        }());
-                    } catch(err) {
-                        console.warn("⚠️ confetti animation script error (ignored):", err);
-                    }
-
-                    clearTimeout(toonPopupTimer);
-                    toonPopupTimer = setTimeout(() => {
-                        p.classList.remove('show');
-                        isDonationPopupShowing = false;
-                        checkReactionQueue();
-                    }, 2000);
                 }
 
                 if (d.takeover_enabled && d.latest_takeover && d.latest_takeover.time !== lastTakeoverTime) { document.getElementById('takeover-text').innerText = d.latest_takeover.name + ' 1등 탈환! 👑'; const tk = document.getElementById('takeover-popup'); tk.classList.remove('show'); void tk.offsetWidth; tk.classList.add('show'); setTimeout(() => tk.classList.remove('show'), 2500); lastTakeoverTime = d.latest_takeover.time; }
@@ -1650,7 +1595,7 @@
         let reactionImgClearTimeout = null;
         let audioSafetyTimeout = null;
         let currentPlayingId = null;
-        let isDonationPopupShowing = false;
+
 
         function checkReactionQueue() {
             if (isDonationPopupShowing) return;
@@ -1700,6 +1645,16 @@
                 clearTimeout(audioSafetyTimeout);
                 audioSafetyTimeout = null;
             }
+            
+            // 💡 [추가] 리액션 취소 시 투네이션 팝업 강제 종료 및 타이머 제거
+            const toonPopup = document.getElementById('toon-popup');
+            if (toonPopup) toonPopup.classList.remove('show');
+            if (toonPopupTimer) {
+                clearTimeout(toonPopupTimer);
+                toonPopupTimer = null;
+            }
+            isDonationPopupShowing = false;
+            
             // 이미지 초기화를 취소 가능한 타이머로 변경 (다음 playReaction에서 취소 가능)
             if (reactionImgClearTimeout) clearTimeout(reactionImgClearTimeout);
             reactionImgClearTimeout = setTimeout(() => { if (img) img.src = ""; }, 500);
@@ -1729,97 +1684,106 @@
             audio.pause();
             audio.src = '';
             
-            // 2. 새로운 리액션 데이터 입력 (후원자명 + 금액 / 메시지)
-            let donatorName = data.donator || '익명';
-            let donationAmount = data.amount ? formatNum(data.amount) + '원' : '';
-            if (donatorEl) {
-                donatorEl.innerText = donatorName + (donationAmount ? ' · ' + donationAmount : '');
-            }
-            let msgText = data.message || '';
-            if (messageEl) {
-                if (msgText && msgText !== '수동 후원 송출') {
-                    messageEl.innerText = msgText;
-                    messageEl.style.display = 'block';
-                } else {
-                    messageEl.innerText = '';
-                    messageEl.style.display = 'none';
+            // 💡 [개조] 리액션 재생 전 후원 팝업을 먼저 보여줍니다.
+            showToonPopup({
+                name: data.donator || '익명',
+                amount: data.amount || 0,
+                message: data.message || ''
+            }, () => {
+                // 팝업이 끝나고 난 뒤 실제 리액션 시작!
+                
+                // 2. 새로운 리액션 데이터 입력 (후원자명 + 금액 / 메시지)
+                let donatorName = data.donator || '익명';
+                let donationAmount = data.amount ? formatNum(data.amount) + '원' : '';
+                if (donatorEl) {
+                    donatorEl.innerText = donatorName + (donationAmount ? ' · ' + donationAmount : '');
                 }
-            }
-            
-            if (data.image_url) {
-                img.src = data.image_url;
-                img.style.display = 'block';
-            } else {
-                img.src = '';
-                img.style.display = 'none';
-            }
-            
-            // 3. 카드 노출 (페이드인 & 스케일 바운스) - 중앙에 크게
-            overlay.classList.remove('minimize');
-            overlay.classList.add('show');
-            
-            // 4. 2.5초 후 좌측으로 부드럽게 이동/축소 (BJ 가림 방지)
-            reactionMinimizeTimeout = setTimeout(() => {
-                overlay.classList.add('minimize');
-            }, 2500);
-            
-            // 5. 음원 재생 및 종료 콜백 설정
-            if (data.audio_url) {
-                // Add a cache buster parameter to bypass OBS/browser caching of previously broken streams
-                audio.src = data.audio_url + '?t=' + (data.id || Date.now());
+                let msgText = data.message || '';
+                if (messageEl) {
+                    if (msgText && msgText !== '수동 후원 송출') {
+                        messageEl.innerText = msgText;
+                        messageEl.style.display = 'block';
+                    } else {
+                        messageEl.innerText = '';
+                        messageEl.style.display = 'none';
+                    }
+                }
                 
-                audio.onended = function() {
-                    console.log('Audio play ended naturally.');
-                    if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-                    onReactionEnded();
-                };
+                if (data.image_url) {
+                    img.src = data.image_url;
+                    img.style.display = 'block';
+                } else {
+                    img.src = '';
+                    img.style.display = 'none';
+                }
                 
-                audio.onerror = function(err) {
-                    console.error('Audio error event fired:', err);
-                    if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-                    onReactionEnded();
-                };
+                // 3. 카드 노출 (페이드인 & 스케일 바운스) - 중앙에 크게
+                overlay.classList.remove('minimize');
+                overlay.classList.add('show');
                 
-                const setupSafetyTimer = () => {
-                    if (audioSafetyTimeout) clearTimeout(audioSafetyTimeout);
-                    const duration = audio.duration;
-                    const safetyDuration = (isFinite(duration) && duration > 0) ? (duration * 1000 + 2000) : 30000;
-                    console.log(`Setting audio safety timeout for ${safetyDuration}ms (audio duration: ${duration}s)`);
-                    audioSafetyTimeout = setTimeout(() => {
-                        console.warn('Audio safety timeout reached! Forcing onReactionEnded.');
+                // 4. 2.5초 후 좌측으로 부드럽게 이동/축소 (BJ 가림 방지)
+                reactionMinimizeTimeout = setTimeout(() => {
+                    overlay.classList.add('minimize');
+                }, 2500);
+                
+                // 5. 음원 재생 및 종료 콜백 설정
+                if (data.audio_url) {
+                    // Add a cache buster parameter to bypass OBS/browser caching of previously broken streams
+                    audio.src = data.audio_url + '?t=' + (data.id || Date.now());
+                    
+                    audio.onended = function() {
+                        console.log('Audio play ended naturally.');
+                        if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
                         onReactionEnded();
-                    }, safetyDuration);
-                };
+                    };
+                    
+                    audio.onerror = function(err) {
+                        console.error('Audio error event fired:', err);
+                        if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                        onReactionEnded();
+                    };
+                    
+                    const setupSafetyTimer = () => {
+                        if (audioSafetyTimeout) clearTimeout(audioSafetyTimeout);
+                        const duration = audio.duration;
+                        const safetyDuration = (isFinite(duration) && duration > 0) ? (duration * 1000 + 2000) : 30000;
+                        console.log(`Setting audio safety timeout for ${safetyDuration}ms (audio duration: ${duration}s)`);
+                        audioSafetyTimeout = setTimeout(() => {
+                            console.warn('Audio safety timeout reached! Forcing onReactionEnded.');
+                            onReactionEnded();
+                        }, safetyDuration);
+                    };
 
-                if (audio.readyState >= 1) { // HAVE_METADATA or higher
-                    setupSafetyTimer();
+                    if (audio.readyState >= 1) { // HAVE_METADATA or higher
+                        setupSafetyTimer();
+                    } else {
+                        audio.onloadedmetadata = setupSafetyTimer;
+                    }
+                    
+                    audio.play().then(() => {
+                        console.log('Audio playback started successfully.');
+                    }).catch(err => {
+                        // ❌ 재생 실패 (autoplay 차단 등)
+                        console.error('Audio autoplay blocked. Local cleanup only:', err);
+                        audio.onended = null;
+                        audio.onerror = null;
+                        audio.onloadedmetadata = null;
+                        if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                        audio.pause();
+                        audio.src = '';
+                        showAutoplayWarning();
+                        // 로컬 화면만 5초 후 닫기 (서버 큐는 건드리지 않음)
+                        reactionTimeout = setTimeout(() => {
+                            stopReactionVisuals();
+                        }, 5000);
+                    });
                 } else {
-                    audio.onloadedmetadata = setupSafetyTimer;
-                }
-                
-                audio.play().then(() => {
-                    console.log('Audio playback started successfully.');
-                }).catch(err => {
-                    // ❌ 재생 실패 (autoplay 차단 등)
-                    console.error('Audio autoplay blocked. Local cleanup only:', err);
-                    audio.onended = null;
-                    audio.onerror = null;
-                    audio.onloadedmetadata = null;
-                    if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-                    audio.pause();
-                    audio.src = '';
-                    showAutoplayWarning();
-                    // 로컬 화면만 5초 후 닫기 (서버 큐는 건드리지 않음)
+                    // 음원 파일이 없는 경우, 5초 동안만 이미지를 보여주고 종료
                     reactionTimeout = setTimeout(() => {
-                        stopReactionVisuals();
+                        onReactionEnded();
                     }, 5000);
-                });
-            } else {
-                // 음원 파일이 없는 경우, 5초 동안만 이미지를 보여주고 종료
-                reactionTimeout = setTimeout(() => {
-                    onReactionEnded();
-                }, 5000);
-            }
+                }
+            });
         }
 
         function onReactionEnded() {
@@ -1850,6 +1814,83 @@
         function hideAutoplayWarning() {
             const banner = document.getElementById('autoplay-warning-banner');
             if (banner) banner.style.display = 'none';
+        }
+
+        // 🎁 후원 알림 공통 팝업 노출 함수
+        function showToonPopup(donation, callback) {
+            isDonationPopupShowing = true;
+            console.log("🎯 [투네이션 팝업 트리거 실행]:", donation);
+            
+            let finalName = donation.name || "익명";
+            let finalMsg = donation.message || "";
+
+            // 📡 반각(:) 및 전각(：) 콜론 통합 분리 대응
+            let hasColon = finalMsg.includes(":") || finalMsg.includes("：");
+            if (hasColon && !finalMsg.startsWith("[시그니처 신청:")) {
+                let splitChar = finalMsg.includes(":") ? ":" : "：";
+                let parts = finalMsg.split(splitChar);
+                let potentialName = parts[0].trim();
+                if (potentialName.length > 0 && potentialName.length <= 15) {
+                    finalName = potentialName; 
+                    finalMsg = parts.slice(1).join(splitChar).trim(); 
+                }
+            }
+
+            document.getElementById('toon-name').innerText = finalName;
+            
+            const actionTextEl = document.getElementById('toon-action-text');
+            const amountEl = document.getElementById('toon-amount');
+            
+            if (finalMsg.startsWith("[시그니처 신청:")) {
+                let match = finalMsg.match(/^\[시그니처 신청:\s*(.*?)\]/);
+                let prod = match ? match[1] : "시그니처";
+                if (actionTextEl) actionTextEl.innerText = "님이 신청하셨습니다!";
+                amountEl.innerText = `"${prod}"`;
+                // 본문 메시지에서 시그니처 태그 삭제
+                finalMsg = finalMsg.replace(/^\[시그니처 신청:\s*.*?\]\s*/, '');
+            } else {
+                if (actionTextEl) actionTextEl.innerText = "님이 후원하셨습니다!";
+                if (donation.amount === 0) {
+                    amountEl.innerText = '후원';
+                } else {
+                    amountEl.innerText = formatNum(donation.amount) + '원';
+                }
+            }
+            
+            let msgEl = document.getElementById('toon-msg');
+            if (finalMsg) { 
+                msgEl.innerText = finalMsg; 
+                msgEl.style.display = 'block'; 
+            } else { 
+                msgEl.style.display = 'none'; 
+            }
+
+            const p = document.getElementById('toon-popup'); 
+            if (p) {
+                p.classList.remove('show'); 
+                void p.offsetWidth; 
+                p.classList.add('show'); 
+            }
+            
+            try {
+                let end = Date.now() + 1500; 
+                (function f() { 
+                    if (typeof confetti === 'function') {
+                        confetti({ particleCount: 7, angle: 60, spread: 80, origin: { x: 0.2, y: 0.8 }, zIndex: 100000 }); 
+                        confetti({ particleCount: 7, angle: 120, spread: 80, origin: { x: 0.8, y: 0.8 }, zIndex: 100000 }); 
+                        if (Date.now() < end) requestAnimationFrame(f); 
+                    }
+                }());
+            } catch(err) {
+                console.warn("⚠️ confetti animation script error (ignored):", err);
+            }
+
+            clearTimeout(toonPopupTimer);
+            toonPopupTimer = setTimeout(() => {
+                if (p) p.classList.remove('show');
+                isDonationPopupShowing = false;
+                if (callback) callback();
+            }, 2000);
         }
 
         // 화면 클릭(상호작용) 발생 시 자동재생 차단을 해제하고 음원 즉시 재생 시도
