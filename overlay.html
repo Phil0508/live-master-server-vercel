@@ -1748,8 +1748,6 @@
                 }
                 
                 if (data.image_url) {
-                    // CORS 우회 설정
-                    img.crossOrigin = "anonymous";
                     img.src = data.image_url;
                     img.style.display = 'block';
                     

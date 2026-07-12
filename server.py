@@ -1917,6 +1917,7 @@ def get_reaction_file(file_id):
                 )
                 response.headers.set('Content-Disposition', f'inline; filename*=UTF-8\'\'{safe_filename}')
                 response.headers.set('Cache-Control', 'public, max-age=31536000')
+                response.headers.set('Access-Control-Allow-Origin', '*')
                 return response
         
         cache_dir = os.path.join(app.root_path, 'media_cache')
@@ -1939,6 +1940,7 @@ def get_reaction_file(file_id):
                     conditional=True
                 )
                 response.headers.set('Cache-Control', 'public, max-age=31536000')
+                response.headers.set('Access-Control-Allow-Origin', '*')
                 return response
             except Exception as e:
                 print(f"Error reading cache for {file_id}: {e}")
@@ -1970,6 +1972,7 @@ def get_reaction_file(file_id):
                 conditional=True
             )
             response.headers.set('Cache-Control', 'public, max-age=31536000')
+            response.headers.set('Access-Control-Allow-Origin', '*')
             return response
     except Exception as e:
         print(f"Error serving reaction file {file_id}: {e}")
