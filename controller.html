@@ -1352,6 +1352,65 @@
             }
         }
         let lastRHtml = ""; let lastMHtml = ""; let lastColorHtml = ""; let lastRankLogHtml = ""; let lastMatchLogHtml = ""; let lastPendingHtml = "";
+        let ytWasPlaying = false;
+
+        // 💡 [통합 패치] 리액션 모드 상태에 따른 노래 일시정지/재개 및 대결 타이머 일시정지/재개 통합 제어기
+        function applyReactionModeEffects(isReactionOn) {
+            let audio = document.getElementById('bgm-audio');
+            let md = gd ? gd.match_data : null;
+            
+            if (isReactionOn) {
+                // 1. BGM 일시정지
+                if (audio) {
+                    if (!audio.paused) { 
+                        audio.dataset.wasPlaying = "true"; 
+                        audio.pause(); 
+                    } else { 
+                        audio.dataset.wasPlaying = "false"; 
+                    }
+                }
+                // 2. 유튜브 일시정지
+                try {
+                    if (ytPlayer && typeof ytPlayer.getPlayerState === 'function' && ytPlayer.getPlayerState() === 1) {
+                        ytWasPlaying = true;
+                        ytPlayer.pauseVideo();
+                    } else {
+                        ytWasPlaying = false;
+                    }
+                } catch(ytErr) {
+                    console.error("ytPlayer pause error:", ytErr);
+                    ytWasPlaying = false;
+                }
+                // 3. 대결 타이머 일시정지 (시간 멈춤)
+                if (md && md.is_running) {
+                    md.time_left_ms = Math.max(0, md.end_time_ms - (Date.now() + serverTimeOffset));
+                    md.is_running = false;
+                    md.was_running_before_reaction = true;
+                }
+                showReactionToast();
+            } else {
+                // 4. BGM 재생 재개
+                if (audio && audio.dataset.wasPlaying === "true") {
+                    audio.play().catch(e=>{});
+                }
+                // 5. 유튜브 재생 재개
+                try {
+                    if (ytWasPlaying && ytPlayer && typeof ytPlayer.playVideo === 'function') {
+                        ytPlayer.playVideo();
+                        ytWasPlaying = false;
+                    }
+                } catch(ytErr) {
+                    console.error("ytPlayer play error:", ytErr);
+                }
+                // 6. 대결 타이머 재개
+                if (md && md.was_running_before_reaction) {
+                    if(md.time_left_ms <= 0) md.time_left_ms = md.paused_time_left || 180000;
+                    md.end_time_ms = (Date.now() + serverTimeOffset) + md.time_left_ms;
+                    md.is_running = true;
+                    md.was_running_before_reaction = false;
+                }
+            }
+        }
 
 
 
@@ -1366,33 +1425,7 @@
                     serverTimeOffset = newData.server_time - Date.now();
                 }
                 if (gd && gd.reaction_mode !== newData.reaction_mode) {
-                    let audio = document.getElementById('bgm-audio');
-                    if (newData.reaction_mode) { 
-                        if (!audio.paused) { audio.dataset.wasPlaying = "true"; audio.pause(); } else { audio.dataset.wasPlaying = "false"; } 
-                        try {
-                            if (ytPlayer && typeof ytPlayer.getPlayerState === 'function' && ytPlayer.getPlayerState() === 1) {
-                                ytWasPlaying = true;
-                                ytPlayer.pauseVideo();
-                            } else {
-                                ytWasPlaying = false;
-                            }
-                        } catch(ytErr) {
-                            console.error("fetchAPI ytPlayer pause error:", ytErr);
-                            ytWasPlaying = false;
-                        }
-                        showReactionToast();
-                    } 
-                    else { 
-                        if (audio.dataset.wasPlaying === "true") { audio.play().catch(e=>{}); } 
-                        try {
-                            if (ytWasPlaying && ytPlayer && typeof ytPlayer.playVideo === 'function') {
-                                ytPlayer.playVideo();
-                                ytWasPlaying = false;
-                            }
-                        } catch(ytErr) {
-                            console.error("fetchAPI ytPlayer play error:", ytErr);
-                        }
-                    }
+                    applyReactionModeEffects(newData.reaction_mode);
                 }
                 gd = newData;
                 if(!gd.bjs) { gd.bjs = []; }
@@ -2109,26 +2142,7 @@
         function toggleOption(key) { 
             gd[key] = !gd[key]; 
             if (key === 'reaction_mode') {
-                let audio = document.getElementById('bgm-audio');
-                let md = gd.match_data;
-                
-                if (gd[key]) { 
-                    if (!audio.paused) { audio.dataset.wasPlaying = "true"; audio.pause(); } else { audio.dataset.wasPlaying = "false"; }
-                    if (md && md.is_running) {
-                        md.time_left_ms = Math.max(0, md.end_time_ms - Date.now());
-                        md.is_running = false;
-                        md.was_running_before_reaction = true;
-                    }
-                    showReactionToast();
-                } else { 
-                    if (audio.dataset.wasPlaying === "true") { audio.play().catch(e=>{}); }
-                    if (md && md.was_running_before_reaction) {
-                        if(md.time_left_ms <= 0) md.time_left_ms = md.paused_time_left;
-                        md.end_time_ms = Date.now() + md.time_left_ms;
-                        md.is_running = true;
-                        md.was_running_before_reaction = false;
-                    }
-                }
+                applyReactionModeEffects(gd.reaction_mode);
             }
             pushAPI(); 
         }
@@ -2150,17 +2164,7 @@
             if (color !== 'OFF') {
                 if (!gd.reaction_mode) {
                     gd.reaction_mode = true;
-                    let audio = document.getElementById('bgm-audio');
-                    let md = gd.match_data;
-                    if (audio) {
-                        if (!audio.paused) { audio.dataset.wasPlaying = "true"; audio.pause(); } else { audio.dataset.wasPlaying = "false"; }
-                    }
-                    if (md && md.is_running) {
-                        md.time_left_ms = Math.max(0, md.end_time_ms - Date.now());
-                        md.is_running = false;
-                        md.was_running_before_reaction = true;
-                    }
-                    showReactionToast(); // 🔔 최초 리액션 모드 진입할 때만 딱 한 번 토스트 팝업!
+                    applyReactionModeEffects(true);
                 }
                 gd.reaction_enter_alert = { time: Date.now() };
             }
