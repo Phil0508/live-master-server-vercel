@@ -602,6 +602,34 @@ def sse_stream():
 def api_ping():
     return jsonify({'status': 'pong'})
 
+@app.route('/api/debug')
+def api_debug():
+    """Vercel/Supabase 연결 디버그 엔드포인트"""
+    result = {
+        'is_vercel': IS_VERCEL,
+        'is_postgres': IS_POSTGRES,
+        'has_database_url': bool(DATABASE_URL),
+        'database_url_prefix': DATABASE_URL[:20] + '...' if DATABASE_URL else None,
+        'has_psycopg2': psycopg2 is not None,
+    }
+    # DB 연결 테스트
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
+            result['db_connect'] = 'success'
+            # 테이블 목록 확인
+            try:
+                cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
+                tables = [row[0] for row in cursor.fetchall()]
+                result['tables'] = tables
+            except Exception as e:
+                result['tables_error'] = str(e)
+    except Exception as e:
+        result['db_connect'] = 'failed'
+        result['db_error'] = str(e)
+    return jsonify(result)
+
 # ==========================================
 # 👥 BJ 일괄 등록 API
 # ==========================================
