@@ -66,7 +66,8 @@ def get_db_connection():
     if IS_POSTGRES:
         if psycopg2 is None:
             raise ImportError("psycopg2 is not installed but DATABASE_URL is set.")
-        conn = psycopg2.connect(DATABASE_URL)
+        # Supabase PostgreSQL 연결: SSL 강제 적용 (sslmode=require)
+        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
     else:
         conn = sqlite3.connect(DB_FILE)
     try:
@@ -355,6 +356,46 @@ def init_db():
                     timestamp TEXT,
                     state_json TEXT,
                     summary TEXT
+                )
+            """)
+        
+        # 리액션 파일 및 아이템 테이블 생성 (PostgreSQL/SQLite 공용)
+        if IS_POSTGRES:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS reaction_files (
+                    id TEXT PRIMARY KEY,
+                    filename TEXT,
+                    content_type TEXT,
+                    file_data BYTEA
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS reaction_items (
+                    id SERIAL PRIMARY KEY,
+                    title TEXT,
+                    amount INTEGER DEFAULT 0,
+                    audio_file_id TEXT,
+                    image_file_id TEXT,
+                    is_enabled BOOLEAN DEFAULT TRUE
+                )
+            """)
+        else:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS reaction_files (
+                    id TEXT PRIMARY KEY,
+                    filename TEXT,
+                    content_type TEXT,
+                    file_data BLOB
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS reaction_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT,
+                    amount INTEGER DEFAULT 0,
+                    audio_file_id TEXT,
+                    image_file_id TEXT,
+                    is_enabled INTEGER DEFAULT 1
                 )
             """)
         
