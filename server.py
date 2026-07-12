@@ -416,32 +416,55 @@ def init_db():
             except Exception:
                 pass
         else:
-            # PostgreSQL 전용: players 테이블 컬럼 검증 및 자동 복구
-            try:
-                cursor.execute("""
-                    SELECT column_name FROM information_schema.columns 
-                    WHERE table_schema = 'public' AND table_name = 'players'
-                """)
-                existing_cols = {row[0] for row in cursor.fetchall()}
-                
-                if existing_cols and 'score' not in existing_cols:
-                    # score 컬럼이 없으면 추가
-                    try:
-                        cursor.execute("ALTER TABLE players ADD COLUMN score INTEGER DEFAULT 0")
-                    except Exception:
-                        pass
-                if existing_cols and 'contribution' not in existing_cols:
-                    # contribution 컬럼이 없으면 추가
-                    try:
-                        cursor.execute("ALTER TABLE players ADD COLUMN contribution INTEGER DEFAULT 0")
-                    except Exception:
-                        pass
-                if existing_cols and 'name' not in existing_cols:
-                    # 핵심 name 컬럼도 없으면 테이블 자체가 잘못된 것이므로 재생성
-                    cursor.execute("DROP TABLE IF EXISTS players")
-                    cursor.execute("CREATE TABLE players (name TEXT PRIMARY KEY, score INTEGER, contribution INTEGER)")
-            except Exception as e:
-                print(f"⚠️ [PostgreSQL 스키마 복구] players 테이블 복구 실패: {e}")
+            # PostgreSQL 전용: 테이블 스키마 검증 및 자동 복구
+            # Supabase 대시보드에서 다른 스키마로 생성된 테이블이 있을 수 있으므로 확인 후 재생성
+            
+            # 각 테이블의 필수 컬럼 정의
+            required_schemas = {
+                'players': {'name', 'score', 'contribution'},
+                'reaction_files': {'id', 'filename', 'content_type', 'file_data'},
+                'reaction_items': {'id', 'title', 'amount', 'audio_file_id', 'image_file_id', 'is_enabled'},
+            }
+            
+            for table_name, required_cols in required_schemas.items():
+                try:
+                    cursor.execute("""
+                        SELECT column_name FROM information_schema.columns 
+                        WHERE table_schema = 'public' AND table_name = %s
+                    """, (table_name,))
+                    existing_cols = {row[0] for row in cursor.fetchall()}
+                    
+                    # 필수 컬럼이 부족하면 테이블을 드롭하고 재생성
+                    missing_cols = required_cols - existing_cols
+                    if missing_cols:
+                        print(f"⚠️ [PostgreSQL 스키마 복구] {table_name}: 누락 컬럼 {missing_cols} → 테이블 재생성")
+                        cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE")
+                        conn.commit()
+                        
+                        if table_name == 'players':
+                            cursor.execute("CREATE TABLE IF NOT EXISTS players (name TEXT PRIMARY KEY, score INTEGER, contribution INTEGER)")
+                        elif table_name == 'reaction_files':
+                            cursor.execute("""
+                                CREATE TABLE IF NOT EXISTS reaction_files (
+                                    id TEXT PRIMARY KEY,
+                                    filename TEXT,
+                                    content_type TEXT,
+                                    file_data BYTEA
+                                )
+                            """)
+                        elif table_name == 'reaction_items':
+                            cursor.execute("""
+                                CREATE TABLE IF NOT EXISTS reaction_items (
+                                    id SERIAL PRIMARY KEY,
+                                    title TEXT,
+                                    amount INTEGER DEFAULT 0,
+                                    audio_file_id TEXT,
+                                    image_file_id TEXT,
+                                    is_enabled BOOLEAN DEFAULT TRUE
+                                )
+                            """)
+                except Exception as e:
+                    print(f"⚠️ [PostgreSQL 스키마 복구] {table_name} 복구 실패: {e}")
             
             # donation_history tx_id 컬럼 확인 및 추가
             try:
