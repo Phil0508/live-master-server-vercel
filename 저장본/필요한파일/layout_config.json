@@ -1,0 +1,47 @@
+{
+    "account": {
+        "x_px": 6,
+        "y_px": 194,
+        "scale": 1.1
+    },
+    "gauge": {
+        "x_px": 496,
+        "y_px": 1517,
+        "scale": 1.3292329142959949
+    },
+    "goal_popup": {
+        "scale": 1,
+        "x_px": 223,
+        "y_px": 934
+    },
+    "match": {
+        "x_px": 103,
+        "y_px": 482,
+        "scale": 1.1244358303812478
+    },
+    "popup": {
+        "x_px": 342,
+        "y_px": 730,
+        "scale": 1
+    },
+    "ranking": {
+        "x_px": 373,
+        "y_px": 183,
+        "scale": 0.9909783102410772
+    },
+    "takeover": {
+        "x_px": 331,
+        "y_px": 854,
+        "scale": 1
+    },
+    "ticker_bottom": {
+        "x_px": -10,
+        "y_px": 1402,
+        "scale": 1
+    },
+    "ticker_top": {
+        "x_px": -4,
+        "y_px": 93,
+        "scale": 1
+    }
+}

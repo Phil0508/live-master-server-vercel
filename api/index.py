@@ -20,4 +20,3 @@ init_db()
 
 # Vercel Python Runtime이 인식하는 WSGI 앱 객체
 # @vercel/python은 'app' 이름으로 export된 WSGI callable을 자동 감지
-app = app

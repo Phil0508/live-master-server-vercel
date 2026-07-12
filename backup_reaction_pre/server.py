@@ -1,0 +1,1752 @@
+import sys
+import os
+import io
+
+# GUI 모드(console=False)에서 발생하는 모든 에러를 파일로 로깅하여 크래시 분석
+if getattr(sys, 'frozen', False):
+    try:
+        exe_dir = os.path.dirname(sys.executable)
+        log_file = open(os.path.join(exe_dir, 'server_error.log'), 'w', encoding='utf-8', buffering=1)
+        sys.stderr = log_file
+        sys.stdout = log_file
+    except Exception:
+        pass
+else:
+    # 윈도우 콘솔 UTF-8 출력 강제 (cp949 이모지 에러 방지)
+    try:
+        if sys.stdout is not None and hasattr(sys.stdout, 'buffer'):
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        if sys.stderr is not None and hasattr(sys.stderr, 'buffer'):
+            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+    except Exception:
+        pass
+
+import json
+import threading
+import logging
+import pyotp
+import secrets
+
+import time
+import csv
+import queue
+import shutil
+import socket
+import sqlite3
+from contextlib import contextmanager
+import ssl
+import urllib.request
+import urllib.parse
+
+# Try importing psycopg2 for PostgreSQL support
+try:
+    import psycopg2
+except ImportError:
+    psycopg2 = None
+
+DATABASE_URL = os.environ.get('DATABASE_URL')
+IS_POSTGRES = bool(DATABASE_URL)
+
+def db_query(query):
+    if IS_POSTGRES:
+        return query.replace('?', '%s')
+    return query
+
+@contextmanager
+def get_db_connection():
+    if IS_POSTGRES:
+        if psycopg2 is None:
+            raise ImportError("psycopg2 is not installed but DATABASE_URL is set.")
+        conn = psycopg2.connect(DATABASE_URL)
+    else:
+        conn = sqlite3.connect(DB_FILE)
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+from flask import Flask, jsonify, request, send_from_directory, redirect, url_for, session
+from flask_cors import CORS
+try:
+    import tkinter as tk
+    from tkinter import messagebox
+except ImportError:
+    tk = None
+    messagebox = None
+import webbrowser
+
+if getattr(sys, 'frozen', False):
+    BASE_DIR = os.path.dirname(sys.executable)
+    BUNDLE_DIR = getattr(sys, '_MEIPASS', BASE_DIR)
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    BUNDLE_DIR = BASE_DIR
+
+DB_FILE = os.path.join(BASE_DIR, 'live_master.db')
+LAYOUT_FILE = os.path.join(BASE_DIR, 'layout.json')
+AUTH_CONFIG_FILE = os.path.join(BASE_DIR, 'auth_config.json')
+
+def load_auth_config():
+    config = {
+        'admin_password': '0508',
+        'session_secret': 'isacbin_master_key_0508',
+        'totp_secret': ''
+    }
+    if os.path.exists(AUTH_CONFIG_FILE):
+        try:
+            with open(AUTH_CONFIG_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                if 'admin_password' in data:
+                    config['admin_password'] = data['admin_password']
+                if 'session_secret' in data:
+                    config['session_secret'] = data['session_secret']
+                if 'totp_secret' in data:
+                    config['totp_secret'] = data['totp_secret']
+        except Exception as e:
+            print(f"Error reading auth config: {e}")
+            
+    env_password = os.environ.get('ADMIN_PASSWORD')
+    if env_password:
+        config['admin_password'] = env_password.strip()
+        
+    env_session_secret = os.environ.get('SESSION_SECRET')
+    if env_session_secret:
+        config['session_secret'] = env_session_secret.strip()
+        
+    env_totp_secret = os.environ.get('TOTP_SECRET')
+    if env_totp_secret:
+        config['totp_secret'] = env_totp_secret.strip()
+        
+    if not config['totp_secret']:
+        config['totp_secret'] = pyotp.random_base32()
+        save_auth_config(config)
+        
+    return config
+
+def save_auth_config(config):
+    try:
+        with open(AUTH_CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=4)
+    except Exception as e:
+        print(f"Error writing auth config: {e}")
+
+# ==========================================
+# 🤫 서버 로그 제어
+# ==========================================
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+log.disabled = True 
+
+app = Flask(__name__)
+app.secret_key = load_auth_config()['session_secret']
+CORS(app)
+file_lock = threading.Lock()
+
+# 🚫 [강력 차단] 웹 브라우저 및 OBS CEF 캐싱 방지 헤더 이식
+@app.after_request
+def add_header(r):
+    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    r.headers["Pragma"] = "no-cache"
+    r.headers["Expires"] = "0"
+    return r
+
+# 🔒 [보안 통제] 웹 제어실 및 중요 API 접근 제한 미들웨어
+@app.before_request
+def require_login():
+    path = request.path
+    
+    # 정적 자원 파일 프리패스
+    if (path.endswith('.css') or path.endswith('.js') or path.endswith('.png') or 
+        path.endswith('.jpg') or path.endswith('.ico') or path.endswith('.woff') or 
+        path.endswith('.woff2') or path.endswith('.ttf') or path.endswith('.svg')):
+        return
+        
+    # 세션 검증 예외 경로 리스트
+    exempt_routes = [
+        '/login',
+        '/logout',
+        '/',
+        '/overlay',
+        '/overlay.html',
+        '/api/stream',
+        '/api/ping',
+        '/api/donation',
+        '/api/streamdeck/neon',
+        '/api/streamdeck/save',
+        '/api/roulette/winner',
+        '/setup'
+    ]
+    
+    if path in exempt_routes:
+        return
+        
+    # HTTP Authorization Bearer 토큰 및 ?token= 파라미터 검증 지원
+    auth_header = request.headers.get('Authorization')
+    token = None
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+    else:
+        token = request.args.get('token')
+        
+    is_token_valid = (token and token == load_auth_config()['session_secret'])
+        
+    # 비인증 사용자 제약
+    if not session.get('authenticated') and not is_token_valid:
+        if path.startswith('/api/'):
+            return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+        if request.query_string:
+            return redirect(url_for('serve_login') + '?' + request.query_string.decode('utf-8'))
+        return redirect(url_for('serve_login'))
+
+# 📡 실시간 SSE 클라이언트 관리 시스템
+sse_clients = []
+sse_lock = threading.Lock()
+
+def broadcast_event(event_name, data):
+    if isinstance(data, dict):
+        data = data.copy()
+        data['server_time'] = int(time.time() * 1000)
+    with sse_lock:
+        message = f"event: {event_name}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+        for client_q in sse_clients:
+            try:
+                client_q.put_nowait(message)
+            except queue.Full:
+                pass
+
+def get_or_create_totp_secret():
+    return load_auth_config()['totp_secret']
+
+def serve_html_file(filename):
+    local_path = os.path.join(BASE_DIR, filename)
+    if os.path.exists(local_path):
+        return send_from_directory(BASE_DIR, filename)
+    return send_from_directory(BUNDLE_DIR, filename)
+
+DEFAULT_STATE = {
+    "bjs": [],
+    "bottom_fixed": {"name": "운영비", "score": 0},
+    "target_goal": 50000,
+    "theme": "default",
+    "reaction_mode": False,
+    "popup_enabled": True,
+    "takeover_enabled": True,
+    "ticker_enabled": True,
+    "ticker_speed": 70,
+    "ticker_text": "📢 환영합니다! 후원은 방송에 큰 힘이 됩니다!",
+    "match_data": {"active": False, "players": [], "time_left_ms": 180000, "is_running": False},
+    "account": {"bank": "기업은행", "acc_num": "464-068673-04-016", "name": "드래곤엔터"},
+    "pending_donations": [],
+    "latest_donation": {"name": "", "amount": 0, "message": "", "time": 0},
+    "extra_game_active": False,
+    "extra_bjs": [],
+    "roulette_enabled": False,
+    "broadcast_active": False,
+    "saved_colors": ['#ff0055', '#00e5ff', '#ff9100', '#d500f9', '#00ff00', '#ffff00', '#ff0000', '#0000ff', '#ffffff'],
+    "version": 1,
+    "roulette": {
+        "command": None,
+        "command_time": 0,
+        "weight_type": "equal",
+        "select_name": "",
+        "select_index": -1,
+        "winner_name": None,
+        "is_spinning": False,
+        "item_source": "bj",
+        "custom_items": ["벌칙 1", "벌칙 2", "벌칙 3", "벌칙 4", "벌칙 5"]
+    }
+}
+
+MEMORY_STATE = None
+
+# ==========================================
+# 🗄️ 데이터베이스 핵심 로직
+# ==========================================
+def init_db():
+    if not IS_POSTGRES:
+        if not os.path.exists(DB_FILE) and os.path.exists(DB_FILE + '.bak'):
+            try:
+                shutil.copy2(DB_FILE + '.bak', DB_FILE)
+                print("[DB 자동 복구] 백업 본으로 DB 복구 성공!")
+            except Exception as e:
+                print(f"[DB 자동 복구 실패] {e}")
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        if not IS_POSTGRES:
+            try:
+                cursor.execute("PRAGMA journal_mode=WAL;")
+            except Exception:
+                pass
+        
+        cursor.execute("CREATE TABLE IF NOT EXISTS kv_store (key TEXT PRIMARY KEY, value TEXT)")
+        cursor.execute("CREATE TABLE IF NOT EXISTS players (name TEXT PRIMARY KEY, score INTEGER, contribution INTEGER)")
+        
+        if IS_POSTGRES:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS donation_history (
+                    id SERIAL PRIMARY KEY,
+                    timestamp TEXT,
+                    name TEXT,
+                    amount INTEGER,
+                    current_total INTEGER, 
+                    message TEXT,
+                    source TEXT,
+                    tx_id TEXT
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS snapshots (
+                    id SERIAL PRIMARY KEY,
+                    timestamp TEXT,
+                    state_json TEXT,
+                    summary TEXT
+                )
+            """)
+        else:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS donation_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT,
+                    name TEXT,
+                    amount INTEGER,
+                    current_total INTEGER, 
+                    message TEXT,
+                    source TEXT,
+                    tx_id TEXT
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS snapshots (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT,
+                    state_json TEXT,
+                    summary TEXT
+                )
+            """)
+        
+        # 💡 [스키마 마이그레이션 패치] 기존 테이블 스키마 동적 추가 및 안전성 유지
+        try:
+            cursor.execute("ALTER TABLE snapshots ADD COLUMN summary TEXT")
+        except Exception:
+            pass
+        try:
+            cursor.execute("ALTER TABLE donation_history ADD COLUMN tx_id TEXT")
+        except Exception:
+            pass
+
+def load_data():
+    global MEMORY_STATE
+    if MEMORY_STATE is not None:
+        return MEMORY_STATE
+    init_db()
+    
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(db_query("SELECT key, value FROM kv_store"))
+            kv_data = {row[0]: json.loads(row[1]) for row in cursor.fetchall()}
+            cursor.execute(db_query("SELECT name, score, contribution FROM players ORDER BY contribution DESC"))
+            bjs = [{"name": row[0], "score": row[1], "contribution": row[2]} for row in cursor.fetchall()]
+    except Exception as e:
+        print(f"⚠️ [DB 로드 오류] {e}")
+        # DB 로드 실패 시 데이터를 덮어써서 날려버리는 것을 막기 위해 예외를 상위로 전파합니다.
+        raise e
+
+    if not kv_data and not bjs:
+        MEMORY_STATE = DEFAULT_STATE.copy()
+        save_data(MEMORY_STATE, is_initial=True)
+        return MEMORY_STATE
+
+    state = {}
+    for key, default_val in DEFAULT_STATE.items():
+        if key == "bjs": 
+            state["bjs"] = bjs
+        elif key in kv_data: 
+            state[key] = kv_data[key]
+        else: 
+            state[key] = default_val
+            
+    # saved_colors 보정 (6개 -> 9개로 확장 및 하위 호환 마이그레이션)
+    default_colors = ['#ff0055', '#00e5ff', '#ff9100', '#d500f9', '#00ff00', '#ffff00', '#ff0000', '#0000ff', '#ffffff']
+    if 'saved_colors' in state:
+        if not isinstance(state['saved_colors'], list):
+            state['saved_colors'] = default_colors
+        elif len(state['saved_colors']) < 9:
+            for i in range(len(state['saved_colors']), 9):
+                state['saved_colors'].append(default_colors[i])
+    else:
+        state['saved_colors'] = default_colors
+    
+    MEMORY_STATE = state
+    return MEMORY_STATE
+
+db_write_queue = queue.Queue()
+
+def db_worker():
+    while True:
+        try:
+            new_data, is_initial = db_write_queue.get()
+            save_data_sync(new_data, is_initial)
+            db_write_queue.task_done()
+        except Exception as e:
+            print(f"❌ [비동기 DB 저장 백그라운드 오류] {e}")
+            time.sleep(1)
+
+threading.Thread(target=db_worker, daemon=True).start()
+
+def save_data_sync(new_data, is_initial=False):
+    global MEMORY_STATE
+    old_data = MEMORY_STATE if MEMORY_STATE else DEFAULT_STATE
+    
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # 1. 수동 조작 시 장부 누적 (영수증 발급)
+            if not is_initial:
+                old_scores = {p["name"]: p["score"] for p in old_data.get("bjs", [])}
+                for new_p in new_data.get("bjs", []):
+                    p_name = new_p["name"]
+                    p_score = new_p["score"]
+                    o_score = old_scores.get(p_name, 0)
+                    diff = p_score - o_score
+                    
+                    if diff != 0:
+                        cursor.execute(
+                            db_query("INSERT INTO donation_history (timestamp, name, amount, current_total, message, source) VALUES (?, ?, ?, ?, ?, ?)"),
+                            (time.strftime('%Y-%m-%d %H:%M:%S'), p_name, diff, p_score, "수동 점수 조작", "mobile")
+                        )
+            
+            # 2. 플레이어 테이블 갱신
+            cursor.execute(db_query("DELETE FROM players"))
+            for bj in new_data.get("bjs", []):
+                cursor.execute(db_query("INSERT INTO players (name, score, contribution) VALUES (?, ?, ?)"), (bj["name"], bj["score"], bj.get("contribution", 0)))
+            
+            # 3. 설정 상태 키-값 저장 (변경된 값만 필터링하여 데이터베이스 트래픽 최소화)
+            for key, value in new_data.items():
+                if key != "bjs":
+                    new_val_str = json.dumps(value, ensure_ascii=False)
+                    old_val = old_data.get(key)
+                    old_val_str = json.dumps(old_val, ensure_ascii=False) if old_val is not None else None
+                    
+                    if is_initial or old_val_str != new_val_str:
+                        if IS_POSTGRES:
+                            cursor.execute(
+                                "INSERT INTO kv_store (key, value) VALUES (%s, %s) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
+                                (key, new_val_str)
+                            )
+                        else:
+                            cursor.execute(
+                                "INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?)",
+                                (key, new_val_str)
+                            )
+                            
+    except Exception as e:
+        print(f"❌ [DB 동기화 저장 실패] {e}")
+
+def save_data(new_data, is_initial=False):
+    global MEMORY_STATE
+    # 메모리 상의 캐시 상태는 즉시 최신화하여 조종실과 오버레이에 즉시 전송되게 함 (0ms 레이턴시)
+    MEMORY_STATE = new_data
+    # 실제 원격 DB 저장은 백그라운드 큐에 넣어 비동기로 처리
+    db_write_queue.put((new_data, is_initial))
+
+def time_machine_recovery():
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(db_query("DELETE FROM players"))
+            cursor.execute(db_query("""
+                INSERT INTO players (name, score, contribution)
+                SELECT name, current_total, current_total 
+                FROM donation_history 
+                WHERE id IN (
+                    SELECT MAX(id) FROM donation_history GROUP BY name
+                )
+            """))
+            
+        global MEMORY_STATE
+        MEMORY_STATE = None 
+        load_data()
+        return True
+    except Exception as e:
+        print(f"❌ [복구 실패] {e}")
+        return False
+
+# ==========================================
+# 📡 실시간 SSE 라우트 및 제네레이터
+# ==========================================
+@app.route('/api/stream')
+def sse_stream():
+    q = queue.Queue()
+    with sse_lock:
+        sse_clients.append(q)
+        
+    def event_generator():
+        initial_state = load_data()
+        yield f"event: init\ndata: {json.dumps(initial_state, ensure_ascii=False)}\n\n"
+        
+        if os.path.exists(LAYOUT_FILE):
+            try:
+                with open(LAYOUT_FILE, 'r', encoding='utf-8') as f:
+                    layout_data = json.load(f)
+                yield f"event: layout\ndata: {json.dumps(layout_data, ensure_ascii=False)}\n\n"
+            except Exception:
+                pass
+                
+        while True:
+            try:
+                msg = q.get(timeout=15.0)
+                yield msg
+            except queue.Empty:
+                yield "event: ping\ndata: {}\n\n"
+            except GeneratorExit:
+                break
+                
+        with sse_lock:
+            if q in sse_clients:
+                sse_clients.remove(q)
+                
+    return app.response_class(event_generator(), mimetype='text/event-stream')
+
+@app.route('/api/ping')
+def api_ping():
+    return jsonify({'status': 'pong'})
+
+# ==========================================
+# 👥 BJ 일괄 등록 API
+# ==========================================
+@app.route('/api/bjs/import', methods=['POST'])
+def import_bjs():
+    try:
+        req = request.json
+        names = req.get('names', [])
+        if not names:
+            return jsonify({'status': 'error', 'message': '등록할 이름이 없습니다.'}), 400
+            
+        with file_lock:
+            state = load_data()
+            overwrite = req.get('overwrite', False)
+            new_bjs = []
+            
+            for name in names:
+                name = name.strip()
+                if not name:
+                    continue
+                new_bjs.append({"name": name, "score": 0, "contribution": 0})
+                
+            if overwrite:
+                state['bjs'] = new_bjs
+            else:
+                existing_names = {bj['name'] for bj in state.get('bjs', [])}
+                for new_bj in new_bjs:
+                    if new_bj['name'] not in existing_names:
+                        state['bjs'].append(new_bj)
+                        
+            save_data(state)
+            broadcast_event('update', state)
+            
+        return jsonify({'status': 'success', 'count': len(new_bjs)})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# ==========================================
+# 🌐 페이지 라우팅
+# ==========================================
+@app.route('/setup', methods=['GET', 'POST'])
+def serve_setup():
+    if request.method == 'POST':
+        try:
+            data = request.get_json() or {}
+            p = data.get('password', '').strip()
+            if p == load_auth_config()['admin_password']:
+                session['setup_authorized'] = True
+                return jsonify({'status': 'success'})
+            else:
+                return jsonify({'status': 'error', 'message': '비밀번호가 잘못되었습니다.'}), 400
+        except Exception as e:
+            return jsonify({'status': 'error', 'message': str(e)}), 500
+
+    # GET request
+    if not session.get('setup_authorized'):
+        # Return a simple password protection UI for setup
+        html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔒 라이브 마스터 OTP 등록 게이트</title>
+    <style>
+        body {{
+            background: #0d0d0f;
+            color: #f5f5f7;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }}
+        .card {{
+            background: #16161a;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 400px;
+            width: 90%;
+            box-sizing: border-box;
+        }}
+        h2 {{ color: #00ffcc; margin-top: 0; font-size: 22px; }}
+        input {{
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            text-align: center;
+            box-sizing: border-box;
+            outline: none;
+            margin: 20px 0;
+        }}
+        input:focus {{ border-color: #00ffcc; }}
+        .btn {{
+            background: #00ffcc;
+            color: #000;
+            border: none;
+            padding: 14px 28px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 15px;
+        }}
+        .err {{ color: #ff453a; font-size: 13px; margin-top: 10px; display: none; }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🔒 OTP 등록 페이지 인증</h2>
+        <p style="font-size: 14px; color: #8e8e93;">보안을 위해 서버 비밀번호를 입력해 주세요.</p>
+        <input type="password" id="pw" placeholder="비밀번호 입력" autofocus onkeydown="if(event.key==='Enter') verifyPw()">
+        <button onclick="verifyPw()" class="btn">인증 및 등록 진행</button>
+        <div id="err" class="err">비밀번호가 올바르지 않습니다.</div>
+    </div>
+    <script>
+        async function verifyPw() {{
+            const p = document.getElementById('pw').value.trim();
+            const err = document.getElementById('err');
+            err.style.display = 'none';
+            try {{
+                const res = await fetch('/setup', {{
+                    method: 'POST',
+                    headers: {{'Content-Type': 'application/json'}},
+                    body: JSON.stringify({{password: p}})
+                }});
+                const data = await res.json();
+                if (data.status === 'success') {{
+                    window.location.reload();
+                }} else {{
+                    err.innerText = data.message;
+                    err.style.display = 'block';
+                }}
+            }} catch(e) {{
+                err.innerText = '인증 중 오류가 발생했습니다.';
+                err.style.display = 'block';
+            }}
+        }}
+    </script>
+</body>
+</html>
+"""
+        return html
+
+    secret = get_or_create_totp_secret()
+    # QR Code compatible URL (ASCII only for label/issuer)
+    otp_uri = f"otpauth://totp/LiveMaster:admin?secret={secret}&issuer=LiveMaster"
+    
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔒 라이브 마스터 OTP 초기 페어링</title>
+    <style>
+        body {{
+            background: #0d0d0f;
+            color: #f5f5f7;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }}
+        .card {{
+            background: #16161a;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 420px;
+            width: 90%;
+            box-sizing: border-box;
+        }}
+        h2 {{ color: #00ffcc; margin-top: 0; font-size: 22px; }}
+        p {{ font-size: 14px; color: #8e8e93; line-height: 1.6; }}
+        canvas {{ background: #fff; padding: 10px; border-radius: 10px; margin: 20px 0; }}
+        .secret-label {{ font-size: 12px; color: #8e8e93; margin-top: 15px; margin-bottom: 5px; }}
+        .secret {{
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 18px;
+            letter-spacing: 2px;
+            color: #ff9f0a;
+            user-select: all;
+            word-break: break-all;
+            font-weight: bold;
+        }}
+        .btn {{
+            background: #00ffcc;
+            color: #000;
+            border: none;
+            padding: 14px 28px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 25px;
+            text-decoration: none;
+            display: inline-block;
+            transition: opacity 0.2s;
+        }}
+        .btn:hover {{ opacity: 0.9; }}
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+</head>
+<body>
+    <div class="card">
+        <h2>🔒 모바일 OTP 페어링 타워</h2>
+        <p>스마트폰의 <b>구글 OTP (Google Authenticator)</b> 앱을 실행하고,<br>우측 하단의 '+' 버튼을 눌러 아래 QR 코드를 스캔해 주세요.</p>
+        <canvas id="qr"></canvas>
+        <div class="secret-label">수동 등록을 위한 보안 키 (앱에 직접 입력 가능)</div>
+        <div class="secret">{secret}</div>
+        <a href="/login" class="btn">인증 로그인 화면으로 이동</a>
+    </div>
+    <script>
+        new QRious({{
+            element: document.getElementById('qr'),
+            value: '{otp_uri}',
+            size: 200
+        }});
+    </script>
+</body>
+</html>
+"""
+    return html
+
+@app.route('/login', methods=['GET', 'POST'])
+def serve_login():
+    if request.method == 'GET' and session.get('authenticated'):
+        if request.query_string:
+            return redirect(url_for('serve_controller') + '?' + request.query_string.decode('utf-8'))
+        return redirect(url_for('serve_controller'))
+        
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            p = data.get('password', '').strip()
+            otp_code = data.get('otp', '').strip()
+            
+            # PW 검증
+            if p == load_auth_config()['admin_password']:
+                # TOTP OTP 검증
+                totp_secret = get_or_create_totp_secret()
+                totp = pyotp.TOTP(totp_secret)
+                if totp.verify(otp_code, valid_window=1): # Allow 30 seconds clock drift
+                    session['authenticated'] = True
+                    return jsonify({'status': 'success'})
+                else:
+                    return jsonify({'status': 'error', 'message': '보안 OTP 번호가 일치하지 않습니다.'}), 400
+            else:
+                return jsonify({'status': 'error', 'message': '비밀번호가 잘못되었습니다.'}), 400
+        except Exception as e:
+            return jsonify({'status': 'error', 'message': str(e)}), 500
+            
+    return serve_html_file('login.html')
+
+@app.route('/logout')
+def serve_logout():
+    session.pop('authenticated', None)
+    return redirect(url_for('serve_login'))
+
+@app.route('/')
+def serve_root():
+    return serve_html_file('overlay.html')
+
+@app.route('/overlay')
+@app.route('/overlay.html')
+def serve_overlay():
+    return serve_html_file('overlay.html')
+
+@app.route('/streamdeck')
+@app.route('/streamdeck.html')
+def serve_streamdeck():
+    return serve_html_file('streamdeck.html')
+
+@app.route('/controller')
+def serve_controller():
+    # 1. 쿼리 매개변수로 명시적 모드가 지정된 경우 우선 처리
+    mode = request.args.get('mode', '').lower()
+    if mode == 'mobile':
+        return serve_html_file('mobile.html')
+    elif mode == 'desktop':
+        return serve_html_file('controller.html')
+        
+    # 2. 자동으로 User-Agent 판별
+    ua = request.headers.get('User-Agent', '').lower()
+    mobile_keywords = ['mobile', 'android', 'iphone', 'ipad', 'ipod', 'webos', 'blackberry', 'opera mini', 'opera mobi', 'windows phone']
+    is_mobile = any(kw in ua for kw in mobile_keywords)
+    if is_mobile:
+        return serve_html_file('mobile.html')
+    return serve_html_file('controller.html')
+
+@app.route('/mobile')
+def serve_mobile():
+    return serve_html_file('mobile.html')
+
+@app.route('/admin')
+@app.route('/admin.html')
+def serve_admin():
+    return serve_html_file('admin.html')
+
+
+
+@app.route('/<path:filename>')
+def serve_dynamic_file(filename):
+    for root in [BASE_DIR, BUNDLE_DIR]:
+        if os.path.exists(os.path.join(root, filename)):
+            return send_from_directory(root, filename)
+    return jsonify({"error": "File not found"}), 404
+
+# ==========================================
+# 🛡️ 투네이션 후원 안전 접수 및 파서
+# ==========================================
+@app.route('/api/donation', methods=['POST'])
+def receive_donation():
+    try:
+        new_don = request.json or {}
+        amount = int(new_don.get('amount', 0))
+        tx_id = new_don.get('tx_id')
+        
+        # 1. 음수(0원 미만) 후원 금액 차단 (0원 시그니처 후원 등 허용)
+        if amount < 0:
+            return jsonify({"status": "error", "message": "Invalid amount"}), 400
+            
+        # 2. tx_id 중복 검사로 중복 처리 차단
+        if tx_id:
+            try:
+                with get_db_connection() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute(db_query("SELECT id FROM donation_history WHERE tx_id = ?"), (tx_id,))
+                    if cursor.fetchone():
+                        return jsonify({"status": "success", "message": "Duplicate donation ignored."})
+            except Exception as dbe:
+                print(f"⚠️ [tx_id 중복 확인 오류] {dbe}")
+
+        with file_lock:
+            state = load_data()
+            don_id = f"don_{int(time.time() * 1000)}"
+            name = new_don.get('name', '익명')
+            msg = new_don.get('message', '')
+            
+            parsed_name = name.strip()
+            cleaned_msg = msg.strip()
+            
+            # 💡 [핵심] 메시지 내 콜론(:)을 감지하여 이름과 메시지를 분리해주는 오토 파서 (시그니처 신청 태그는 제외)
+            cleaned_msg_for_split = cleaned_msg.replace('：', ':')
+            if cleaned_msg_for_split and ':' in cleaned_msg_for_split and not cleaned_msg.startswith("[시그니처 신청:"):
+                split_char = ':' if ':' in cleaned_msg else '：'
+                parts = cleaned_msg.split(split_char, 1)
+                potential_name = parts[0].strip()
+                if 0 < len(potential_name) <= 15:
+                    parsed_name = potential_name
+                    cleaned_msg = parts[1].strip()
+                    
+            if parsed_name.endswith('님') and len(parsed_name) > 1:
+                parsed_name = parsed_name[:-1]
+                
+            parsed_don_entry = {
+                'id': don_id,
+                'name': parsed_name,
+                'amount': amount,
+                'message': cleaned_msg,
+                'time': time.strftime('%H:%M:%S')
+            }
+            state['pending_donations'].append(parsed_don_entry)
+            state['latest_donation'] = {
+                'name': parsed_name,
+                'amount': amount,
+                'message': cleaned_msg,
+                'time': time.time()
+            }
+            state['reaction_mode'] = True
+            
+            # BJ 점수판 업데이트
+            current_total = amount
+            target_list_key = 'extra_bjs' if state.get('extra_game_active', False) else 'bjs'
+            
+            if target_list_key == 'extra_bjs' and not state.get('extra_bjs'):
+                state['extra_bjs'] = [{"name": bj['name'], "score": 0, "contribution": 0} for bj in state.get('bjs', [])]
+                
+            # [비활성화] 닉네임 직접 매칭 자동 점수 가산 기능 해제 (모든 후원이 승인 대기함으로 모이도록 설정)
+            # for bj in state.get(target_list_key, []):
+            #     if bj['name'] == parsed_name:
+            #         add_point = int(amount / 10000 + 0.5)
+            #         bj['score'] += add_point
+            #         bj['contribution'] = bj.get('contribution', 0) + add_point
+            #         current_total = bj['score']
+            #         break
+                    
+            try:
+                with get_db_connection() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        db_query("INSERT INTO donation_history (timestamp, name, amount, current_total, message, source, tx_id) VALUES (?, ?, ?, ?, ?, ?, ?)"),
+                        (time.strftime('%Y-%m-%d %H:%M:%S'), parsed_name, amount, current_total, cleaned_msg, "toonation", tx_id)
+                    )
+            except Exception as dbe:
+                print(f"[장부 기록 오류] {dbe}")
+                
+            save_data(state)
+            broadcast_event('update', state)
+            
+            print("  🎯 [최종 처리 결과]")
+            print(f"    ▶ 최종 분류된 이름  : {parsed_name}")
+            print(f"    ▶ 최종 분류된 메시지: {cleaned_msg}")
+            print("    ▶ 자동 승인 처리 여부: 🟡 클래식 수동 정산 모드 작동 (승인 대기함 적립)")
+            print("======================================================================\n")
+            
+        return jsonify({'status': 'success', 'id': don_id})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# ==========================================
+# 📺 CORS 우회 유튜브 검색 API (SSL 무시)
+# ==========================================
+@app.route('/api/yt/search')
+def yt_search():
+    query = request.args.get('q', '')
+    if not query:
+        return jsonify([])
+        
+    instances = ['https://yewtu.be', 'https://invidious.flokinet.to', 'https://iv.melmac.space']
+    ssl_ctx = ssl._create_unverified_context()
+    
+    for base in instances:
+        try:
+            encoded_query = urllib.parse.quote(query)
+            url = f"{base}/api/v1/search?q={encoded_query}"
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            
+            with urllib.request.urlopen(req, context=ssl_ctx, timeout=3) as response:
+                data = json.loads(response.read().decode('utf-8'))
+                results = []
+                for item in data:
+                    if item.get('type') == 'video':
+                         length = item.get('lengthSeconds', 0)
+                         mins = length // 60
+                         secs = length % 60
+                         duration_str = f"{mins}:{secs:02d}"
+                         
+                         video_id = item.get('videoId', '')
+                         results.append({
+                             'title': item.get('title', ''),
+                             'videoId': video_id,
+                             'author': item.get('author', ''),
+                             'duration': duration_str,
+                             'thumbnail': f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"
+                         })
+                return jsonify(results)
+        except Exception as e:
+            print(f"[YT Search Exception on {base}] {e}")
+            continue
+            
+    return jsonify([])
+
+@app.route('/api/data', methods=['GET', 'POST'])
+def api_data():
+    if request.method == 'POST':
+        with file_lock:
+            state = request.json or {}
+            current_state = load_data()
+            
+            # [수정] 409 conflict로 인한 경고창(Alert) 발생을 원천 차단하기 위해 409 검증을 제거하고,
+            # 마지막으로 전송된 상태를 기준으로 버전을 갱신하여 저장합니다. (Last-Write-Wins)
+            client_version = state.get('version', 0)
+            server_version = current_state.get('version', 1)
+            
+            state['version'] = max(client_version, server_version) + 1
+            save_data(state)
+            broadcast_event('update', state)
+        return jsonify({"status": "success"})
+        
+    state = load_data()
+    if isinstance(state, dict):
+        state = state.copy()
+        state['server_time'] = int(time.time() * 1000)
+        # 조종실 웹에 로그인 세션이 있을 경우 보안 API 토큰을 제공
+        if session.get('authenticated'):
+            state['api_token'] = load_auth_config()['session_secret']
+    return jsonify(state)
+
+@app.route('/api/roulette/winner', methods=['POST'])
+def api_roulette_winner():
+    try:
+        req_data = request.json
+        winner_name = req_data.get('name', '익명')
+        with file_lock:
+            state = load_data()
+            if 'roulette' not in state:
+                state['roulette'] = {
+                    "command": None,
+                    "command_time": 0,
+                    "weight_type": "equal",
+                    "select_name": "",
+                    "select_index": -1,
+                    "winner_name": None,
+                    "is_spinning": False,
+                    "item_source": "bj",
+                    "custom_items": ["벌칙 1", "벌칙 2", "벌칙 3", "벌칙 4", "벌칙 5"]
+                }
+            state['roulette']['winner_name'] = winner_name
+            state['roulette']['command'] = 'ended'
+            state['roulette']['is_spinning'] = False
+            state['roulette']['command_time'] = int(time.time() * 1000)
+            state['roulette_enabled'] = False
+            
+            # 랭킹 로그에 기록 추가
+            time_str = time.strftime('%H:%M:%S')
+            if 'logs' not in state:
+                state['logs'] = []
+            state['logs'].insert(0, {
+                'time': time_str,
+                'name': f"🎡 룰렛 결과: {winner_name}",
+                'val': 0
+            })
+            if len(state['logs']) > 200:
+                state['logs'] = state['logs'][:200]
+                
+            save_data(state)
+            broadcast_event('update', state)
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/layout', methods=['GET', 'POST'])
+def api_layout():
+    if request.method == 'POST':
+        with open(LAYOUT_FILE, 'w', encoding='utf-8') as f:
+            json.dump(request.json, f, ensure_ascii=False, indent=4)
+        broadcast_event('layout', request.json)
+        return jsonify({"status": "success"})
+    if os.path.exists(LAYOUT_FILE):
+        with open(LAYOUT_FILE, 'r', encoding='utf-8') as f:
+            return jsonify(json.load(f))
+    return jsonify({})
+
+# ==========================================
+# 🎮 번외 게임 모드 제어 API
+# ==========================================
+@app.route('/api/extra_game/start', methods=['POST'])
+def extra_game_start():
+    try:
+        with file_lock:
+            state = load_data()
+            state["extra_game_active"] = True
+            
+            # Initialize extra_bjs with all players from bjs, reset scores to 0
+            state["extra_bjs"] = []
+            for bj in state.get("bjs", []):
+                state["extra_bjs"].append({
+                    "name": bj["name"],
+                    "score": 0,
+                    "contribution": 0
+                })
+                
+            save_data(state)
+            broadcast_event('update', state)
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/extra_game/end', methods=['POST'])
+def extra_game_end():
+    try:
+        with file_lock:
+            state = load_data()
+            if not state.get("extra_game_active", False) or "extra_bjs" not in state:
+                return jsonify({"status": "error", "message": "진행 중인 번외 게임이 없습니다."}), 400
+                
+            extra_scores = {bj["name"]: bj for bj in state.get("extra_bjs", [])}
+            
+            for bj in state.get("bjs", []):
+                bj_name = bj["name"]
+                if bj_name in extra_scores:
+                    bj["score"] += extra_scores[bj_name]["score"]
+                    bj["contribution"] = bj.get("contribution", 0) + extra_scores[bj_name].get("contribution", 0)
+                    
+            state["extra_game_active"] = False
+            state["extra_bjs"] = []
+            
+            save_data(state)
+            broadcast_event('update', state)
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/extra_game/cancel', methods=['POST'])
+def extra_game_cancel():
+    try:
+        with file_lock:
+            state = load_data()
+            state["extra_game_active"] = False
+            state["extra_bjs"] = []
+            
+            save_data(state)
+            broadcast_event('update', state)
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# ==========================================
+# 💾 타임머신 스냅샷 API
+# ==========================================
+@app.route('/api/snapshots', methods=['GET'])
+def get_snapshots():
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(db_query("SELECT id, timestamp, summary FROM snapshots ORDER BY id DESC"))
+            rows = cursor.fetchall()
+            snapshots = [{"id": r[0], "timestamp": r[1], "summary": r[2]} for r in rows]
+        return jsonify({"status": "success", "snapshots": snapshots})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/snapshots/manual', methods=['POST'])
+def create_manual_snapshot():
+    try:
+        req_data = request.json
+        label = req_data.get("label", "수동 백업")
+        state = load_data()
+        timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                db_query("INSERT INTO snapshots (timestamp, state_json, summary) VALUES (?, ?, ?)"),
+                (timestamp, json.dumps(state, ensure_ascii=False), label)
+            )
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/snapshots/restore', methods=['POST'])
+def restore_snapshot():
+    try:
+        req_data = request.json
+        snap_id = req_data.get("id")
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(db_query("SELECT state_json FROM snapshots WHERE id = ?"), (snap_id,))
+            row = cursor.fetchone()
+            if not row:
+                return jsonify({"status": "error", "message": "스냅샷을 찾을 수 없습니다."}), 404
+            state_json = row[0]
+            
+        with file_lock:
+            state = json.loads(state_json)
+            save_data(state)
+            broadcast_event('update', state)
+            
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/snapshots/delete', methods=['POST'])
+def delete_snapshot():
+    try:
+        req_data = request.json
+        snap_id = req_data.get("id")
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(db_query("DELETE FROM snapshots WHERE id = ?"), (snap_id,))
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/server/status', methods=['GET'])
+def get_server_status():
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            # Get player count
+            cursor.execute(db_query("SELECT COUNT(*) FROM players"))
+            player_count = cursor.fetchone()[0]
+            
+            # Get donation history count
+            cursor.execute(db_query("SELECT COUNT(*) FROM donation_history"))
+            history_count = cursor.fetchone()[0]
+            
+            # Get snapshot count
+            cursor.execute(db_query("SELECT COUNT(*) FROM snapshots"))
+            snapshot_count = cursor.fetchone()[0]
+            
+            # Get last 30 logs from donation_history
+            cursor.execute(db_query("SELECT id, timestamp, name, amount, current_total, message, source FROM donation_history ORDER BY id DESC LIMIT 30"))
+            history_rows = cursor.fetchall()
+            history_list = []
+            for r in history_rows:
+                history_list.append({
+                    'id': r[0],
+                    'timestamp': r[1],
+                    'name': r[2],
+                    'amount': r[3],
+                    'current_total': r[4],
+                    'message': r[5],
+                    'source': r[6]
+                })
+                
+        return jsonify({
+            'status': 'success',
+            'is_postgres': IS_POSTGRES,
+            'player_count': player_count,
+            'history_count': history_count,
+            'snapshot_count': snapshot_count,
+            'logs': history_list
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/server/reset', methods=['POST'])
+def reset_server_database():
+    try:
+        global MEMORY_STATE
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(db_query("DELETE FROM players"))
+            cursor.execute(db_query("DELETE FROM kv_store"))
+            cursor.execute(db_query("DELETE FROM donation_history"))
+            cursor.execute(db_query("DELETE FROM snapshots"))
+            
+        MEMORY_STATE = DEFAULT_STATE.copy()
+        save_data(MEMORY_STATE, is_initial=True)
+        broadcast_event('update', MEMORY_STATE)
+        return jsonify({"status": "success", "message": "데이터베이스가 성공적으로 완전히 리셋되었습니다."})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/server/end_broadcast', methods=['POST'])
+def end_broadcast():
+    try:
+        global MEMORY_STATE
+        with file_lock:
+            # 1. Clear database tables (donation history, snapshots, players)
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(db_query("DELETE FROM players"))
+                cursor.execute(db_query("DELETE FROM donation_history"))
+                cursor.execute(db_query("DELETE FROM snapshots"))
+                # Delete kv_store keys that are NOT persistent configurations
+                cursor.execute(
+                    db_query("DELETE FROM kv_store WHERE key NOT IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"), 
+                    ('theme', 'neon_speed', 'saved_colors', 'target_goal', 'account', 'effect_rules', 'screen_effect', 'ticker_enabled', 'ticker_speed', 'ticker_text', 'totp_secret')
+                )
+            
+            # 2. Get current state from database (which will have only configurations preserved)
+            state = load_data()
+            
+            # Reset memory state and set broadcast_active to False
+            state['broadcast_active'] = False
+            state['bjs'] = []
+            state['bottom_fixed']['score'] = 0
+            state['reaction_mode'] = False
+            state['match_data'] = {"active": False, "players": [], "time_left_ms": 180000, "is_running": False}
+            state['pending_donations'] = []
+            state['latest_donation'] = {"name": "", "amount": 0, "message": "", "time": 0}
+            state['extra_game_active'] = False
+            state['extra_bjs'] = []
+            state['roulette_enabled'] = False
+            if 'roulette' in state:
+                state['roulette']['winner_name'] = None
+                state['roulette']['is_spinning'] = False
+                state['roulette']['select_name'] = ""
+                state['roulette']['select_index'] = -1
+            state['logs'] = []
+            state['match_logs'] = []
+            
+            save_data(state)
+            broadcast_event('update', state)
+            
+        return jsonify({"status": "success", "message": "방송이 종료되고 오늘의 데이터가 리셋되었습니다."})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/server/start_broadcast', methods=['POST'])
+def start_broadcast():
+    try:
+        global MEMORY_STATE
+        req = request.json or {}
+        names = req.get('names', [])
+        if not names:
+            return jsonify({"status": "error", "message": "최소 한 명 이상의 플레이어를 등록해야 합니다."}), 400
+        if len(names) > 10:
+            return jsonify({"status": "error", "message": "플레이어는 최대 10명까지 등록할 수 있습니다."}), 400
+            
+        with file_lock:
+            # 1. Clear database tables (donation history, snapshots, players)
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(db_query("DELETE FROM players"))
+                cursor.execute(db_query("DELETE FROM donation_history"))
+                cursor.execute(db_query("DELETE FROM snapshots"))
+                # Delete kv_store keys that are NOT persistent configurations
+                cursor.execute(
+                    db_query("DELETE FROM kv_store WHERE key NOT IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"), 
+                    ('theme', 'neon_speed', 'saved_colors', 'target_goal', 'account', 'effect_rules', 'screen_effect', 'ticker_enabled', 'ticker_speed', 'ticker_text', 'totp_secret')
+                )
+            
+            # 2. Get current state from database (which will have only configurations preserved)
+            state = load_data()
+            
+            # 3. Set broadcast_active to True and initialize players
+            state['broadcast_active'] = True
+            state['bjs'] = [{"name": name.strip(), "score": 0, "contribution": 0} for name in names if name.strip()]
+            state['bottom_fixed']['score'] = 0
+            state['reaction_mode'] = False
+            state['match_data'] = {"active": False, "players": [], "time_left_ms": 180000, "is_running": False}
+            state['pending_donations'] = []
+            state['latest_donation'] = {"name": "", "amount": 0, "message": "", "time": 0}
+            state['extra_game_active'] = False
+            state['extra_bjs'] = []
+            state['roulette_enabled'] = False
+            if 'roulette' in state:
+                state['roulette']['winner_name'] = None
+                state['roulette']['is_spinning'] = False
+                state['roulette']['select_name'] = ""
+                state['roulette']['select_index'] = -1
+            state['logs'] = []
+            state['match_logs'] = []
+            
+            save_data(state)
+            broadcast_event('update', state)
+            
+        return jsonify({"status": "success", "message": "방송이 활성화되었습니다."})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ==========================================
+# 📋 수동 조작 이력 조회 API
+# ==========================================
+@app.route('/api/manual_logs', methods=['GET'])
+def get_manual_logs():
+    try:
+        source_filter = request.args.get('source', 'all')  # all, mobile, toonation
+        name_filter = request.args.get('name', '').strip()
+        page = max(1, int(request.args.get('page', 1)))
+        per_page = min(200, max(10, int(request.args.get('per_page', 50))))
+        export_csv = request.args.get('export', '') == 'csv'
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Build WHERE clause
+            conditions = []
+            params = []
+            if source_filter == 'mobile':
+                conditions.append("source = " + ("$1" if IS_POSTGRES else "?"))
+                params.append("mobile")
+            elif source_filter == 'toonation':
+                conditions.append("source = " + ("$1" if IS_POSTGRES else "?"))
+                params.append("toonation")
+            
+            if name_filter:
+                param_idx = len(params) + 1
+                if IS_POSTGRES:
+                    conditions.append(f"name LIKE ${param_idx}")
+                else:
+                    conditions.append("name LIKE ?")
+                params.append(f"%{name_filter}%")
+            
+            where_clause = (" WHERE " + " AND ".join(conditions)) if conditions else ""
+            
+            # Get total count
+            count_q = f"SELECT COUNT(*) FROM donation_history{where_clause}"
+            if IS_POSTGRES:
+                # Replace $N placeholders for count query
+                pg_count_q = count_q
+                for i in range(len(params)):
+                    pg_count_q = pg_count_q.replace(f"${i+1}", "%s", 1)
+                cursor.execute(pg_count_q, params)
+            else:
+                cursor.execute(count_q, params)
+            total_count = cursor.fetchone()[0]
+            
+            # CSV Export mode
+            if export_csv:
+                data_q = f"SELECT id, timestamp, name, amount, current_total, message, source FROM donation_history{where_clause} ORDER BY id DESC"
+                if IS_POSTGRES:
+                    pg_data_q = data_q
+                    for i in range(len(params)):
+                        pg_data_q = pg_data_q.replace(f"${i+1}", "%s", 1)
+                    cursor.execute(pg_data_q, params)
+                else:
+                    cursor.execute(data_q, params)
+                rows = cursor.fetchall()
+                
+                import io, csv
+                output = io.StringIO()
+                output.write('\ufeff')  # BOM for Excel
+                writer = csv.writer(output)
+                writer.writerow(['ID', '시간', '이름', '변동량', '누적점수', '메시지', '출처'])
+                for r in rows:
+                    writer.writerow([r[0], r[1], r[2], r[3], r[4], r[5], r[6]])
+                
+                from flask import Response
+                return Response(
+                    output.getvalue(),
+                    mimetype='text/csv',
+                    headers={'Content-Disposition': f'attachment; filename=score_log_{time.strftime("%Y%m%d_%H%M%S")}.csv'}
+                )
+            
+            # Paginated fetch
+            offset = (page - 1) * per_page
+            if IS_POSTGRES:
+                param_idx_limit = len(params) + 1
+                param_idx_offset = len(params) + 2
+                data_q = f"SELECT id, timestamp, name, amount, current_total, message, source FROM donation_history{where_clause} ORDER BY id DESC LIMIT ${param_idx_limit} OFFSET ${param_idx_offset}"
+                pg_data_q = data_q
+                all_params = params + [per_page, offset]
+                for i in range(len(all_params)):
+                    pg_data_q = pg_data_q.replace(f"${i+1}", "%s", 1)
+                cursor.execute(pg_data_q, all_params)
+            else:
+                data_q = f"SELECT id, timestamp, name, amount, current_total, message, source FROM donation_history{where_clause} ORDER BY id DESC LIMIT ? OFFSET ?"
+                cursor.execute(data_q, params + [per_page, offset])
+            
+            rows = cursor.fetchall()
+            logs = []
+            for r in rows:
+                logs.append({
+                    'id': r[0], 'timestamp': r[1], 'name': r[2],
+                    'amount': r[3], 'current_total': r[4],
+                    'message': r[5], 'source': r[6]
+                })
+        
+        total_pages = max(1, (total_count + per_page - 1) // per_page)
+        return jsonify({
+            'status': 'success',
+            'logs': logs,
+            'page': page,
+            'per_page': per_page,
+            'total_count': total_count,
+            'total_pages': total_pages
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# ==========================================
+# ⏪ 시간 여행 복원 API (오늘 지정 시간 기준)
+# ==========================================
+@app.route('/api/time_machine/restore_by_time', methods=['POST'])
+def restore_by_time():
+    try:
+        req_data = request.json
+        time_str = req_data.get('time', '').strip()
+        if not time_str:
+            return jsonify({'status': 'error', 'message': '이동할 시간을 입력해주세요.'}), 400
+            
+        today_str = time.strftime('%Y-%m-%d')
+        target_ts = f"{today_str} {time_str}"
+        if len(time_str.split(':')) == 2:
+            target_ts += ':00'
+            
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(db_query("""
+                SELECT name, current_total 
+                FROM donation_history 
+                WHERE id IN (
+                    SELECT MAX(id) 
+                    FROM donation_history 
+                    WHERE timestamp <= ? 
+                    GROUP BY name
+                )
+            """), (target_ts,))
+            history_rows = cursor.fetchall()
+            
+            if not history_rows:
+                return jsonify({'status': 'error', 'message': f'[{target_ts}] 시점 또는 그 이전에 기록된 장부가 없습니다.'}), 404
+                
+            cursor.execute(db_query("SELECT key, value FROM kv_store WHERE key = 'target_goal'"))
+            goal_row = cursor.fetchone()
+            target_goal = json.loads(goal_row[1]) if goal_row else 50000
+            
+        import copy
+        current_state = load_data()
+        restored_state = copy.deepcopy(current_state)
+        restored_state['target_goal'] = target_goal
+        restored_state['bjs'] = []
+        
+        for name, score in history_rows:
+            restored_state['bjs'].append({
+                'name': name,
+                'score': score,
+                'contribution': score
+            })
+            
+        restored_state['bjs'].sort(key=lambda x: x['contribution'], reverse=True)
+        
+        global MEMORY_STATE
+        MEMORY_STATE = restored_state
+        save_data(restored_state)
+        broadcast_event('update', restored_state)
+        
+        return jsonify({
+            'status': 'success',
+            'message': f'⏳ [시간여행 성공]\n오늘 {time_str} 시점의 플레이어 상태로 안전하게 원복되었습니다!'
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# ==========================================
+# 🎛️ 스트림덱 전용 원터치 제어 API (GET 방식)
+# ==========================================
+@app.route('/api/streamdeck/save', methods=['GET'])
+def sd_save():
+    try:
+        state = load_data()
+        timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+        label = "스트림덱 수동 백업"
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                db_query("INSERT INTO snapshots (timestamp, state_json, summary) VALUES (?, ?, ?)"),
+                (timestamp, json.dumps(state, ensure_ascii=False), label)
+            )
+        print("  💾 [스트림덱 명령] 수동 스냅샷 세이브포인트 저장 완료!")
+        return jsonify({"status": "success", "message": "스냅샷 저장 완료"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/streamdeck/neon', methods=['GET'])
+def sd_neon():
+    try:
+        color = request.args.get('color', 'RAINBOW').upper()
+        # 6자리 16진수 색상 코드인 경우 #을 자동으로 붙여줌
+        if len(color) == 6 and all(c in '0123456789ABCDEF' for c in color):
+            color = '#' + color
+            
+        with file_lock:
+            state = load_data()
+            state['effect_trigger'] = {
+                'time': int(time.time() * 1000),
+                'color': color
+            }
+            if color != 'OFF':
+                state['reaction_mode'] = True
+            else:
+                state['reaction_mode'] = False
+                
+            save_data(state)
+            broadcast_event('update', state)
+        print(f"  💡 [스트림덱 명령] 네온 이펙트 조명 전환: {color}")
+        return jsonify({"status": "success", "color": color})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# ==========================================
+# 🖥️ GUI 관리자 및 로그인 창
+# ==========================================
+def start_self_ping():
+    import urllib.request
+    import threading
+    import time
+    
+    url = os.environ.get('RENDER_EXTERNAL_URL')
+    if not url:
+        return
+        
+    def ping_loop():
+        # 즉시 초기화 로그 출력
+        print(f"⏰ [Self-Ping] Daemon initialized for: {url}", flush=True)
+        # 서버 시작 후 첫 30초 대기
+        time.sleep(30)
+        print(f"⏰ [Self-Ping] Starting self-ping loop...", flush=True)
+        while True:
+            try:
+                req = urllib.request.Request(
+                    url,
+                    headers={'User-Agent': 'LiveMaster-KeepAwake/1.0'}
+                )
+                with urllib.request.urlopen(req, timeout=15) as response:
+                    print(f"⏰ [Self-Ping] Ping sent successfully, response code: {response.getcode()}", flush=True)
+            except Exception as e:
+                print(f"⚠️ [Self-Ping] Ping failed: {e}", flush=True)
+            time.sleep(600)  # 10분마다 실행 (Render 무료 비활성화 임계치인 15분보다 짧음)
+            
+    ping_thread = threading.Thread(target=ping_loop, daemon=True)
+    ping_thread.start()
+
+def run_flask():
+    port = int(os.environ.get('PORT', 5000))
+    start_self_ping()
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+
+def has_gui_support():
+    if os.environ.get('HEADLESS') or os.environ.get('DATABASE_URL'):
+        return False
+    if tk is None:
+        return False
+    try:
+        temp_root = tk.Tk()
+        temp_root.destroy()
+        return True
+    except Exception:
+        return False
+
+def run_login_gui():
+    login_success = [False]
+    
+    def check_login():
+        p = entry_pass.get().strip()
+        if p == '0508':
+            login_success[0] = True
+            login_win.destroy()
+        else:
+            messagebox.showerror('보안 인증 실패', '비밀번호가 올바르지 않습니다!')
+            entry_pass.delete(0, tk.END)
+            entry_pass.focus()
+            
+    def on_login_closing():
+        login_win.destroy()
+        sys.exit(0)
+        
+    login_win = tk.Tk()
+    login_win.title('🔒 라이브 마스터 서버 기동 인증')
+    login_win.geometry('380x220')
+    login_win.configure(bg='#111113')
+    login_win.resizable(False, False)
+    
+    ws = login_win.winfo_screenwidth()
+    hs = login_win.winfo_screenheight()
+    x = (ws / 2) - 190.0
+    y = (hs / 2) - 110.0
+    login_win.geometry(f'380x220+{int(x)}+{int(y)}')
+    
+    try:
+        login_win.attributes('-alpha', 0.96)
+    except:
+        pass
+        
+    title = tk.Label(login_win, text='🔒 SERVER BOOT AUTH', fg='#00ffcc', bg='#111113', font=('Consolas', 15, 'bold'))
+    title.pack(pady=20)
+    
+    frame_pass = tk.Frame(login_win, bg='#111113')
+    frame_pass.pack(pady=10)
+    
+    lbl_pass = tk.Label(frame_pass, text='인증 PW : ', fg='#ffffff', bg='#111113', font=('Malgun Gothic', 10, 'bold'), width=8, anchor='e')
+    lbl_pass.pack(side=tk.LEFT)
+    
+    entry_pass = tk.Entry(frame_pass, show='*', fg='white', bg='#222225', insertbackground='white', font=('Malgun Gothic', 10), width=18, relief='flat')
+    entry_pass.pack(side=tk.LEFT)
+    entry_pass.focus()
+    
+    entry_pass.bind('<Return>', lambda e: check_login())
+    
+    btn_login = tk.Button(login_win, text='🔓 서버 엔진 기동', command=check_login, fg='#000000', bg='#00ffcc', activebackground='#00cca3', font=('Malgun Gothic', 10, 'bold'), width=20, height=2, relief='flat')
+    btn_login.pack(pady=15)
+    
+    login_win.protocol('WM_DELETE_WINDOW', on_closing_exit if 'on_closing_exit' in globals() else on_login_closing)
+    login_win.mainloop()
+    
+    return login_success[0]
+
+def open_link(url):
+    webbrowser.open(url)
+
+def on_closing():
+    if messagebox.askokcancel('서버 종료', '방송 서버를 완전히 종료하시겠습니까?\n(정산 기능 및 오버레이 송출이 중단됩니다)'):
+        root.destroy()
+        sys.exit(0)
+
+if __name__ == '__main__':
+    init_db()
+    if not has_gui_support():
+        print("🖥️ [헤드리스 모드] GUI 모드를 사용할 수 없는 환경이거나 클라우드 배포 상태입니다. 백엔드 Flask 서버만 무중단 구동합니다.")
+        run_flask()
+    else:
+        if run_login_gui():
+            flask_thread = threading.Thread(target=run_flask, daemon=True)
+            flask_thread.start()
+            
+            root = tk.Tk()
+            root.title('💎 라이브 마스터 순정 방송서버')
+            root.geometry('460x340')
+            root.configure(bg='#111113')
+            root.resizable(False, False)
+            
+            try:
+                root.attributes('-alpha', 0.96)
+            except:
+                pass
+                
+            ws = root.winfo_screenwidth()
+            hs = root.winfo_screenheight()
+            x = (ws / 2) - 230.0
+            y = (hs / 2) - 170.0
+            root.geometry(f'460x420+{int(x)}+{int(y)}')
+            
+            # UI 구성
+            lbl_logo = tk.Label(root, text='💎 LIVE MASTER SERVER', fg='#00ffcc', bg='#111113', font=('Consolas', 18, 'bold'))
+            lbl_logo.pack(pady=15)
+            
+            port = int(os.environ.get('PORT', 5000))
+            lbl_status = tk.Label(root, text=f'🟢 실시간 방송 정산 엔진 구동 중 (Port: {port})', fg='#ffffff', bg='#111113', font=('Malgun Gothic', 11, 'bold'))
+            lbl_status.pack(pady=5)
+            
+            lbl_info = tk.Label(root, text='투네이션의 모든 수동 후원이 대기함으로 입하되며,\n조종실 및 방송 오버레이가 한치의 오차 없이 구동됩니다.', fg='#8e8e93', bg='#111113', font=('Malgun Gothic', 9), justify='center')
+            lbl_info.pack(pady=5)
+            
+            # 🔑 OTP 보안 등록 정보 추가
+            otp_sec = get_or_create_totp_secret()
+            lbl_otp = tk.Label(root, text='🔑 모바일 OTP 보안키: ' + otp_sec, fg='#ff9f0a', bg='#111113', font=('Consolas', 11, 'bold'))
+            lbl_otp.pack(pady=5)
+            
+            lbl_otp_info = tk.Label(root, text=f'* 최초 등록 방법: 스마트폰 구글 OTP 앱에서 위 키를 입력하거나,\n서버 PC 브라우저로 http://localhost:{port}/setup 에 접속해 QR 코드를 스캔하세요.', fg='#8e8e93', bg='#111113', font=('Malgun Gothic', 8), justify='center')
+            lbl_otp_info.pack(pady=5)
+            
+            frame_btns = tk.Frame(root, bg='#111113')
+            frame_btns.pack(pady=20)
+            
+            btn_ctrl = tk.Button(frame_btns, text='💻 제어 센터 (조종실)', command=lambda: open_link(f'http://localhost:{port}/controller'), fg='#000000', bg='#00ffcc', activebackground='#00cca3', font=('Malgun Gothic', 10, 'bold'), width=18, height=2, relief='flat')
+            btn_ctrl.pack(side=tk.LEFT, padx=10)
+            
+            btn_ovr = tk.Button(frame_btns, text='🎬 송출용 오버레이', command=lambda: open_link(f'http://localhost:{port}/overlay'), fg='#ffffff', bg='#333336', activebackground='#444448', font=('Malgun Gothic', 10, 'bold'), width=18, height=2, relief='flat')
+            btn_ovr.pack(side=tk.LEFT, padx=10)
+            
+            root.protocol('WM_DELETE_WINDOW', on_closing)
+            root.mainloop()

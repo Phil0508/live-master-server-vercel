@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>🚀 라이브 마스터 오버레이 (새로고침 방어막 패치)</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&family=Orbitron:wght@900&display=swap');
+        
+        :root {
+            --text-main: #ffffff; --text-highlight: #FFD700; --text-secondary: #00E5B5;
+            --excel-yellow: #FFD700; --excel-dark: rgba(20, 20, 20, 0.85); --excel-border: #FFD700;
+            --theme-neon: #ff0055;
+            --neon-speed: 2.5s;
+            --audi-speed: 1.4s;
+            --accent: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.4);
+        }
+
+        body.theme-pink {
+            --text-highlight: #ff85a2;
+            --text-secondary: #ffa3b1;
+            --excel-yellow: #ffb6c1;
+            --excel-border: #ffb6c1;
+            --theme-neon: #ffb6c1;
+            --excel-dark: rgba(30, 20, 25, 0.92);
+            --accent: #ff85a2;
+            --accent-glow: rgba(255, 133, 162, 0.4);
+        }
+
+        body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; background: transparent; font-family: 'Pretendard', sans-serif; overflow: hidden; transition: opacity 0.4s ease-in-out; }
+        #scale-wrapper { position: absolute; top: 0; left: 0; width: 1080px; height: 1920px; transform-origin: top left; }
+        #master-container { width: 100%; height: 100%; position: relative; will-change: transform; }
+        
+        .widget-container { 
+            position: absolute; transform-origin: top left; 
+            /* 🚀 애플 리퀴드 럭셔리 이징(cubic-bezier(0.16, 1, 0.3, 1))을 인가하여 위젯이 미끄러지듯 스르륵 쫀득하게 안착 */
+            transition: top 0.8s cubic-bezier(0.16, 1, 0.3, 1), left 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease-in-out, visibility 0.6s ease-in-out; 
+            pointer-events: auto; 
+        }
+
+        /* --------------------------------------------------
+            🌈 일반 네온 레이어
+        -------------------------------------------------- */
+        .neon-layer { 
+            position: fixed; inset: 0; pointer-events: none; z-index: 90000; 
+            opacity: 0; visibility: hidden; transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+            padding: 40px; 
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude; overflow: hidden;
+        }
+        .neon-layer.active { opacity: 1; visibility: visible; }
+        .neon-layer::before, .neon-layer::after { content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; animation: rotateRainbow var(--neon-speed, 2.5s) linear infinite; will-change: transform; display: none; }
+        .neon-layer::after { filter: blur(25px); opacity: 0.9; }
+        .neon-layer.neon-rainbow::before, .neon-layer.neon-rainbow::after { display: block; background: conic-gradient( #ff0000 0deg, #ff7f00 51deg, #ffff00 102deg, #00ff00 153deg, #0000ff 204deg, #4b0082 255deg, #8b00ff 306deg, #ff0000 360deg ); }
+        .neon-layer.neon-single::before, .neon-layer.neon-single::after { display: block; background: conic-gradient( transparent 0deg, var(--glow-color) 90deg, transparent 90deg, transparent 180deg, var(--glow-color) 270deg, transparent 270deg, transparent 360deg ); }
+        @keyframes rotateRainbow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --------------------------------------------------
+            💡 [신규] 프리미엄 리얼 LED 아우디 라이트 (하얀색 패치)
+        -------------------------------------------------- */
+        .audi-layer { 
+            position: fixed; inset: 0; pointer-events: none; z-index: 89000; 
+            opacity: 0; transition: opacity 0.4s ease; 
+            display: flex; justify-content: space-between; align-items: flex-end;
+            padding: 0 30px 40px 30px; 
+        }
+        .audi-layer.active { opacity: 1; }
+        .audi-layer.hide { opacity: 0; }
+        
+        .audi-layer.active::before {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 120px;
+            background: linear-gradient(to top, rgba(255, 255, 255, 0.2), transparent); 
+            filter: blur(20px); z-index: -1;
+        }
+
+        .audi-container { display: flex; gap: 15px; }
+        .audi-container.right { flex-direction: row-reverse; } 
+
+        .audi-led {
+            width: 45px; height: 12px; border-radius: 6px;
+            background: rgba(255, 60, 0, 0.1); 
+            border: 2px solid rgba(255, 60, 0, 0.3);
+            box-shadow: 0 0 10px rgba(255, 60, 0, 0.2);
+            position: relative;
+        }
+
+        .audi-layer.active .audi-led {
+            animation: ledChase var(--audi-speed, 1.4s) infinite;
+            animation-delay: calc(var(--idx) * 0.08s); 
+        }
+
+        .audi-led::after {
+            content: ''; position: absolute;
+            bottom: 12px; left: 50%; transform: translateX(-50%) scaleY(0);
+            width: 35px; height: 50vh;
+            background: linear-gradient(to top, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.4) 40%, transparent 100%); 
+            filter: blur(8px); opacity: 0;
+            transform-origin: bottom;
+            mix-blend-mode: screen; 
+        }
+        .audi-layer.active .audi-led::after {
+            animation: beamChase var(--audi-speed, 1.4s) infinite;
+            animation-delay: calc(var(--idx) * 0.08s);
+        }
+
+        @keyframes ledChase {
+            0%, 100% { background: rgba(255, 60, 0, 0.1); border-color: rgba(255, 60, 0, 0.3); box-shadow: 0 0 10px rgba(255, 60, 0, 0.2); }
+            15%, 40% { 
+                background: #ffffff; 
+                border-color: #ffffff; 
+                box-shadow: 0 0 30px #ffffff, 0 0 60px #ffffff, inset 0 0 15px #ffffff; 
+            }
+            50% { background: rgba(255, 60, 0, 0.1); border-color: rgba(255, 60, 0, 0.3); box-shadow: 0 0 10px rgba(255, 60, 0, 0.2); }
+        }
+        @keyframes beamChase {
+            0%, 100% { opacity: 0; transform: translateX(-50%) scaleY(0.2); filter: brightness(1) blur(8px); }
+            15%, 30% { opacity: 1; transform: translateX(-50%) scaleY(1.1); filter: brightness(2) blur(12px); }
+            50% { opacity: 0; transform: translateX(-50%) scaleY(0.5); filter: brightness(1) blur(8px); }
+        }
+
+        /* --------------------------------------------------
+            기존 UI 디자인 영역
+        -------------------------------------------------- */
+        .excel-board { background: var(--excel-dark); border: 2px solid var(--excel-border); border-radius: 15px; padding: 12px; width: max-content; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .excel-grid-container { display: flex; gap: 10px; } 
+        .excel-col { display: flex; flex-direction: column; width: 330px; }
+        .excel-header { background: var(--excel-yellow); color: #000; font-weight: 900; font-size: 16px; display: grid; grid-template-columns: 40px 110px 80px 100px; text-align: center; padding: 6px 0; border-radius: 20px; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .excel-header div { display: flex; align-items: center; justify-content: center; letter-spacing: -0.5px; }
+        .excel-row { display: grid; grid-template-columns: 40px 110px 80px 100px; text-align: center; height: 42px; border-bottom: 1px solid rgba(255,255,255,0.15); font-size: 22px; font-weight: 800; align-items: center; padding: 0; }
+        .r-rank { color: #fff; font-size: 22px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+        .r-name { color: #fff; font-weight: 900; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .r-score { color: #fff; position: relative; font-size: 20px; }
+        .r-contrib { color: var(--excel-yellow); font-weight: 900; position: relative; text-shadow: 0 0 10px rgba(255,215,0,0.3); font-size: 20px; }
+        .rank-1 .r-rank { color: #FFD700; text-shadow: 0 0 10px #FFD700; } .rank-2 .r-rank { color: #E0E0E0; text-shadow: 0 0 10px #E0E0E0; } .rank-3 .r-rank { color: #CD7F32; text-shadow: 0 0 10px #CD7F32; }
+
+        .row-bottom { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background: rgba(0, 198, 255, 0.1); border: 1px solid var(--text-secondary); border-radius: 8px; margin-top: 5px; box-shadow: inset 0 0 10px rgba(0, 198, 255, 0.2); }
+        .row-bottom .b-name { color: var(--text-secondary); font-weight: 900; font-size: 20px; text-shadow: 0 0 5px var(--text-secondary); }
+        .row-bottom .b-score { color: var(--text-secondary); font-weight: 900; font-size: 24px; text-shadow: 0 0 10px var(--text-secondary); position: relative; }
+
+        .excel-gauge-box { background: var(--excel-dark); border: 2px solid var(--excel-border); border-radius: 15px; padding: 15px 20px; min-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .total-row { display: flex; justify-content: space-between; font-size: 22px; font-weight: 900; margin-bottom: 12px; }
+        .goal-bar-bg { background: rgba(0,0,0,0.8); border: 2px solid #555; border-radius: 12px; height: 22px; padding: 3px; position: relative; }
+        .goal-bar-fill { background: linear-gradient(90deg, #ff0055, #ff5500); height: 100%; border-radius: 8px; width: 0%; transition: width 0.8s ease; box-shadow: 0 0 15px #ff0055; }
+        .goal-text { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: #ccc; margin-top: 8px; }
+
+        .acc-box-v2 { background: var(--excel-dark); border: 2px solid var(--excel-yellow); border-radius: 15px; padding: 15px 20px; width: 280px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .acc-top { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; } 
+        .acc-bank-tag { background: var(--excel-yellow); color: #000; font-weight: 900; font-size: 18px; padding: 4px 10px; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); } 
+        .acc-name-tag { color: #fff; font-size: 18px; font-weight: 800; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); } 
+        .acc-num-v2 { font-size: 38px; font-weight: 900; color: #fff; letter-spacing: 1px; text-shadow: 3px 3px 6px rgba(0,0,0,0.9); word-break: break-all; line-height: 1.2; }
+
+        /* --------------------------------------------------
+            ⚔️ 퓨처리스트 네온 아크릴 대결판 (리뉴얼)
+        -------------------------------------------------- */
+        .match-wrapper { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 25px; 
+        } 
+        
+        /* 메카닉 타이머 캡슐 */
+        .m-timer-pill { 
+            background: rgba(255, 255, 255, 0.2); 
+            backdrop-filter: blur(8px); 
+            border: 2px solid rgba(255,255,255,0.4); 
+            border-radius: 40px; 
+            padding: 8px 35px; 
+            color: #fff; 
+            font-size: 40px; 
+            font-weight: 900; 
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.8); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5); 
+            transition: all 0.2s linear; 
+        }
+
+        .m-team-container { 
+            display: flex; 
+            gap: 25px; 
+            min-width: 290px; /* 450px는 너무 벌어지는 문제 해결: 290px로 콤팩트하면서 시간이랑 절대 안 겹치게 미세 조정 */
+            justify-content: center; /* 1명만 있거나 할 때도 정가운데 정렬 */
+        } 
+        
+        .m-team-box { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            transition: transform 0.2s ease;
+        } 
+        
+        /* 영롱한 네온 아크릴 쉴드 스코어 보드 */
+        .m-score-box { 
+            background: rgba(15, 15, 22, 0.65); 
+            backdrop-filter: blur(16px) saturate(180%); 
+            border: 2px solid rgba(255, 255, 255, 0.1); 
+            width: 200px; 
+            height: 110px; 
+            border-radius: 20px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: #ffffff; 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 55px; 
+            font-weight: 900; 
+            text-shadow: 0 5px 15px rgba(0,0,0,0.8);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(255,255,255,0.05); 
+            position: relative; 
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        } 
+
+        /* 쫀득한 3D 바운스 및 네온 에너지 벌크업 충전 애니메이션 */
+        .m-score-box.score-bump {
+            animation: scoreBumpAnimation 0.8s cubic-bezier(0.25, 1.5, 0.5, 1) forwards;
+        }
+        @keyframes scoreBumpAnimation {
+            0% { transform: scale(1); }
+            20% { transform: scale(1.22) translateY(-10px); }
+            40% { transform: scale(0.92) translateY(3px); }
+            65% { transform: scale(1.05) translateY(-2px); }
+            80% { transform: scale(0.98) translateY(0); }
+            100% { transform: scale(1); }
+        }
+
+        /* 쉴드 테두리 반짝임 네온 아우라 그라데이션 */
+        .m-score-box::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            padding: 2px;
+            background: linear-gradient(to bottom, var(--team-color, #444), transparent 70%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            opacity: 0.85;
+            box-shadow: 0 0 20px var(--team-color, transparent);
+        }
+
+        /* 메카닉 이름표 배지 */
+        .m-name-box { 
+            background: #0d0d12; 
+            color: #ffffff; 
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 24px; 
+            font-weight: 800; 
+            padding: 8px 30px; 
+            border: 2px solid var(--team-color, #444); 
+            border-radius: 30px; 
+            margin-top: -22px; 
+            z-index: 2; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6); 
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            transition: all 0.3s ease;
+        }
+        
+        .m-team-box:hover .m-score-box {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 15px var(--team-color);
+        }
+        .m-team-box:hover .m-name-box {
+            background: var(--team-color);
+            color: #000;
+            text-shadow: none;
+            box-shadow: 0 8px 25px var(--team-color);
+        }
+
+        @keyframes explodeTimer { 0% { transform: scale(1.3); opacity: 1; filter: drop-shadow(0 0 20px #ff0000); color: #ff0000; background: rgba(255,0,0,0.5); } 20% { transform: scale(1.6); opacity: 1; filter: drop-shadow(0 0 50px #ff5500); color: #fff; background: #ff0000; border-color: #fff; } 100% { transform: scale(0); opacity: 0; filter: drop-shadow(0 0 100px #ffff00); } }
+        .timer-explode { animation: explodeTimer 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
+        .score-pop { position: absolute; right: -20px; top: -15px; color: var(--theme-neon); font-weight: 900; font-size: 22px; text-shadow: 0 0 10px var(--theme-neon); animation: fu 1s ease-out forwards; z-index:100; pointer-events:none; } @keyframes fu { 0%{opacity:1; transform:translateY(0) scale(1)} 50%{transform:translateY(-15px) scale(1.2)} 100%{opacity:0; transform:translateY(-30px) scale(1)} }
+        
+        .center-popup-content { background: rgba(0, 0, 0, 0.9); border: 4px solid var(--text-secondary); border-radius: 50px; padding: 15px 60px; font-size: 36px; font-weight: 900; color: white; white-space: nowrap; box-shadow: 0 15px 35px rgba(0,0,0,0.8), inset 0 0 25px var(--text-secondary); display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.4s; transform: translateY(30px) scale(0.8); } 
+        .center-popup-content.show { opacity: 1; transform: translateY(0) scale(1); }
+        
+        .takeover-popup-content { background: rgba(0, 0, 0, 0.95); border: 4px solid var(--theme-neon); border-radius: 50px; padding: 15px 60px; font-size: 40px; font-weight: 900; color: white; white-space: nowrap; box-shadow: inset 0 0 30px var(--theme-neon); opacity: 0; transition: 0.4s; transform: translateY(40px) scale(0.7); } .takeover-popup-content.show { opacity: 1; transform: translateY(0) scale(1); }
+        
+        .ticker-bar { width: 1080px; height: 70px; background: rgba(0, 0, 0, 0.7); border-top: 2px solid var(--theme-neon); border-bottom: 2px solid var(--theme-neon); display: flex; align-items: center; overflow: hidden; backdrop-filter: blur(8px); box-shadow: 0 5px 20px rgba(0,0,0,0.5);} .ticker-text-wrap { white-space: nowrap; display: inline-block; font-size: 40px; font-weight: 900; color: #fff; text-shadow: 2px 2px 8px rgba(0,0,0,0.9); animation: tickerAnim var(--ticker-speed, 15s) linear infinite; } @keyframes tickerAnim { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
+        
+        #ui-layer { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out; color: var(--text-main); pointer-events: none; } 
+        /* 대결 컨테이너: 기본 숨김, .match-visible 클래스로만 표시 */
+        #match-container { transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out; }
+        /* 리액션 모드: 모든 위젯 강제 숨김 */
+        body.reaction-mode #ui-layer,
+        body.reaction-mode #match-container { opacity: 0 !important; visibility: hidden !important; }
+
+        .fire-vignette { position: fixed; inset: 0; pointer-events: none; z-index: 5; opacity: 0; visibility: hidden; transition: opacity 0.6s ease-in-out; box-shadow: inset 0 0 150px rgba(255, 30, 0, 0.6), inset 0 0 50px rgba(255, 0, 0, 0.4); animation: firePulse 2s infinite alternate ease-in-out; } body.match-fire-on .fire-vignette { opacity: 1; visibility: visible; } @keyframes firePulse { 0% { box-shadow: inset 0 0 80px rgba(255, 30, 0, 0.4), inset 0 0 20px rgba(255, 0, 0, 0.2); } 100% { box-shadow: inset 0 0 180px rgba(255, 50, 0, 0.8), inset 0 0 70px rgba(255, 20, 0, 0.6); } }
+        .up-message { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.3); opacity: 0; font-size: 110px; font-weight: 900; color: #FFD700; text-shadow: 0 0 20px #ff0055, 0 0 50px #ff0055, 5px 5px 0px #000; z-index: 100000; pointer-events: none; white-space: nowrap; transition: 0.4s; } .up-message.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        .time-up-message { position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%) scale(0.3); opacity: 0; font-size: 130px; font-weight: 900; color: #fff; text-shadow: 0 0 20px #ff0055, 0 0 40px #ff0055, 0 0 80px #ff0055, 6px 6px 0px #000; z-index: 100000; pointer-events: none; white-space: nowrap; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .time-up-message.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+
+        #toon-popup-container {
+            position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; z-index: 100005; pointer-events: none;
+        }
+        .donation-popup-content { background: rgba(20, 20, 25, 0.95); border: 4px solid #ff0055; border-radius: 20px; padding: 40px 60px; text-align: center; box-shadow: 0 0 30px rgba(255, 0, 85, 0.6), inset 0 0 20px rgba(255, 0, 85, 0.4); opacity: 0; visibility: hidden; transform: scale(0.8) translateY(30px); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), visibility 0.5s; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 500px; }
+        .donation-popup-content.show { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
+        .donator-text { font-size: 36px; font-weight: 800; color: #ffffff; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+        .donator-name { color: #ff3366; text-shadow: 0 0 15px rgba(255, 51, 102, 0.8); }
+        .donation-amount { font-size: 70px; font-weight: 900; color: #FFD700; text-shadow: 0 0 20px #FFD700, 0 0 40px #ffaa00; margin: 15px 0; letter-spacing: -2px; }
+        .donation-message { background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 12px; padding: 15px 35px; font-size: 28px; font-weight: 700; color: #ffffff; max-width: 700px; word-break: break-all; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+
+        /* 🎵 리액션 음원/사진 송출 화면 오버레이 스타일 */
+        .reaction-screen-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            width: 500px;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 100010;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .reaction-screen-overlay.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .reaction-screen-overlay.show.minimize {
+            left: 180px;
+            top: 600px;
+            transform: translate(-50%, -50%) scale(0.6);
+        }
+        .reaction-screen-overlay img {
+            max-width: 100%;
+            max-height: 380px;
+            object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+        .reaction-text-donator {
+            margin-top: 15px;
+            font-size: 28px;
+            font-weight: 900;
+            color: #000000;
+            text-shadow: -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff, 1.5px 1.5px 0 #fff;
+            font-family: 'Malgun Gothic', sans-serif;
+            text-align: center;
+        }
+        .reaction-text-message {
+            margin-top: 8px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #000000;
+            text-shadow: -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff, 1.5px 1.5px 0 #fff;
+            font-family: 'Malgun Gothic', sans-serif;
+            text-align: center;
+            max-width: 480px;
+            word-break: break-all;
+            line-height: 1.4;
+        }
+        @keyframes pulse {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.03); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 🛑 디버깅 용도: 화면 하단에 실시간 웹 콘솔 로그 표출 (나중에 삭제 가능) -->
+    <div id="debug-log-console" style="position:fixed; bottom:0; left:0; width:100%; max-height:200px; background:rgba(0,0,0,0.85); color:#00ffcc; font-family:monospace; font-size:12px; z-index:999999; overflow-y:auto; padding:5px; pointer-events:none; border-top:2px solid #00ffcc;">
+        <div>📟 [오버레이 실시간 로그 전광판]</div>
+    </div>
+    <script>
+        (function() {
+            const consoleDiv = document.getElementById('debug-log-console');
+            function logToScreen(type, args) {
+                const msg = args.map(arg => {
+                    try {
+                        return typeof arg === 'object' ? JSON.stringify(arg) : arg;
+                    } catch(e) {
+                        return String(arg);
+                    }
+                }).join(' ');
+                const item = document.createElement('div');
+                item.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+                item.style.padding = '2px 0';
+                item.innerHTML = `[${new Date().toLocaleTimeString()}] [${type}] ${msg}`;
+                consoleDiv.appendChild(item);
+                consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            }
+            
+            const originalLog = console.log;
+            const originalError = console.error;
+            const originalWarn = console.warn;
+            
+            console.log = function(...args) {
+                originalLog.apply(console, args);
+                logToScreen('LOG', args);
+            };
+            console.error = function(...args) {
+                originalError.apply(console, args);
+                logToScreen('ERROR', args);
+            };
+            console.warn = function(...args) {
+                originalWarn.apply(console, args);
+                logToScreen('WARN', args);
+            };
+            
+            window.addEventListener('error', function(e) {
+                logToScreen('UNHANDLED', [e.message, e.filename, e.lineno]);
+            });
+            window.addEventListener('unhandledrejection', function(e) {
+                logToScreen('UNHANDLED_REJECTION', [e.reason]);
+            });
+        })();
+    </script>
+
+    <div id="fire-vignette" class="fire-vignette"></div>
+    <div id="neon-overlay" class="neon-layer"></div>
+    
+    <!-- ⚠️ 자동재생 차단 경고 배너 -->
+    <div id="autoplay-warning-banner" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(255,59,48,0.95); color:white; padding:12px 24px; font-weight:bold; font-size:16px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.3); z-index:9999999; border:2px solid #ff453a; text-align:center; animation: pulse 1.5s infinite; font-family: sans-serif;">
+        ⚠️ 브라우저 소리 자동재생이 차단되었습니다!<br>
+        <span style="font-size:13px; font-weight:normal; opacity:0.9;">소리를 켜려면 화면 아무 곳이나 클릭(크롬 창 클릭 또는 OBS 소스 우클릭 -> 상호작용)해 주세요.</span>
+    </div>
+    
+    <!-- 🎵 리액션 음원/사진 송출 전광판 및 오디오 객체 -->
+    <div id="reaction-screen-overlay" class="reaction-screen-overlay">
+        <img id="reaction-screen-image" src="" alt="Reaction Image">
+        <div id="reaction-donator-info" class="reaction-text-donator"></div>
+        <div id="reaction-message-info" class="reaction-text-message"></div>
+    </div>
+    <audio id="reaction-audio" style="display:none;"></audio>
+    
+    <div id="audi-overlay" class="audi-layer">
+        <div class="audi-container left">
+            <div class="audi-led" style="--idx: 0"></div>
+            <div class="audi-led" style="--idx: 1"></div>
+            <div class="audi-led" style="--idx: 2"></div>
+            <div class="audi-led" style="--idx: 3"></div>
+            <div class="audi-led" style="--idx: 4"></div>
+            <div class="audi-led" style="--idx: 5"></div>
+            <div class="audi-led" style="--idx: 6"></div>
+            <div class="audi-led" style="--idx: 7"></div>
+        </div>
+        <div class="audi-container right">
+            <div class="audi-led" style="--idx: 0"></div>
+            <div class="audi-led" style="--idx: 1"></div>
+            <div class="audi-led" style="--idx: 2"></div>
+            <div class="audi-led" style="--idx: 3"></div>
+            <div class="audi-led" style="--idx: 4"></div>
+            <div class="audi-led" style="--idx: 5"></div>
+            <div class="audi-led" style="--idx: 6"></div>
+            <div class="audi-led" style="--idx: 7"></div>
+        </div>
+    </div>
+
+    <div id="scale-wrapper">
+        <div id="master-container"> 
+            <div id="up-message-layer" class="up-message">UP!</div>
+            <div id="time-up-message-layer" class="time-up-message">시간 종료!</div>
+            <div id="roulette-winner-message-layer" class="time-up-message" style="color: var(--accent); text-shadow: 0 0 15px var(--accent), 4px 4px 0px #000;">당첨!</div>
+
+            <div id="ticker_top-container" class="widget-container" style="opacity: 0; visibility: hidden;"><div class="ticker-bar"><div class="ticker-text-wrap" id="ticker_top-text"></div></div></div>
+            <div id="ticker_bottom-container" class="widget-container" style="opacity: 0; visibility: hidden;"><div class="ticker-bar"><div class="ticker-text-wrap" id="ticker_bottom-text"></div></div></div>
+
+            <div id="toon-popup-container">
+                <div id="toon-popup" class="donation-popup-content">
+                    <div class="donator-text"><span id="toon-name" class="donator-name">누군가</span> <span id="toon-action-text">님이 후원하셨습니다!</span></div>
+                    <div class="donation-amount" id="toon-amount">10,000원</div>
+                    <div class="donation-message" id="toon-msg">메시지</div>
+                </div>
+            </div>
+
+            <div id="popup-container" class="widget-container">
+                <div id="center-popup" class="center-popup-content">
+                    <span id="popup-text"></span><span style="color:var(--text-secondary); margin-left:15px;" id="popup-score"></span>
+                </div>
+            </div>
+
+            <div id="ui-layer">
+                
+                <div id="takeover-container" class="widget-container"><div id="takeover-popup" class="takeover-popup-content"><span style="color:var(--theme-neon);" id="takeover-text"></span></div></div>
+                
+                <div id="ranking-container" class="widget-container">
+                    <div class="excel-board" id="excel-board">
+                        <div class="excel-grid-container">
+                            <div class="excel-col">
+                                <div class="excel-header"><div></div><div>플레이어</div><div>점수</div><div>기여도</div></div>
+                                <div id="rank-left"></div>
+                            </div>
+                            <div class="excel-col">
+                                <div class="excel-header"><div></div><div>플레이어</div><div>점수</div><div>기여도</div></div>
+                                <div id="rank-right"></div>
+                            </div>
+                        </div>
+                        <div class="row-bottom" id="excel-bottom-fixed">
+                            <div class="b-name" id="bot-name">⚙️ 운영비</div>
+                            <div class="b-score" id="bot-score">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🟢 번외 임시 게임판 마크업 추가 -->
+                <div id="extra-ranking-container" class="widget-container" style="left: 1500px; top: 183px; transform: scale(0.99); transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                    <div class="excel-board" id="extra-excel-board" style="border-color: #ff3366; box-shadow: 0 10px 40px rgba(255, 51, 102, 0.25);">
+                        <div class="excel-grid-container">
+                            <div class="excel-col">
+                                <div class="excel-header" style="background: #ff3366; color: #fff;"><div></div><div>플레이어</div><div>점수</div><div>기여도</div></div>
+                                <div id="extra-rank-left"></div>
+                            </div>
+                            <div class="excel-col">
+                                <div class="excel-header" style="background: #ff3366; color: #fff;"><div></div><div>플레이어</div><div>점수</div><div>기여도</div></div>
+                                <div id="extra-rank-right"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="gauge-container" class="widget-container">
+                    <div class="excel-gauge-box" id="goal-box-ui">
+                        <div class="total-row"><div style="color:#fff;">💰 방송 총 후원</div><div style="color:var(--excel-yellow);" id="ui-total-score">0</div></div>
+                        <div class="goal-bar-bg"><div class="goal-bar-fill" id="goal-chunk"></div></div>
+                        <div class="goal-text"><span id="goal-percent">🔥 달성률: 0%</span><span id="goal-target">목표: 0</span></div>
+                    </div>
+                </div>
+                
+                <div id="account-container" class="widget-container">
+                    <div class="acc-box-v2" id="account-box-ui" style="opacity: 0; visibility: hidden;">
+                        <div class="acc-top"><span class="acc-bank-tag" id="ui-bank">기업은행</span> <span class="acc-name-tag" id="ui-name">드래곤엔터</span></div>
+                        <div class="acc-num-v2" id="ui-num">464-068673-04-016</div>
+                    </div>
+                </div>
+                
+            </div> <!-- 🟢 #ui-layer 를 여기서 닫아 대결판들이 리액션 모드 영향으로 사라지지 않게 보호 -->
+            
+            <div id="match-container" class="widget-container" style="opacity: 0; visibility: hidden;">
+                <div class="match-wrapper">
+                    <div class="m-timer-pill" id="m-timer">00:00</div>
+                    <div class="match-main-row" style="display: flex; align-items: center; justify-content: center; gap: 30px; position: relative;">
+                        <div class="m-team-container" id="m-players-area"></div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- 🎡 팝업형 내장 룰렛 레이어 -->
+            <div id="roulette-overlay-backdrop" style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 99999; opacity: 0; visibility: hidden; transition: all 0.5s ease; width: 100%; height: 100%;"></div>
+            
+            <div id="roulette-container" class="widget-container" style="position: absolute; left: 240px; top: 600px; z-index: 100000; opacity: 0; visibility: hidden; transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s, left 0.8s cubic-bezier(0.16, 1, 0.3, 1), top 0.8s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto;">
+                <div class="roulette-wrap" style="position: relative; width: 660px; height: 740px; background: rgba(20, 20, 25, 0.96); border: 4px solid var(--accent, #00ffcc); border-radius: 30px; padding: 25px; box-shadow: 0 0 40px var(--accent-glow), inset 0 0 15px rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box;">
+                    <h1 id="roulette-title" style="font-family: 'Pretendard', sans-serif; font-size: 36px; font-weight: 900; color: #fff; margin: 0 0 20px 0; text-shadow: 0 0 15px rgba(0, 255, 204, 0.6); text-align: center;">🎡 행운의 돌림판</h1>
+                    <canvas id="roulette-canvas" width="600" height="600" style="display: block; width: 600px; height: 600px; border-radius: 50%;"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // URL에서 token 파라미터 추출 및 window.apiToken 저장
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlToken = urlParams.get('token');
+        if (urlToken) {
+            window.apiToken = urlToken;
+        }
+
+        // 전역 fetch 인터셉터 (인증 토큰 자동 주입)
+        const originalFetch = window.fetch;
+        window.fetch = function(resource, init) {
+            if (window.apiToken && typeof resource === 'string' && resource.startsWith('/api/')) {
+                init = init || {};
+                init.headers = init.headers || {};
+                if (init.headers instanceof Headers) {
+                    init.headers.set('Authorization', 'Bearer ' + window.apiToken);
+                } else {
+                    init.headers['Authorization'] = 'Bearer ' + window.apiToken;
+                }
+            }
+            return originalFetch(resource, init);
+        };
+
+        // ==========================================
+        // 기존 오버레이 로직
+        // ==========================================
+        let previousScores = {}; let previousContribs = {}; let prevMatchScores = {}; let flashed = false; let lastTickerState = ""; let lastUpTriggerTime = 0; let upMessageTimer = null; let lastTakeoverTime = 0;
+        
+        let lastReactionEnterAlertTime = 0;
+        let lastPopupTime = 0;    
+        let lastDonationTime = 0; 
+        
+        let lastEffectTime = 0; 
+        let globalNeon = 'OFF';
+        let globalAudi = false;
+        let toonPopupTimer = null;
+
+        let lastRosterStr = ""; 
+        let lastExtraRosterStr = "";  
+
+        let audioCtx = null;
+        function initAudio() {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            } catch(e) { console.warn("AudioContext init blocked or unsupported in this browser environment:", e); }
+        }
+        document.addEventListener('click', initAudio, { once: true });
+
+        function playBeep(freq, type, dur, vol) {
+            try {
+                if(!audioCtx) return; if(audioCtx.state === 'suspended') audioCtx.resume();
+                let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
+                osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + dur);
+            } catch(e) { console.warn("Beep audio play blocked:", e); }
+        }
+        
+        function playExplosion() {
+            try {
+                if(!audioCtx) return; if(audioCtx.state === 'suspended') audioCtx.resume();
+                let bufferSize = audioCtx.sampleRate * 2.0; let buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                let data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                let noise = audioCtx.createBufferSource(); noise.buffer = buffer;
+                let filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 800; 
+                let gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(2.0, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
+                noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+                noise.start();
+            } catch(e) { console.warn("Explosion audio play blocked:", e); }
+        }
+
+        let lastBeepSec = -1; let timerExploded = false;
+
+        function resizeOverlay() { const wrapper = document.getElementById('scale-wrapper'); const scale = Math.min(window.innerWidth / 1080, window.innerHeight / 1920); wrapper.style.transform = `scale(${scale})`; wrapper.style.left = `${(window.innerWidth - 1080 * scale) / 2}px`; wrapper.style.top = `${(window.innerHeight - 1920 * scale) / 2}px`; } window.addEventListener('resize', resizeOverlay); resizeOverlay();
+        function formatNum(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+        function safeId(n) { return 'bj-' + btoa(unescape(encodeURIComponent(n))).replace(/=/g, ''); }
+        
+        function animateVal(el, start, end, dur) { 
+            let startT = null; 
+            const step = (ts) => { 
+                if (!startT) startT = ts; 
+                const prog = Math.min((ts - startT) / dur, 1); 
+                const cur = Math.floor((1 - Math.pow(1 - prog, 3)) * (end - start) + start); 
+                el.innerText = formatNum(cur); 
+                if (prog < 1) window.requestAnimationFrame(step); 
+                else el.innerText = formatNum(end); 
+            }; 
+            window.requestAnimationFrame(step); 
+        }
+        
+        function popScore(el, diff) { const p = document.createElement('div'); p.className = 'score-pop'; p.innerText = '+' + formatNum(diff); el.appendChild(p); setTimeout(() => p.remove(), 1000); }
+        
+        let lastLayoutData = null; // 전역 레이아웃 캐시
+        function applyLayout(ly) { 
+            if (ly) lastLayoutData = ly;
+            let isExtra = (currentExtraActiveState === true);
+            
+            ['ranking', 'gauge', 'account', 'match', 'popup', 'takeover', 'ticker_top', 'ticker_bottom', 'roulette'].forEach(id => { 
+                const el = document.getElementById(id + '-container'); 
+                if(ly && el) { 
+                    let coord = ly[id];
+                    if (coord) {
+                        el.style.top = (coord.y_px || 0) + 'px'; 
+                        if (id === 'ranking') {
+                            el.style.left = isExtra ? '-650px' : ((coord.x_px || 0) + 'px');
+                        } else {
+                            el.style.left = (coord.x_px || 0) + 'px'; 
+                        }
+                        
+                        if (id === 'roulette') {
+                            let scale = coord.scale || 1.0;
+                            if (isRouletteWidgetShown) {
+                                el.style.transform = `scale(${scale * 1.1})`;
+                            } else {
+                                el.style.transform = `scale(${scale})`;
+                            }
+                        } else {
+                            el.style.transform = `scale(${coord.scale || 1})`; 
+                        }
+                    }
+                } 
+            }); 
+            
+            // 번외 점수판 슬라이딩 처리
+            const extraEl = document.getElementById('extra-ranking-container');
+            if (extraEl && ly && ly['ranking']) {
+                extraEl.style.top = (ly['ranking'].y_px || 0) + 'px';
+                extraEl.style.transform = `scale(${ly['ranking'].scale || 1})`;
+                extraEl.style.left = isExtra ? ((ly['ranking'].x_px || 0) + 'px') : '1500px';
+            }
+        }
+
+        let isFirstLoadOverlay = true; // 💡 여기에 방어막 변수 추가!
+        let matchData = null;
+        let globalData = null;
+        let serverTimeOffset = 0;
+        
+        let currentExtraActiveState = false;
+        function handleData(d) {
+            if (d && d.server_time) {
+                serverTimeOffset = d.server_time - Date.now();
+            }
+            globalData = d;
+            
+            let isActive = d.broadcast_active || false;
+            ['ranking', 'gauge', 'account', 'match', 'roulette', 'extra-ranking'].forEach(id => {
+                const el = document.getElementById(id + '-container');
+                if (el) el.style.display = isActive ? '' : 'none';
+            });
+            
+            if (!isActive) return;
+            
+            try {
+                // 🎨 실시간 테마 스위칭
+                if (d.theme === 'pink') {
+                    document.body.classList.add('theme-pink');
+                } else {
+                    document.body.classList.remove('theme-pink');
+                }
+
+                // 💡 [실시간 조명 속도 슬라이더 연동]
+                let neonSpeedSec = d.neon_speed || 1.5;
+                document.documentElement.style.setProperty('--neon-speed', `${neonSpeedSec}s`);
+                document.documentElement.style.setProperty('--audi-speed', `${neonSpeedSec * 0.56}s`);
+
+                // 💡 [실시간 리액션 볼륨 연동]
+                if (d.reaction_volume !== undefined) {
+                    const audio = document.getElementById('reaction-audio');
+                    if (audio) audio.volume = d.reaction_volume;
+                }
+
+                // 💡 [번외 게임 활성화 상태 동적 체킹 및 슬라이딩 트리거]
+                let extraActive = d.extra_game_active || false;
+                if (currentExtraActiveState !== extraActive) {
+                    currentExtraActiveState = extraActive;
+                    if (lastLayoutData) applyLayout(lastLayoutData);
+                }
+
+                // ==========================================
+                // 🟢 번외 임시 게임판 (extra_bjs) 실시간 렌더링 루프
+                // ==========================================
+                let extraBjs = d.extra_bjs || [];
+                let extraRosterStr = extraBjs.map(b => b.name).join('|');
+                
+                if (lastExtraRosterStr !== extraRosterStr) {
+                    lastExtraRosterStr = extraRosterStr;
+                    
+                    let leftCount = Math.max(3, Math.ceil(extraBjs.length / 2));
+                    let leftHtml = ''; let rightHtml = '';
+                    
+                    for(let i=0; i<leftCount; i++) {
+                        if(i < extraBjs.length) {
+                            let b = extraBjs[i]; let id = 'ex-' + safeId(b.name); let rankStr = i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
+                            let rowClass = i < 3 ? `rank-${i+1}` : '';
+                            leftHtml += `<div class="excel-row ${rowClass}" id="${id}"><div class="r-rank" style="color:#ff3366;">${rankStr}</div><div class="r-name">${b.name}</div><div class="r-score" id="sc-${id}">${formatNum(b.score)}</div><div class="r-contrib" id="cb-${id}" style="color:#ff85a2;">${formatNum(b.contribution || 0)}</div></div>`;
+                        } else { leftHtml += `<div class="excel-row"><div class="r-rank">-</div><div class="r-name"></div><div class="r-score"></div><div class="r-contrib"></div></div>`; }
+                    }
+                    for(let i=leftCount; i<leftCount*2; i++) {
+                        if(i < extraBjs.length) {
+                            let b = extraBjs[i]; let id = 'ex-' + safeId(b.name); let rankStr = (i+1);
+                            rightHtml += `<div class="excel-row" id="${id}"><div class="r-rank" style="color:#ff3366;">${rankStr}</div><div class="r-name">${b.name}</div><div class="r-score" id="sc-${id}">${formatNum(b.score)}</div><div class="r-contrib" id="cb-${id}" style="color:#ff85a2;">${formatNum(b.contribution || 0)}</div></div>`;
+                        } else { rightHtml += `<div class="excel-row"><div class="r-rank">-</div><div class="r-name"></div><div class="r-score"></div><div class="r-contrib"></div></div>`; }
+                    }
+
+                    document.getElementById('extra-rank-left').innerHTML = leftHtml; 
+                    document.getElementById('extra-rank-right').innerHTML = rightHtml;
+                    
+                    extraBjs.forEach(b => {
+                        let id = 'ex-' + safeId(b.name);
+                        previousScores[id] = b.score;
+                        previousContribs[id] = b.contribution || 0;
+                    });
+                }
+
+                extraBjs.forEach((b, i) => {
+                    let id = 'ex-' + safeId(b.name); 
+                    let scEl = document.getElementById(`sc-${id}`); 
+                    let cbEl = document.getElementById(`cb-${id}`);
+                    
+                    if(scEl) { 
+                        let pv = previousScores[id]; 
+                        if (pv === undefined) {
+                            scEl.innerText = formatNum(b.score);
+                            previousScores[id] = b.score;
+                        } else if (b.score !== pv) { 
+                            animateVal(scEl, pv, b.score, 800); 
+                            if(b.score > pv) popScore(scEl, b.score - pv); 
+                            previousScores[id] = b.score; 
+                        } 
+                    }
+                    if(cbEl) { 
+                        let pcv = previousContribs[id]; 
+                        if (pcv === undefined) {
+                            cbEl.innerText = formatNum(b.contribution || 0);
+                            previousContribs[id] = b.contribution || 0;
+                        } else if ((b.contribution || 0) !== pcv) { 
+                            animateVal(cbEl, pcv, b.contribution || 0, 800); 
+                            previousContribs[id] = b.contribution || 0; 
+                        } 
+                    }
+                });
+
+                // 💡 [방어막 시작] 첫 로딩 시 과거 시간들을 전부 눈으로만 읽고 흡수합니다.
+                if (isFirstLoadOverlay) {
+                    if (d.effect_trigger) lastEffectTime = d.effect_trigger.time;
+                    if (d.up_trigger) lastUpTriggerTime = d.up_trigger.time;
+                    if (d.latest_popup) lastPopupTime = d.latest_popup.time;
+                    if (d.latest_donation) lastDonationTime = d.latest_donation.time;
+                    if (d.latest_takeover) lastTakeoverTime = d.latest_takeover.time;
+                    isFirstLoadOverlay = false;
+                }
+                // 💡 [방어막 끝]
+
+                // 조명 컨트롤
+                if (d.effect_trigger && d.effect_trigger.time !== lastEffectTime) {
+                    lastEffectTime = d.effect_trigger.time;
+                    let c = d.effect_trigger.color;
+                    
+                    if (c === 'OFF') {
+                        globalNeon = 'OFF';
+                        globalAudi = false;
+                    } else if (c === 'AUDI') {
+                        globalAudi = !globalAudi;
+                    } else {
+                        globalNeon = c; 
+                    }
+                }
+
+                // 💡 아우디 라이트
+                let shouldAudiShow = globalAudi && d.reaction_mode;
+                let audiEl = document.getElementById('audi-overlay');
+                
+                if (shouldAudiShow) {
+                    if (audiEl && !audiEl.classList.contains('active')) {
+                        audiEl.classList.remove('hide');
+                        void audiEl.offsetWidth; 
+                        audiEl.classList.add('active');
+                    }
+                } else {
+                    if (audiEl && audiEl.classList.contains('active')) {
+                        audiEl.classList.remove('active');
+                        audiEl.classList.add('hide'); 
+                    }
+                }
+
+                // 네온 라이트
+                let shouldNeonShow = (globalNeon !== 'OFF') && d.reaction_mode;
+                let neonEl = document.getElementById('neon-overlay');
+                if (neonEl) {
+                    neonEl.className = 'neon-layer'; 
+                    
+                    if (shouldNeonShow) {
+                        neonEl.classList.add('active');
+                        if (globalNeon === 'RAINBOW') {
+                            neonEl.classList.add('neon-rainbow');
+                        } else {
+                            neonEl.classList.add('neon-single');
+                            neonEl.style.setProperty('--glow-color', globalNeon);
+                        }
+                    } else {
+                        neonEl.classList.remove('active');
+                    }
+                }
+
+                if (d.reaction_mode) document.body.classList.add('reaction-mode'); else document.body.classList.remove('reaction-mode');
+                let md = d.match_data || {active: false, players: [], fire_effect: false}; if (md.active && md.fire_effect) document.body.classList.add('match-fire-on'); else document.body.classList.remove('match-fire-on');
+
+                const accBox = document.getElementById('account-box-ui');
+                if(d.account && (d.account.bank || d.account.acc_num)) { 
+                    accBox.style.opacity = 1;
+                    accBox.style.visibility = 'visible';
+                    document.getElementById('ui-bank').innerText = d.account.bank || ''; 
+                    document.getElementById('ui-num').innerText = d.account.acc_num || ''; 
+                    document.getElementById('ui-name').innerText = d.account.name || ''; 
+                } else { 
+                    accBox.style.opacity = 0;
+                    accBox.style.visibility = 'hidden';
+                }
+
+                if (d.up_trigger && d.up_trigger.time !== lastUpTriggerTime) { lastUpTriggerTime = d.up_trigger.time; const upEl = document.getElementById('up-message-layer'); upEl.innerText = d.up_trigger.text; upEl.style.transition = 'none'; upEl.classList.remove('show'); void upEl.offsetWidth; upEl.style.transition = ''; upEl.classList.add('show'); clearTimeout(upMessageTimer); upMessageTimer = setTimeout(() => { upEl.classList.remove('show'); }, 2000); }
+                
+                // 수동 알림
+                if (d.latest_popup && d.latest_popup.time !== lastPopupTime && d.popup_enabled && d.latest_popup.diff > 0) { 
+                    lastPopupTime = d.latest_popup.time;
+                    document.getElementById('popup-text').innerText = d.latest_popup.name + ' 후원 '; 
+                    document.getElementById('popup-score').innerText = '+' + formatNum(d.latest_popup.diff); 
+                    
+                    const p = document.getElementById('center-popup'); 
+                    p.classList.remove('show'); 
+                    void p.offsetWidth; 
+                    p.classList.add('show'); 
+                    setTimeout(() => p.classList.remove('show'), 2000); 
+                }
+
+                // 🎁 투네이션 팝업
+                if (d.latest_donation && d.latest_donation.time !== lastDonationTime && d.popup_enabled) { 
+                    isDonationPopupShowing = true;
+                    console.log("🎯 [투네이션 팝업 트리거 수신]:", d.latest_donation);
+                    lastDonationTime = d.latest_donation.time;
+                    
+                    let finalName = d.latest_donation.name;
+                    let finalMsg = d.latest_donation.message || "";
+
+                    // 📡 반각(:) 및 전각(：) 콜론 통합 분리 대응
+                    let hasColon = finalMsg.includes(":") || finalMsg.includes("：");
+                    if (hasColon && !finalMsg.startsWith("[시그니처 신청:")) {
+                        let splitChar = finalMsg.includes(":") ? ":" : "：";
+                        let parts = finalMsg.split(splitChar);
+                        let potentialName = parts[0].trim();
+                        if (potentialName.length > 0 && potentialName.length <= 15) {
+                            finalName = potentialName; 
+                            finalMsg = parts.slice(1).join(splitChar).trim(); 
+                        }
+                    }
+
+                    document.getElementById('toon-name').innerText = finalName;
+                    
+                    const actionTextEl = document.getElementById('toon-action-text');
+                    const amountEl = document.getElementById('toon-amount');
+                    
+                    if (finalMsg.startsWith("[시그니처 신청:")) {
+                        let match = finalMsg.match(/^\[시그니처 신청:\s*(.*?)\]/);
+                        let prod = match ? match[1] : "시그니처";
+                        if (actionTextEl) actionTextEl.innerText = "님이 신청하셨습니다!";
+                        amountEl.innerText = `"${prod}"`;
+                        // 본문 메시지에서 시그니처 태그 삭제
+                        finalMsg = finalMsg.replace(/^\[시그니처 신청:\s*.*?\]\s*/, '');
+                    } else {
+                        if (actionTextEl) actionTextEl.innerText = "님이 후원하셨습니다!";
+                        if (d.latest_donation.amount === 0) {
+                            amountEl.innerText = '후원';
+                        } else {
+                            amountEl.innerText = formatNum(d.latest_donation.amount) + '원';
+                        }
+                    }
+                    
+                    let msgEl = document.getElementById('toon-msg');
+                    if (finalMsg) { 
+                        msgEl.innerText = finalMsg; 
+                        msgEl.style.display = 'block'; 
+                    } else { 
+                        msgEl.style.display = 'none'; 
+                    }
+
+                    const p = document.getElementById('toon-popup'); 
+                    p.classList.remove('show'); 
+                    void p.offsetWidth; 
+                    p.classList.add('show'); 
+                    
+                    try {
+                        let end = Date.now() + 1500; 
+                        (function f() { 
+                            if (typeof confetti === 'function') {
+                                confetti({ particleCount: 7, angle: 60, spread: 80, origin: { x: 0.2, y: 0.8 }, zIndex: 100000 }); 
+                                confetti({ particleCount: 7, angle: 120, spread: 80, origin: { x: 0.8, y: 0.8 }, zIndex: 100000 }); 
+                                if (Date.now() < end) requestAnimationFrame(f); 
+                            }
+                        }());
+                    } catch(err) {
+                        console.warn("⚠️ confetti animation script error (ignored):", err);
+                    }
+
+                    clearTimeout(toonPopupTimer);
+                    toonPopupTimer = setTimeout(() => {
+                        p.classList.remove('show');
+                        isDonationPopupShowing = false;
+                        checkReactionQueue();
+                    }, 2000);
+                }
+
+                if (d.takeover_enabled && d.latest_takeover && d.latest_takeover.time !== lastTakeoverTime) { document.getElementById('takeover-text').innerText = d.latest_takeover.name + ' 1등 탈환! 👑'; const tk = document.getElementById('takeover-popup'); tk.classList.remove('show'); void tk.offsetWidth; tk.classList.add('show'); setTimeout(() => tk.classList.remove('show'), 2500); lastTakeoverTime = d.latest_takeover.time; }
+                
+                let mc = document.getElementById('match-container');
+                if(md.active) { 
+                    mc.style.opacity = 1; mc.style.visibility = 'visible';
+                    let ma = document.getElementById('m-players-area'); 
+                    let cols = ['#ff4d4d', '#00e676', '#3399ff', '#FFD700']; 
+                    let colsRgb = ['255, 77, 77', '0, 230, 118', '51, 153, 255', '255, 215, 0'];
+                    if(ma.children.length !== md.players.length) { 
+                        ma.innerHTML = ''; 
+                        md.players.forEach((p, i) => ma.innerHTML += `<div class="m-team-box" style="--team-color:${cols[i%4]}; --team-color-rgb:${colsRgb[i%4]};"><div class="m-score-box" id="mp-${i}">0</div><div class="m-name-box" id="mp-name-${i}">${p.name}</div></div>`); 
+                    } 
+                    md.players.forEach((p, i) => { 
+                        let nameEl = document.getElementById(`mp-name-${i}`); 
+                        if(nameEl && nameEl.innerText !== p.name) nameEl.innerText = p.name; 
+                        let el = document.getElementById(`mp-${i}`); 
+                        let key = `m_${i}`; 
+                        let prev = prevMatchScores[key] ?? p.score; 
+                        if (p.score !== prev && el) { 
+                            animateVal(el, prev, p.score, 800); 
+                            if (p.score > prev) {
+                                popScore(el, p.score - prev); 
+                                // 💡 [3D 쫀득 바운스]
+                                el.classList.remove('score-bump');
+                                void el.offsetWidth;
+                                el.classList.add('score-bump');
+                                setTimeout(() => el.classList.remove('score-bump'), 850);
+                            }
+                            prevMatchScores[key] = p.score; 
+                        } else if (el && el.innerText === "0") { 
+                            el.innerText = formatNum(p.score); 
+                            prevMatchScores[key] = p.score; 
+                        } 
+                    }); 
+
+
+
+                    matchData = md;
+                } else { 
+                    mc.style.opacity = 0; mc.style.visibility = 'hidden'; 
+                }
+
+                let bjs = d.bjs || []; let bot = d.bottom_fixed || {name:'운영비', score:0}; let tgt = d.target_goal || 1; 
+                
+                let currentRosterStr = bjs.map(b => b.name).join('|');
+                if (lastRosterStr !== currentRosterStr) {
+                    lastRosterStr = currentRosterStr;
+                    
+                    let leftCount = Math.max(3, Math.ceil(bjs.length / 2));
+                    let leftHtml = ''; let rightHtml = '';
+                    
+                    for(let i=0; i<leftCount; i++) {
+                        if(i < bjs.length) {
+                            let b = bjs[i]; let id = safeId(b.name); let rankStr = i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
+                            let rowClass = i < 3 ? `rank-${i+1}` : '';
+                            leftHtml += `<div class="excel-row ${rowClass}" id="${id}"><div class="r-rank">${rankStr}</div><div class="r-name">${b.name}</div><div class="r-score" id="sc-${id}">${formatNum(b.score)}</div><div class="r-contrib" id="cb-${id}">${formatNum(b.contribution || 0)}</div></div>`;
+                        } else { leftHtml += `<div class="excel-row"><div class="r-rank">-</div><div class="r-name"></div><div class="r-score"></div><div class="r-contrib"></div></div>`; }
+                    }
+                    for(let i=leftCount; i<leftCount*2; i++) {
+                        if(i < bjs.length) {
+                            let b = bjs[i]; let id = safeId(b.name); let rankStr = (i+1);
+                            rightHtml += `<div class="excel-row" id="${id}"><div class="r-rank">${rankStr}</div><div class="r-name">${b.name}</div><div class="r-score" id="sc-${id}">${formatNum(b.score)}</div><div class="r-contrib" id="cb-${id}">${formatNum(b.contribution || 0)}</div></div>`;
+                        } else { rightHtml += `<div class="excel-row"><div class="r-rank">-</div><div class="r-name"></div><div class="r-score"></div><div class="r-contrib"></div></div>`; }
+                    }
+
+                    document.getElementById('rank-left').innerHTML = leftHtml; 
+                    document.getElementById('rank-right').innerHTML = rightHtml;
+                    
+                    bjs.forEach(b => {
+                        let id = safeId(b.name);
+                        previousScores[id] = b.score;
+                        previousContribs[id] = b.contribution || 0;
+                    });
+                }
+
+                bjs.forEach((b, i) => {
+                    let id = safeId(b.name); 
+                    let scEl = document.getElementById(`sc-${id}`); 
+                    let cbEl = document.getElementById(`cb-${id}`);
+                    
+                    if(scEl) { 
+                        let pv = previousScores[id]; 
+                        if (pv === undefined) {
+                            scEl.innerText = formatNum(b.score);
+                            previousScores[id] = b.score;
+                        } else if (b.score !== pv) { 
+                            animateVal(scEl, pv, b.score, 800); 
+                            if(b.score > pv) popScore(scEl, b.score - pv); 
+                            previousScores[id] = b.score; 
+                        } 
+                    }
+                    if(cbEl) { 
+                        let pvc = previousContribs[id]; 
+                        let curCb = b.contribution || 0; 
+                        if (pvc === undefined) {
+                            cbEl.innerText = formatNum(curCb);
+                            previousContribs[id] = curCb;
+                        } else if (curCb !== pvc) { 
+                            animateVal(cbEl, pvc, curCb, 800); 
+                            previousContribs[id] = curCb; 
+                        } 
+                    }
+                });
+
+                let tot = bot.score || 0; bjs.forEach(b => tot += b.score);
+                let botNameEl = document.getElementById('bot-name'); let botScoreEl = document.getElementById('bot-score');
+                if(botNameEl) botNameEl.innerText = '⚙️ ' + (bot.name || '운영비');
+                if(botScoreEl) { let pvb = previousScores['bot']; if(pvb === undefined) botScoreEl.innerText = formatNum(bot.score); else if(bot.score !== pvb) { animateVal(botScoreEl, pvb, bot.score, 800); if(bot.score > pvb) popScore(botScoreEl, bot.score - pvb); } previousScores['bot'] = bot.score; }
+
+                document.getElementById('ui-total-score').innerText = formatNum(tot);
+                let pct = tgt > 0 ? (tot/tgt)*100 : 0; document.getElementById('goal-chunk').style.width = Math.min(100, pct) + '%';
+                document.getElementById('goal-percent').innerText = `🔥 달성률: ${pct.toFixed(1)}%`; document.getElementById('goal-target').innerText = `목표: ${formatNum(tgt)}`;
+                
+                if(tot >= tgt && tgt > 0) { 
+                    if(!flashed) { flashed = true; const gb = document.getElementById('goal-box-ui'); if(gb) { gb.classList.remove('goal-flash'); void gb.offsetWidth; gb.classList.add('goal-flash'); } } 
+                } else { flashed = false; }
+
+                let curTick = d.ticker_text + "_" + d.ticker_speed + "_" + d.ticker_enabled + "_" + d.reaction_mode;
+                if (lastTickerState !== curTick) { 
+                    lastTickerState = curTick; 
+                    ['ticker_top', 'ticker_bottom'].forEach(id => { 
+                        let c = document.getElementById(id + '-container'); 
+                        if (d.ticker_enabled && d.reaction_mode) { 
+                            c.style.opacity = '1'; 
+                            c.style.visibility = 'visible';
+                            let t = document.getElementById(id + '-text'); 
+                            let chunk = Array(15).fill(d.ticker_text).join("&nbsp;&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;&nbsp;") + "&nbsp;&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;&nbsp;"; 
+                            t.innerHTML = chunk + chunk; 
+                            setTimeout(() => { 
+                                let w = t.scrollWidth/2; let spd = d.ticker_speed||70; let dur = w/Math.max(30, spd*8); 
+                                t.style.animation = 'none'; void t.offsetWidth; 
+                                t.style.animation = `tickerAnim ${dur}s linear infinite`; 
+                            }, 50); 
+                        } else { 
+                            c.style.opacity = '0'; 
+                            c.style.visibility = 'hidden';
+                        } 
+                    }); 
+                }
+                
+                // 🎡 룰렛 처리
+                if (d.roulette) {
+                    handleRouletteState(d);
+                }
+                
+                checkReactionQueue();
+            } catch(e) { console.error("⚠️ handleData Error:", e); }
+        }
+
+
+
+        function updateMatchTimer() {
+            if (!matchData || !matchData.active) return;
+            
+            let md = matchData;
+            let left = md.is_running ? Math.max(0, md.end_time_ms - (Date.now() + serverTimeOffset)) : (md.time_left_ms || 0); 
+            let sec = Math.ceil(left/1000); 
+            let timerEl = document.getElementById('m-timer');
+            if (!timerEl) return;
+
+            if (left <= 0) {
+                timerEl.style = ''; 
+                timerEl.classList.remove('timer-explode');
+                timerEl.innerText = "시간종료";
+                
+                // Play explosion once when it first hits 0
+                if (md.is_running && !timerExploded) {
+                    timerExploded = true;
+                    initAudio(); playExplosion();
+                    
+                    let rect = timerEl.getBoundingClientRect();
+                    confetti({ particleCount: 150, spread: 100, startVelocity: 40, origin: { x: (rect.left+rect.width/2)/window.innerWidth, y: (rect.top+rect.height/2)/window.innerHeight }, colors: ['#ff0000', '#ff5500', '#ffff00'], zIndex: 99999 });
+                    
+                    let timeUpEl = document.getElementById('time-up-message-layer');
+                    if(timeUpEl) {
+                        timeUpEl.classList.remove('show');
+                        void timeUpEl.offsetWidth;
+                        timeUpEl.classList.add('show');
+                        setTimeout(() => { timeUpEl.classList.remove('show'); }, 3000);
+                    }
+                    
+                    // Auto-stop the timer on the server
+                    if (globalData) {
+                        globalData.match_data.is_running = false;
+                        globalData.match_data.time_left_ms = 0;
+                        fetch('/api/data', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(globalData)
+                        }).catch(e => console.error("Error stopping timer:", e));
+                    }
+                }
+                return;
+            }
+
+            if (md.is_running) {
+                if (left <= 10000 && left > 0) {
+                    let intensity = (10000 - left) / 10000;
+                    timerEl.style.backgroundColor = `rgba(255, ${255 * (1-intensity)}, ${255 * (1-intensity)}, 0.5)`;
+                    timerEl.style.boxShadow = `0 0 ${intensity * 40}px rgba(255, 0, 0, ${intensity})`;
+                    timerEl.style.color = `rgb(255, ${255 * (1-intensity)}, ${255 * (1-intensity)})`;
+                    timerEl.style.transform = `scale(${1 + intensity * 0.3})`;
+                    timerEl.classList.remove('timer-explode');
+                    
+                    initAudio();
+                    let currentSec = Math.ceil(left / 1000);
+                    if (currentSec !== lastBeepSec) {
+                        if (currentSec > 1) { playBeep(800 + (10 - currentSec)*20, 'sine', 0.1, 0.2); } 
+                        else if (currentSec === 1) {
+                            playBeep(1200, 'square', 0.08, 0.15); setTimeout(() => playBeep(1200, 'square', 0.08, 0.15), 150); setTimeout(() => playBeep(1200, 'square', 0.08, 0.15), 300); setTimeout(() => playBeep(1200, 'square', 0.08, 0.15), 450); setTimeout(() => playBeep(1200, 'square', 0.08, 0.15), 600); setTimeout(() => playBeep(1200, 'square', 0.08, 0.15), 750);
+                        }
+                        lastBeepSec = currentSec;
+                    }
+                    timerExploded = false;
+                    timerEl.innerText = `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+                } else if (left > 10000) {
+                    timerEl.style = ''; timerEl.classList.remove('timer-explode');
+                    timerExploded = false; lastBeepSec = -1;
+                    timerEl.innerText = `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+                }
+            } else {
+                timerEl.style = ''; timerEl.classList.remove('timer-explode');
+                timerExploded = false; lastBeepSec = -1;
+                timerEl.innerText = `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+            }
+        }
+        setInterval(updateMatchTimer, 100);
+
+
+
+        // ==========================================
+        // 🎡 바닐라 JS 기반 경량 룰렛 위젯 엔진 및 SSE 연동
+        // ==========================================
+        const RouletteWidget = {
+            canvas: null,
+            ctx: null,
+            bufferCanvas: null,
+            bufferCtx: null,
+            size: { width: 600, height: 600 },
+            center: { x: 300, y: 300 },
+            radius: 240,
+            rotation: 0,
+            angularVelocity: 0,
+            angularDamping: 0,
+            isRolling: false,
+            launched: false,
+            stopping: null,
+            selectAngle: 0,
+            needStopAngularVelocity: 10,
+            items: [],
+            current: "",
+            currentColor: "",
+            lastTimestamp: 0,
+            animationFrameId: null,
+
+            init() {
+                this.canvas = document.getElementById('roulette-canvas');
+                if (!this.canvas) return;
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.bufferCanvas = document.createElement('canvas');
+                this.bufferCanvas.width = this.size.width;
+                this.bufferCanvas.height = this.size.height;
+                this.bufferCtx = this.bufferCanvas.getContext('2d');
+                this.bufferCtx.textAlign = "center";
+                
+                this.lastTimestamp = performance.now();
+                this.loop(this.lastTimestamp);
+            },
+
+            updateRoster(roster, weightType) {
+                if (this.isRolling) return; // 회전 중에는 원판 레이아웃 변동 잠금
+                
+                let items = [];
+                let angleSum = 0;
+                let weightSum = 0;
+                
+                if (weightType === 'contrib') {
+                    roster.forEach(bj => {
+                        weightSum += Math.max(1, bj.contribution || 0);
+                    });
+                } else {
+                    weightSum = roster.length;
+                }
+                
+                roster.forEach((bj, i) => {
+                    let weight = (weightType === 'contrib') ? Math.max(1, bj.contribution || 0) : 1;
+                    let chance = weightSum > 0 ? (weight / weightSum) : 0;
+                    let angle = 360 * chance;
+                    angleSum += angle;
+                    
+                    let color = this.getColor(i);
+                    items.push({
+                        name: bj.name,
+                        angle: angle,
+                        angleSum: angleSum,
+                        color: color
+                    });
+                });
+                
+                this.items = items;
+            },
+
+            getColor(i) {
+                const palette = [
+                    "#f44336", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5",
+                    "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50",
+                    "#8bc34a", "#cddc39", "#ffeb3b", "#ffc107", "#ff9800",
+                    "#ff5722", "#795548", "#607d8b"
+                ];
+                if (!this.startColorIdx) {
+                    this.startColorIdx = Math.floor(Math.random() * palette.length);
+                }
+                if (i === 0) return palette[this.startColorIdx];
+                return palette[(this.startColorIdx + 4 * i) % palette.length];
+            },
+
+            launch() {
+                this.launched = true;
+                this.isRolling = true;
+                this.angularVelocity = 2 * 360; // 초당 2회전
+                this.angularDamping = 0;
+                this.stopping = null;
+                this.selectAngle = 0;
+                this.needStopAngularVelocity = 10;
+            },
+
+            stop(riggedIndex) {
+                this.stopping = Date.now();
+                
+                if (riggedIndex > -1 && riggedIndex < this.items.length) {
+                    let item = this.items[riggedIndex];
+                    let angle = item.angle;
+                    let angleSum = item.angleSum;
+                    
+                    let min = angleSum - angle;
+                    let max = angleSum;
+                    
+                    // 해당 영역 이내 무작위 타깃 각 설정
+                    this.selectAngle = (max - min) * Math.random() + min;
+                    
+                    let addAngle = 360 - this.selectAngle - this.rotation;
+                    if (addAngle < 0) addAngle += 360;
+                    
+                    let startDp = 132.94;
+                    let endDp = 110.08;
+                    let capDp = (startDp - endDp) / 360;
+                    
+                    let fixDp = 0.375;
+                    if (addAngle > 180) {
+                        fixDp = ((360 - addAngle) / 180) * fixDp;
+                    } else {
+                        fixDp = (addAngle / 180) * fixDp;
+                    }
+                    
+                    this.angularDamping = startDp - addAngle * capDp - fixDp;
+                } else {
+                    this.angularDamping = 110 + 23 * Math.random();
+                }
+            },
+
+            loop(timestamp) {
+                this.animationFrameId = requestAnimationFrame((ts) => this.loop(ts));
+                
+                let deltaTime = timestamp - this.lastTimestamp;
+                this.lastTimestamp = timestamp;
+                
+                if (deltaTime <= 0) return;
+                
+                if (this.stopping) {
+                    if (Date.now() - this.stopping > 15 * 1000) {
+                        this.angularVelocity = 0;
+                        this.stopping = null;
+                    }
+                }
+                
+                if (this.angularDamping) {
+                    if (this.selectAngle === 0) {
+                        this.angularVelocity -= Math.max(20, Math.min(this.angularVelocity * 0.5, this.angularDamping)) * (33 / 1000);
+                    } else if (this.selectAngle > 0 && this.angularVelocity > 2) {
+                        this.angularVelocity -= Math.max(20, Math.min(this.angularVelocity * 0.5, this.angularDamping)) * (33 / 1000);
+                    }
+                }
+                
+                if (this.angularVelocity <= 0) {
+                    this.angularVelocity = 0;
+                    if (this.launched) {
+                        this.launched = false;
+                        this.isRolling = false;
+                        this.onStop();
+                    }
+                }
+                
+                if (this.angularVelocity > 0) {
+                    let cap = this.angularVelocity * (33 / 1000);
+                    
+                    if (this.angularVelocity < this.needStopAngularVelocity) {
+                        let s_cap_r = 360 - this.selectAngle - this.rotation;
+                        if (s_cap_r < 0) s_cap_r = 360 - s_cap_r;
+                        
+                        if (cap > s_cap_r) {
+                            cap = s_cap_r;
+                            this.angularVelocity = 0;
+                        }
+                    }
+                    
+                    this.rotation += cap;
+                    while (this.rotation < 0) this.rotation += 360;
+                    while (this.rotation >= 360) this.rotation -= 360;
+                }
+                
+                this.render();
+            },
+
+            render() {
+                if (!this.ctx) return;
+                const ctx = this.bufferCtx;
+                const w = this.size.width;
+                const h = this.size.height;
+                
+                ctx.fillStyle = "rgba(20, 20, 25, 0.96)";
+                ctx.fillRect(0, 0, w, h);
+                
+                // 테마 감지 네온 색상 스위칭
+                let strokeCol = (globalData && globalData.theme === 'pink') ? '#ff85a2' : '#00ffcc';
+                
+                // 원형 배경 드로잉
+                ctx.save();
+                ctx.translate(this.center.x, this.center.y);
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, 2 * Math.PI);
+                ctx.fillStyle = "rgba(10, 10, 15, 0.98)";
+                ctx.fill();
+                ctx.lineWidth = 15;
+                ctx.strokeStyle = strokeCol;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = strokeCol;
+                ctx.stroke();
+                ctx.restore();
+                
+                this.current = null;
+                this.currentColor = null;
+                
+                if (this.items && this.items.length > 0) {
+                    let lastAngle = 0;
+                    
+                    // 슬롯 그리기
+                    this.items.forEach((item) => {
+                        ctx.save();
+                        ctx.translate(this.center.x, this.center.y);
+                        ctx.rotate((this.rotation + lastAngle - 90) * Math.PI / 180);
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.arc(0, 0, this.radius - 8, 0, item.angle * Math.PI / 180);
+                        ctx.closePath();
+                        ctx.fillStyle = item.color;
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.radius - 8, 0, item.angle * Math.PI / 180);
+                        ctx.strokeStyle = "rgba(0, 0, 0, 0.25)";
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        
+                        ctx.restore();
+                        lastAngle += item.angle;
+                    });
+                    
+                    // 텍스트 기입 및 타깃팅 판정
+                    lastAngle = 0;
+                    let currentAngle = 360 - this.rotation;
+                    while (currentAngle < 0) currentAngle += 360;
+                    while (currentAngle >= 360) currentAngle -= 360;
+                    
+                    this.items.forEach((item) => {
+                        if (item.angleSum - item.angle <= currentAngle && currentAngle <= item.angleSum) {
+                            this.current = item.name;
+                            this.currentColor = item.color;
+                        }
+                        
+                        ctx.save();
+                        ctx.translate(this.center.x, this.center.y);
+                        ctx.rotate((this.rotation + lastAngle - 90 + item.angle / 2) * Math.PI / 180);
+                        
+                        ctx.beginPath();
+                        ctx.font = "bold 22px 'Pretendard', sans-serif";
+                        ctx.strokeStyle = "#111113";
+                        ctx.lineWidth = 5;
+                        ctx.strokeText(item.name, this.radius / 2 + 10, 8);
+                        ctx.fillStyle = "white";
+                        ctx.fillText(item.name, this.radius / 2 + 10, 8);
+                        
+                        ctx.restore();
+                        lastAngle += item.angle;
+                    });
+                }
+                
+                // 화살표 바늘 그리기
+                ctx.beginPath();
+                ctx.moveTo(w / 2, this.center.y - this.radius + 15);
+                ctx.lineTo(w / 2 - 12, this.center.y - this.radius - 10);
+                ctx.lineTo(w / 2 + 12, this.center.y - this.radius - 10);
+                ctx.closePath();
+                ctx.fillStyle = "#ff453a";
+                ctx.fill();
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // 센터 피벗 캡 드로잉
+                ctx.beginPath();
+                ctx.arc(this.center.x, this.center.y, 15, 0, 2 * Math.PI);
+                ctx.fillStyle = "white";
+                ctx.fill();
+                ctx.strokeStyle = "#111";
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                
+                // 지시 바늘 당첨 후보 렌더링
+                if (this.current) {
+                    ctx.font = "bold 26px 'Pretendard', sans-serif";
+                    ctx.strokeStyle = "#111";
+                    ctx.lineWidth = 5;
+                    ctx.strokeText(this.current, w / 2, this.center.y - this.radius - 25);
+                    ctx.fillStyle = strokeCol;
+                    ctx.fillText(this.current, w / 2, this.center.y - this.radius - 25);
+                }
+                
+                this.ctx.drawImage(this.bufferCanvas, 0, 0);
+            },
+
+            onStop() {
+                if (typeof confetti === 'function') {
+                    confetti({
+                        particleCount: 150,
+                        spread: 80,
+                        origin: { y: 0.6 }
+                    });
+                }
+                
+                if (this.current) {
+                    fetch('/api/roulette/winner', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: this.current })
+                    }).catch(e => console.error("Error reporting winner:", e));
+                }
+                
+                // 대결모드 시간종료처럼 결과를 가운데 크게 띄우기 (이모지 제외)
+                const winMsgEl = document.getElementById('roulette-winner-message-layer');
+                if (winMsgEl && this.current) {
+                    winMsgEl.innerText = `${this.current} 당첨!`;
+                    winMsgEl.classList.remove('show');
+                    void winMsgEl.offsetWidth;
+                    winMsgEl.classList.add('show');
+                    setTimeout(() => { winMsgEl.classList.remove('show'); }, 4000);
+                }
+                
+                // 당첨 시 즉시 룰렛위젯 꺼짐 처리 (로컬 상태만 업데이트, 실제 비활성화는 winner API 완료 시 SSE로 자동 동기화)
+                if (globalData) {
+                    globalData.roulette_enabled = false;
+                }
+            }
+        };
+
+        let lastRouletteCommandTime = 0;
+        let isRouletteWidgetShown = false;
+
+        function handleRouletteState(d) {
+            const rState = d.roulette;
+            
+            // 1. Roster & weights 동적 계산
+            let isExtra = d.extra_game_active || false;
+            let itemSource = rState.item_source || 'bj';
+            let roster = [];
+            
+            if (itemSource === 'custom') {
+                roster = (rState.custom_items || []).map(name => ({ name: name, contribution: 0 }));
+            } else {
+                roster = isExtra ? d.extra_bjs : d.bjs;
+            }
+            RouletteWidget.updateRoster(roster, rState.weight_type);
+            
+            // 2. 수동 토글 감지 (ON/OFF)
+            if (d.roulette_enabled) {
+                if (!isRouletteWidgetShown) {
+                    showRouletteWidget();
+                }
+            } else {
+                // 토글이 꺼졌는데 회전 중이 아니라면 화면에서 즉시 내림
+                if (isRouletteWidgetShown && !RouletteWidget.isRolling) {
+                    hideRouletteWidget();
+                }
+            }
+            
+            // 3. 시작/정지 명령어 핸들링
+            let cmd = rState.command;
+            let cmdTime = rState.command_time || 0;
+            
+            if (cmdTime > lastRouletteCommandTime) {
+                lastRouletteCommandTime = cmdTime;
+                
+                if (cmd === 'spin') {
+                    showRouletteWidget(); // 시작 시 무조건 위젯 강제 표출
+                    RouletteWidget.launch();
+                } else if (cmd === 'stop') {
+                    // 이름 일치 인덱스 실시간 추적
+                    let targetIndex = -1;
+                    if (rState.select_name) {
+                        targetIndex = roster.findIndex(bj => bj.name === rState.sele        // 🎵 리액션 음원/사진 즉시 재생 기능 및 타이머
+        let reactionTimeout = null;
+        let reactionMinimizeTimeout = null;
+        let reactionImgClearTimeout = null;
+        let audioSafetyTimeout = null;
+        let currentPlayingId = null;
+        let isDonationPopupShowing = false;
+
+        function checkReactionQueue() {
+            if (isDonationPopupShowing) return;
+            
+            // 💡 [개조] 리액션 모드(reaction_mode)가 꺼져있거나 대기열이 비었으면 리액션 화면을 즉시 내립니다.
+            if (!globalData || !globalData.reaction_mode || !globalData.reaction_queue || globalData.reaction_queue.length === 0) {
+                if (currentPlayingId !== null) {
+                    console.log("checkReactionQueue: Reaction mode OFF or queue empty. Stopping visuals.");
+                    currentPlayingId = null;
+                    stopReactionVisuals();
+                }
+                return;
+            }
+            
+            const firstItem = globalData.reaction_queue[0];
+            if (currentPlayingId !== firstItem.id) {
+                currentPlayingId = firstItem.id;
+                playReaction(firstItem);
+            }
+        }
+
+        function stopReactionVisuals() {
+            const overlay = document.getElementById('reaction-screen-overlay');
+            const img = document.getElementById('reaction-screen-image');
+            const audio = document.getElementById('reaction-audio');
+            
+            if (overlay) {
+                overlay.classList.remove('show');
+                overlay.classList.remove('minimize');
+            }
+            if (audio) {
+                audio.onended = null;
+                audio.onerror = null;
+                audio.onloadedmetadata = null;
+                audio.pause();
+                audio.src = "";
+            }
+            if (reactionTimeout) {
+                clearTimeout(reactionTimeout);
+                reactionTimeout = null;
+            }
+            if (reactionMinimizeTimeout) {
+                clearTimeout(reactionMinimizeTimeout);
+                reactionMinimizeTimeout = null;
+            }
+            if (audioSafetyTimeout) {
+                clearTimeout(audioSafetyTimeout);
+                audioSafetyTimeout = null;
+            }
+            // 이미지 초기화를 취소 가능한 타이머로 변경 (다음 playReaction에서 취소 가능)
+            if (reactionImgClearTimeout) clearTimeout(reactionImgClearTimeout);
+            reactionImgClearTimeout = setTimeout(() => { if (img) img.src = ""; }, 500);
+        }
+
+        function playReaction(data) {
+            console.log("Playing reaction:", data);
+            
+            const overlay = document.getElementById('reaction-screen-overlay');
+            const img = document.getElementById('reaction-screen-image');
+            const donatorEl = document.getElementById('reaction-donator-info');
+            const messageEl = document.getElementById('reaction-message-info');
+            const audio = document.getElementById('reaction-audio');
+            
+            if (!overlay || !img || !audio) return;
+            
+            // 1. 기존 진행 중인 리액션 및 오디오 강제 중지
+            if (reactionTimeout) clearTimeout(reactionTimeout);
+            if (reactionMinimizeTimeout) clearTimeout(reactionMinimizeTimeout);
+            // ⚠️ 이전 stopReactionVisuals의 지연된 img.src="" 타이머를 반드시 취소!
+            // 안 하면 500ms 후에 새 리액션의 사진이 지워져 버립니다.
+            if (reactionImgClearTimeout) { clearTimeout(reactionImgClearTimeout); reactionImgClearTimeout = null; }
+            if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+            audio.onended = null;
+            audio.onerror = null;
+            audio.onloadedmetadata = null;
+            audio.pause();
+            audio.src = "";
+            
+            // 2. 새로운 리액션 데이터 입력 (후원자명 + 금액 / 메시지)
+            let donatorName = data.donator || "익명";
+            let donationAmount = data.amount ? formatNum(data.amount) + '원' : '';
+            if (donatorEl) {
+                donatorEl.innerText = donatorName + (donationAmount ? ' · ' + donationAmount : '');
+            }
+            let msgText = data.message || "";
+            if (messageEl) {
+                if (msgText && msgText !== "수동 후원 송출") {
+                    messageEl.innerText = msgText;
+                    messageEl.style.display = 'block';
+                } else {
+                    messageEl.innerText = "";
+                    messageEl.style.display = 'none';
+                }
+            }
+            
+            if (data.image_url) {
+                img.src = data.image_url;
+                img.style.display = 'block';
+            } else {
+                img.src = "";
+                img.style.display = 'none';
+            }
+            
+            // 3. 카드 노출 (페이드인 & 스케일 바운스) - 중앙에 크게
+            overlay.classList.remove('minimize');
+            overlay.classList.add('show');
+            
+            // 4. 2.5초 후 좌측으로 부드럽게 이동/축소 (BJ 가림 방지)
+            reactionMinimizeTimeout = setTimeout(() => {
+                overlay.classList.add('minimize');
+            }, 2500);
+            
+            // 5. 음원 재생 및 종료 콜백 설정
+            if (data.audio_url) {
+                // Add a cache buster parameter to bypass OBS/browser caching of previously broken streams
+                audio.src = data.audio_url + '?t=' + (data.id || Date.now());
+                
+                audio.onended = function() {
+                    console.log("Audio play ended naturally.");
+                    if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                    onReactionEnded();
+                };
+                
+                audio.onerror = function(err) {
+                    console.error("Audio error event fired:", err);
+                    if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                    onReactionEnded();
+                };
+                
+                const setupSafetyTimer = () => {
+                    if (audioSafetyTimeout) clearTimeout(audioSafetyTimeout);
+                    const duration = audio.duration;
+                    const safetyDuration = (isFinite(duration) && duration > 0) ? (duration * 1000 + 2000) : 30000;
+                    console.log(`Setting audio safety timeout for ${safetyDuration}ms (audio duration: ${duration}s)`);
+                    audioSafetyTimeout = setTimeout(() => {
+                        console.warn("Audio safety timeout reached! Forcing onReactionEnded.");
+                        onReactionEnded();
+                    }, safetyDuration);
+                };
+
+                if (audio.readyState >= 1) { // HAVE_METADATA or higher
+                    setupSafetyTimer();
+                } else {
+                    audio.onloadedmetadata = setupSafetyTimer;
+                }
+                
+                audio.play().then(() => {
+                    console.log("Audio playback started successfully.");
+                }).catch(err => {
+                    // ❌ 재생 실패 (autoplay 차단 등)
+                    console.error("Audio autoplay blocked. Local cleanup only:", err);
+                    audio.onended = null;
+                    audio.onerror = null;
+                    audio.onloadedmetadata = null;
+                    if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                    audio.pause();
+                    audio.src = "";
+                    showAutoplayWarning();
+                    // 로컬 화면만 5초 후 닫기 (서버 큐는 건드리지 않음)
+                    reactionTimeout = setTimeout(() => {
+                        stopReactionVisuals();
+                    }, 5000);
+                });
+            } else {
+                // 음원 파일이 없는 경우, 5초 동안만 이미지를 보여주고 종료
+                reactionTimeout = setTimeout(() => {
+                    onReactionEnded();
+                }, 5000);
+            }
+        }�료
+                reactionTimeout = setTimeout(() => {
+                    onReactionEnded();
+                }, 5000);
+            }
+        } const setupSafetyTimer = () => {
+                        if (audioSafetyTimeout) clearTimeout(audioSafetyTimeout);
+                        const duration = audio.duration;
+                        const safetyDuration = (isFinite(duration) && duration > 0) ? (duration * 1000 + 2000) : 30000;
+                        console.log(`Setting audio safety timeout for ${safetyDuration}ms (audio duration: ${duration}s)`);
+                        audioSafetyTimeout = setTimeout(() => {
+                            console.warn("Audio safety timeout reached! Forcing onReactionEnded.");
+                            onReactionEnded();
+                        }, safetyDuration);
+                    };
+
+                    if (audio.readyState >= 1) { // HAVE_METADATA or higher
+                        setupSafetyTimer();
+                    } else {
+                        audio.onloadedmetadata = setupSafetyTimer;
+                    }
+                    
+                    audio.onended = function() {
+                        console.log("Audio play ended naturally.");
+                        if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                        onReactionEnded();
+                    };
+                    audio.onerror = function(err) {
+                        console.error("Audio error during playback:", err);
+                        if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                        onReactionEnded();
+                    };
+                }).catch(err => {
+                    // ❌ 재생 실패 (autoplay 차단 등)
+                    console.error("Audio autoplay blocked. Local cleanup only:", err);
+                    audio.onended = null;
+                    audio.onerror = null;
+                    if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                    audio.pause();
+                    audio.src = "";
+                    showAutoplayWarning();
+                    // 로컬 화면만 5초 후 닫기 (서버 큐는 건드리지 않음)
+                    reactionTimeout = setTimeout(() => {
+                        stopReactionVisuals();
+                    }, 5000);
+                });
+            } else {
+                // 음원 파일이 없는 경우, 5초 동안만 이미지를 보여주고 종료
+                reactionTimeout = setTimeout(() => {
+                    onReactionEnded();
+                }, 5000);
+            }
+        }
+
+        function onReactionEnded() {
+            const popId = currentPlayingId;
+            currentPlayingId = null;
+            
+            // 서버에 현재 아이템 ID를 보내서 정확히 해당 아이템만 pop (이중 pop 방지)
+            fetch('/api/reaction/next', { 
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: popId})
+            }).then(res => res.json()).then(() => {
+                // SSE 업데이트가 늦을 수 있으므로, 직접 최신 상태를 가져와서 다음 후원 즉시 재생
+                return fetch('/api/data');
+            }).then(res => res.json()).then(data => {
+                globalData = data;
+                checkReactionQueue();
+            }).catch(err => {
+                console.error("Failed to advance reaction queue:", err);
+            });
+        }
+
+        function showAutoplayWarning() {
+            const banner = document.getElementById('autoplay-warning-banner');
+            if (banner) banner.style.display = 'block';
+        }
+
+        function hideAutoplayWarning() {
+            const banner = document.getElementById('autoplay-warning-banner');
+            if (banner) banner.style.display = 'none';
+        }
+
+        // 화면 클릭(상호작용) 발생 시 자동재생 차단을 해제하고 음원 즉시 재생 시도
+        window.addEventListener('click', () => {
+            console.log("User clicked screen. Attempting to clear autoplay warning and resume audio.");
+            hideAutoplayWarning();
+            
+            if (globalData && globalData.reaction_queue && globalData.reaction_queue.length > 0) {
+                const firstItem = globalData.reaction_queue[0];
+                const audio = document.getElementById('reaction-audio');
+                
+                if (audio && (audio.paused || !audio.src)) {
+                    console.log("Re-triggering playReaction from click interaction.");
+                    playReaction(firstItem);
+                }
+            }
+        });
+
+        let sseSource = null;
+        function initSSE() {
+            if (sseSource) {
+                sseSource.close();
+            }
+            sseSource = new EventSource('/api/stream');
+            
+            sseSource.addEventListener('init', function(e) {
+                const newData = JSON.parse(e.data);
+                handleData(newData);
+            });
+            
+            sseSource.addEventListener('update', function(e) {
+                const newData = JSON.parse(e.data);
+                handleData(newData);
+            });
+            
+            sseSource.addEventListener('layout', function(e) {
+                const layoutData = JSON.parse(e.data);
+                applyLayout(layoutData);
+            });
+
+            sseSource.addEventListener('reaction_stop', function(e) {
+                try {
+                    const data = e.data ? JSON.parse(e.data) : {};
+                    if (data.id && data.id !== currentPlayingId) {
+                        console.log(`Ignoring reaction_stop for ID ${data.id} (current playing: ${currentPlayingId})`);
+                        return;
+                    }
+                    console.log("Stopping reaction visuals via SSE reaction_stop event.");
+                    currentPlayingId = null;
+                    stopReactionVisuals();
+                } catch(err) {
+                    console.error("Error parsing reaction_stop data:", err);
+                    currentPlayingId = null;
+                    stopReactionVisuals();
+                }
+            });
+            
+            sseSource.onerror = function(err) {
+                console.error("SSE connection error. Retrying in 3 seconds...", err);
+                sseSource.close();
+                setTimeout(initSSE, 3000);
+            };
+        }
+
+        initSSE();
+    </script>
+</body>
+</html>

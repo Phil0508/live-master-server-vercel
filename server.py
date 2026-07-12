@@ -55,6 +55,12 @@ def db_query(query):
         return query.replace('?', '%s')
     return query
 
+def _pg_binary(data):
+    """PostgreSQL 바이너리 데이터 안전 변환 (psycopg2가 None이면 일반 bytes 반환)"""
+    if IS_POSTGRES and psycopg2 is not None:
+        return psycopg2.Binary(data)
+    return data
+
 @contextmanager
 def get_db_connection():
     if IS_POSTGRES:
@@ -1118,6 +1124,10 @@ def api_roulette_winner():
 @app.route('/api/layout', methods=['GET', 'POST'])
 def api_layout():
     if request.method == 'POST':
+        if IS_VERCEL:
+            # Vercel 서버리스: 읽기전용 파일시스템, 메모리에서만 처리
+            broadcast_event('layout', request.json)
+            return jsonify({"status": "success", "message": "Layout updated in memory (Vercel read-only filesystem)"})
         with open(LAYOUT_FILE, 'w', encoding='utf-8') as f:
             json.dump(request.json, f, ensure_ascii=False, indent=4)
         broadcast_event('layout', request.json)
@@ -1807,7 +1817,7 @@ def add_reaction():
                 audio_data = audio_file.read()
                 cursor.execute(
                     db_query("INSERT INTO reaction_files (id, filename, content_type, file_data) VALUES (?, ?, ?, ?)"),
-                    (audio_file_id, audio_file.filename, audio_file.content_type, psycopg2.Binary(audio_data) if IS_POSTGRES else audio_data)
+                    (audio_file_id, audio_file.filename, audio_file.content_type, _pg_binary(audio_data))
                 )
                 
             if image_file and image_file.filename:
@@ -1817,7 +1827,7 @@ def add_reaction():
                 filename = opt_filename or image_file.filename
                 cursor.execute(
                     db_query("INSERT INTO reaction_files (id, filename, content_type, file_data) VALUES (?, ?, ?, ?)"),
-                    (image_file_id, filename, content_type, psycopg2.Binary(image_data) if IS_POSTGRES else image_data)
+                    (image_file_id, filename, content_type, _pg_binary(image_data))
                 )
                 
             cursor.execute(
@@ -1886,7 +1896,7 @@ def edit_reaction(item_id):
                 audio_data = audio_file.read()
                 cursor.execute(
                     db_query("INSERT INTO reaction_files (id, filename, content_type, file_data) VALUES (?, ?, ?, ?)"),
-                    (audio_file_id, audio_file.filename, audio_file.content_type, psycopg2.Binary(audio_data) if IS_POSTGRES else audio_data)
+                    (audio_file_id, audio_file.filename, audio_file.content_type, _pg_binary(audio_data))
                 )
                 if old_audio_id:
                     cursor.execute(db_query("DELETE FROM reaction_files WHERE id = ?"), (old_audio_id,))
@@ -1898,7 +1908,7 @@ def edit_reaction(item_id):
                 filename = opt_filename or image_file.filename
                 cursor.execute(
                     db_query("INSERT INTO reaction_files (id, filename, content_type, file_data) VALUES (?, ?, ?, ?)"),
-                    (image_file_id, filename, content_type, psycopg2.Binary(image_data) if IS_POSTGRES else image_data)
+                    (image_file_id, filename, content_type, _pg_binary(image_data))
                 )
                 if old_image_id:
                     cursor.execute(db_query("DELETE FROM reaction_files WHERE id = ?"), (old_image_id,))

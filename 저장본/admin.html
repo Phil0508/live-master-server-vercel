@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 마스터 레이아웃 에디터 V12.5 (영상 매니저 탑재)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        :root { --bg-body: #0d0d0f; --bg-panel: #18181b; --bg-card: #222225; --bg-canvas: #000000; --border-light: rgba(255, 255, 255, 0.08); --text-main: #ffffff; --text-muted: #8e8e93; --accent: #00ffcc; --accent-glow: rgba(0, 255, 204, 0.4); --danger: #ff453a; --excel-yellow: #FFD700; --excel-dark: rgba(20, 20, 20, 0.85); --excel-border: #FFD700; --theme-neon: #ff0055; --text-secondary: #00E5B5; }
+        body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; background: var(--bg-body); color: var(--text-main); font-family: 'Pretendard', sans-serif; overflow: hidden; display: flex; -webkit-font-smoothing: antialiased; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        
+        .sidebar { width: 320px; min-width: 320px; background: var(--bg-panel); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; z-index: 100; box-shadow: 5px 0 20px rgba(0,0,0,0.5); } .sidebar-header { padding: 25px 20px; border-bottom: 1px solid var(--border-light); } .sidebar-header h1 { margin: 0; font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #fff; } .sidebar-header h1 i { color: var(--accent); } .sidebar-header p { font-size: 13px; color: var(--text-muted); margin: 8px 0 0 0; line-height: 1.4; }
+        .sidebar-content { padding: 20px; flex: 1; overflow-y: auto; } .group-title { font-size: 14px; font-weight: 700; color: var(--text-muted); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        button { width: 100%; background: #333336; color: white; border: 1px solid var(--border-light); border-radius: 10px; padding: 12px 15px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; } button:hover { background: #444448; transform: translateY(-1px); } button.danger { background: transparent; color: var(--danger); border-color: rgba(255, 69, 58, 0.3); } button.danger:hover { background: rgba(255, 69, 58, 0.1); }
+        .live-badge { background: rgba(0, 255, 204, 0.1); border: 1px solid var(--accent); color: var(--accent); border-radius: 10px; padding: 15px; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; box-shadow: 0 0 15px var(--accent-glow); } .live-dot { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; animation: pulse 1.5s infinite; } @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 204, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0, 255, 204, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 204, 0); } }
+        .property-box { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 10px; padding: 15px; margin-bottom: 25px; display: none; } .property-box.active { display: block; animation: fadeIn 0.3s ease; } @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } } .prop-name { font-size: 16px; font-weight: 800; color: var(--accent); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; } .prop-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: #ccc; } .prop-row input[type="range"] { flex: 1; margin-left: 10px; accent-color: var(--accent); } .prop-row span { width: 40px; text-align: right; font-weight: bold; color: #fff; }
+        .main-area { flex: 1; padding: 30px; display: flex; align-items: center; justify-content: center; position: relative; background: radial-gradient(circle at center, #222 0%, var(--bg-body) 100%); overflow: hidden; } .canvas-wrapper { position: relative; background: var(--bg-canvas); border: 2px solid #333; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05); overflow: hidden; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 40px 40px; } .canvas-board { position: absolute; top: 0; left: 0; width: 1080px; height: 1920px; transform-origin: top left; }
+        
+        .widget { position: absolute; display: flex; align-items: flex-start; justify-content: flex-start; outline: 2px solid transparent; outline-offset: 2px; border-radius: 6px; cursor: grab; user-select: none; width: max-content; height: max-content; transform-origin: top left; transition: outline-color 0.1s; } 
+        .widget:active { cursor: grabbing; } .widget:hover { outline-color: rgba(255, 255, 255, 0.3); } .widget.selected { outline-color: var(--accent); z-index: 1000 !important; }
+        .widget > div { pointer-events: none; }
+        .resize-handle { position: absolute; bottom: -8px; right: -8px; width: 24px; height: 24px; background: #fff; border: 4px solid var(--accent); border-radius: 50%; cursor: nwse-resize; display: none; z-index: 100; pointer-events: auto !important; box-shadow: 0 2px 5px rgba(0,0,0,0.5); } 
+        .widget.selected .resize-handle { display: block; }
+
+        .admin-input { width: 100%; box-sizing: border-box; margin-bottom: 8px; background: #111; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 6px; font-family: 'Pretendard'; font-size: 13px; } .admin-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 2px rgba(0, 255, 204, 0.2); }
+
+        .excel-board { background: var(--excel-dark); border: 2px solid var(--excel-border); border-radius: 15px; padding: 12px; width: max-content; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .excel-grid-container { display: flex; gap: 10px; } .excel-col { display: flex; flex-direction: column; width: 330px; }
+        .excel-header { background: var(--excel-yellow); color: #000; font-weight: 900; font-size: 16px; display: grid; grid-template-columns: 40px 110px 80px 100px; text-align: center; padding: 6px 0; border-radius: 20px; margin-bottom: 8px; } .excel-header div { display: flex; align-items: center; justify-content: center; letter-spacing: -0.5px; }
+        .excel-row { display: grid; grid-template-columns: 40px 110px 80px 100px; text-align: center; height: 42px; border-bottom: 1px solid rgba(255,255,255,0.15); font-size: 22px; font-weight: 800; align-items: center; padding: 0; } .r-rank { color: #fff; font-size: 22px; } .r-name { color: #fff; font-weight: 900; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;} .r-score { color: #fff; font-size: 20px;} .r-contrib { color: var(--excel-yellow); font-weight: 900; font-size: 20px;}
+        
+        .row-bottom { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background: rgba(0, 198, 255, 0.1); border: 1px solid var(--text-secondary); border-radius: 8px; margin-top: 5px; box-shadow: inset 0 0 10px rgba(0, 198, 255, 0.2); } .row-bottom .b-name { color: var(--text-secondary); font-weight: 900; font-size: 20px; text-shadow: 0 0 5px var(--text-secondary); } .row-bottom .b-score { color: var(--text-secondary); font-weight: 900; font-size: 24px; text-shadow: 0 0 10px var(--text-secondary); position: relative; }
+
+        .excel-gauge-box { background: var(--excel-dark); border: 2px solid var(--excel-border); border-radius: 15px; padding: 15px 20px; min-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); } .total-row { display: flex; justify-content: space-between; font-size: 22px; font-weight: 900; margin-bottom: 12px; } .goal-bar-bg { background: rgba(0,0,0,0.8); border: 2px solid #555; border-radius: 12px; height: 22px; padding: 3px; } .goal-bar-fill { background: linear-gradient(90deg, #ff0055, #ff5500); height: 100%; border-radius: 8px; width: 50%; box-shadow: 0 0 15px #ff0055; } .goal-text { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: #ccc; margin-top: 8px; }
+
+        .acc-box-v2 { background: var(--excel-dark); border: 2px solid var(--excel-yellow); border-radius: 15px; padding: 15px 20px; width: 280px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); } .acc-top { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; } .acc-bank-tag { background: var(--excel-yellow); color: #000; font-weight: 900; font-size: 18px; padding: 4px 10px; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); } .acc-name-tag { color: #fff; font-size: 18px; font-weight: 800; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); } .acc-num-v2 { font-size: 38px; font-weight: 900; color: #fff; letter-spacing: 1px; text-shadow: 3px 3px 6px rgba(0,0,0,0.9); word-break: break-all; line-height: 1.2; }
+
+        .match-wrapper { display: flex; flex-direction: column; align-items: center; gap: 15px; } .m-timer-pill { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(8px); border: 2px solid rgba(255,255,255,0.4); border-radius: 40px; padding: 8px 35px; color: #fff; font-size: 40px; font-weight: 900; transition: all 0.2s linear; } .m-team-container { display: flex; gap: 20px; } .m-team-box { display: flex; flex-direction: column; align-items: center; } .m-score-box { background: rgba(30, 30, 35, 0.9); border: 2px solid #444; width: 180px; height: 90px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 50px; font-weight: 900; } .m-name-box { background: #111; color: #fff; font-size: 24px; font-weight: 900; padding: 6px 25px; border: 3px solid var(--team-color); border-radius: 8px; margin-top: -15px; }
+        
+        .timer-explode { transform: scale(0) !important; opacity: 0 !important; }
+        .time-up-message { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) scale(0.3); opacity: 0; font-size: 130px; font-weight: 900; color: #fff; text-shadow: 0 0 20px #ff0055, 0 0 40px #ff0055, 0 0 80px #ff0055, 6px 6px 0px #000; z-index: 100000; pointer-events: none; white-space: nowrap; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .time-up-message.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+
+        .center-popup-content { background: rgba(0, 0, 0, 0.9); border: 4px solid #00E5B5; border-radius: 50px; padding: 15px 60px; font-size: 36px; font-weight: 900; color: white; white-space: nowrap; } .takeover-popup-content { background: rgba(0, 0, 0, 0.95); border: 4px solid var(--theme-neon); border-radius: 50px; padding: 15px 60px; font-size: 40px; font-weight: 900; color: white; white-space: nowrap; }
+        .ticker-bar { width: 1080px; height: 70px; background: rgba(0, 0, 0, 0.7); border-top: 2px solid var(--theme-neon); border-bottom: 2px solid var(--theme-neon); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 900; color: #fff; }
+        .guide-text { position: absolute; top: 15px; left: 30px; color: #888; font-size: 14px; font-weight: bold; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header"><h1><i class="fa-solid fa-mobile-screen"></i> 레이아웃 에디터</h1><p>1080x1920 (세로형) 화면입니다.<br>마우스로 실물 박스를 잡고 끄세요.</p></div>
+        <div class="sidebar-content">
+            
+
+
+            <div id="property-panel" class="property-box">
+                <div class="prop-name" id="prop-title"><i class="fa-solid fa-cube"></i> 선택된 위젯 없음</div>
+                <div class="prop-row"><i class="fa-solid fa-expand"></i> 세밀 크기 조절<input type="range" id="prop-scale" min="0.3" max="3.0" step="0.05" value="1.0"><span id="prop-scale-val">1.0</span></div>
+                
+                <div id="prop-account-edit" style="display: none; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px;">
+                    <div style="font-size:13px; font-weight:bold; color:var(--text-secondary); margin-bottom:12px;"><i class="fa-solid fa-pen-to-square"></i> 텍스트 실시간 수정</div>
+                    <input type="text" id="admin-acc-bank" placeholder="은행명 (예: 카카오)" class="admin-input" oninput="liveUpdateAccount()">
+                    <input type="text" id="admin-acc-num" placeholder="계좌번호 (예: 3333-01...)" class="admin-input" oninput="liveUpdateAccount()">
+                    <input type="text" id="admin-acc-name" placeholder="예금주 (예: 홍길동)" class="admin-input" oninput="liveUpdateAccount()">
+                    <div style="font-size: 11px; color: var(--accent); margin-top: 5px; text-align: center;"><i class="fa-solid fa-bolt"></i> 타이핑하는 즉시 방송에 실시간 적용</div>
+                </div>
+            </div>
+            
+            <div class="group-title"><i class="fa-solid fa-bolt"></i> 오토 세이브 (OBS 모드)</div>
+            <div class="live-badge"><div class="live-dot"></div> 실시간 자동 적용 중</div>
+            <button class="danger" onclick="resetLayout()" style="margin-top: 15px;"><i class="fa-solid fa-rotate-left"></i> 기본 위치로 리셋</button>
+        </div>
+    </div>
+
+    <div class="main-area" id="main-area">
+        <div class="guide-text"><i class="fa-solid fa-mobile"></i> 세로형 모니터 영역 (1080 x 1920)</div>
+        <div class="canvas-wrapper" id="canvas-wrapper">
+            <div class="canvas-board" id="canvas-board">
+                
+                <div id="time-up-message-layer" class="time-up-message">시간 종료!</div>
+
+                <div class="widget" id="ranking" data-id="ranking" style="left:50px; top:50px;">
+                    <div class="excel-board">
+                        <div class="excel-grid-container">
+                            <div class="excel-col"><div class="excel-header"><div></div><div>플레이어</div><div>후원</div><div>기여도</div></div><div id="rank-left"></div></div>
+                            <div class="excel-col"><div class="excel-header"><div></div><div>플레이어</div><div>후원</div><div>기여도</div></div><div id="rank-right"></div></div>
+                        </div>
+                        <div class="row-bottom" id="excel-bottom-fixed">
+                            <div class="b-name" id="bot-name">⚙️ 운영비</div><div class="b-score" id="bot-score">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="widget" id="gauge" data-id="gauge" style="left:50px; top:420px;">
+                    <div class="excel-gauge-box">
+                        <div class="total-row"><div style="color:#fff;">💰 방송 총 후원</div><div style="color:var(--excel-yellow);" id="ui-total-score">0</div></div>
+                        <div class="goal-bar-bg"><div class="goal-bar-fill" id="goal-chunk"></div></div>
+                        <div class="goal-text"><span id="goal-percent">🔥 달성률: 0%</span><span id="goal-target">목표: 0</span></div>
+                    </div>
+                </div>
+
+                <div class="widget" id="account" data-id="account" style="left:50px; top:580px; display: none;">
+                    <div class="acc-box-v2">
+                        <div class="acc-top"><span class="acc-bank-tag" id="ui-bank">기업은행</span> <span class="acc-name-tag" id="ui-name">드래곤엔터</span></div>
+                        <div class="acc-num-v2" id="ui-num">464-068673-04-016</div>
+                    </div>
+                </div>
+
+                <div class="widget" id="match" data-id="match" style="left:50px; top:780px; display: none;">
+                    <div class="match-wrapper">
+                        <div class="m-timer-pill" id="m-timer">00:00</div>
+                        <div class="m-team-container" id="m-players-area"></div>
+                    </div>
+                </div>
+
+
+
+
+                <div class="widget" id="popup" data-id="popup" style="left:50px; top:1150px;"><div class="center-popup-content" id="popup-preview">알림 팝업 <span style="color:#00E5B5; margin-left:15px;">+100점</span></div></div>
+                <div class="widget" id="takeover" data-id="takeover" style="left:450px; top:1150px;"><div class="takeover-popup-content"><span style="color:var(--theme-neon);">홍길동 1등 탈환! 👑</span></div></div>
+                <div class="widget" id="ticker_top" data-id="ticker_top" style="left:0px; top:1400px;"><div class="ticker-bar" id="ticker_top-text">📢 상단 전광판</div></div>
+                <div class="widget" id="ticker_bottom" data-id="ticker_bottom" style="left:0px; top:1500px;"><div class="ticker-bar" id="ticker_bottom-text">📢 하단 전광판</div></div>
+                <div class="widget" id="roulette" data-id="roulette" style="left:240px; top:600px; display: none;">
+                    <div style="width: 250px; height: 250px; border-radius: 50%; border: 4px solid var(--accent); background: rgba(20,20,25,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 0 20px var(--accent-glow);">
+                        <span style="font-size: 40px;">🎡</span>
+                        <span style="font-size: 16px; font-weight: 800; color: #fff; margin-top: 10px;">행운의 룰렛</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvasWrapper = document.getElementById('canvas-wrapper'); const canvasBoard = document.getElementById('canvas-board'); const mainArea = document.getElementById('main-area'); let scaleRatio = 1;
+            const widgetNames = { 'ranking': '🏆 랭킹판', 'gauge': '🔥 목표 게이지', 'account': '🏦 계좌 정보', 'match': '⚔️ 대결 보드', 'popup': '🔔 점수 팝업', 'takeover': '👑 1등 탈환 팝업', 'ticker_top': '📢 상단 전광판', 'ticker_bottom': '📢 하단 전광판', 'roulette': '🎡 행운의 룰렛' };
+            function formatNum(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+            
+            function resizeCanvas() { if (!mainArea || !canvasWrapper || !canvasBoard) return; const pad = 80; const availableW = mainArea.clientWidth - pad; const availableH = mainArea.clientHeight - pad; scaleRatio = Math.min(availableW / 1080, availableH / 1920); canvasWrapper.style.width = `${1080 * scaleRatio}px`; canvasWrapper.style.height = `${1920 * scaleRatio}px`; canvasBoard.style.transform = `scale(${scaleRatio})`; }
+            window.addEventListener('resize', resizeCanvas); resizeCanvas();
+            
+            let layout = {}; let activeWidget = null; let isDragging = false; let isResizing = false; let startX, startY, initialX, initialY; let startScale = 1.0; let baseWidth = 100;
+            let globalData = null;
+
+            async function fetchRealData() {
+                try {
+                    let res = await fetch('/api/data'); if(!res.ok) return; 
+                    let d = await res.json(); globalData = d;
+
+                    let bjs = d.bjs || []; let bot = d.bottom_fixed || {name:'운영비', score:0}; let tgt = d.target_goal || 1; 
+                    let tot = bot.score || 0; bjs.forEach(b => tot += b.score);
+                    let leftCount = Math.max(3, Math.ceil(bjs.length / 2)); let leftHtml = ''; let rightHtml = '';
+                    
+                    for(let i=0; i<leftCount; i++) {
+                        if(i < bjs.length) {
+                            let b = bjs[i]; let rankStr = i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
+                            let colorStyle = i===0 ? 'color:#FFD700; text-shadow:0 0 10px #FFD700;' : i===1 ? 'color:#E0E0E0; text-shadow:0 0 10px #E0E0E0;' : i===2 ? 'color:#CD7F32; text-shadow:0 0 10px #CD7F32;' : '';
+                            leftHtml += `<div class="excel-row"><div class="r-rank" style="${colorStyle}">${rankStr}</div><div class="r-name">${b.name}</div><div class="r-score">${formatNum(b.score)}</div><div class="r-contrib">${formatNum(b.contribution||0)}</div></div>`;
+                        } else leftHtml += `<div class="excel-row"><div class="r-rank">-</div><div class="r-name"></div><div class="r-score"></div><div class="r-contrib"></div></div>`;
+                    }
+                    for(let i=leftCount; i<leftCount*2; i++) {
+                        if(i < bjs.length) {
+                            let b = bjs[i]; let rankStr = (i+1);
+                            rightHtml += `<div class="excel-row"><div class="r-rank">${rankStr}</div><div class="r-name">${b.name}</div><div class="r-score">${formatNum(b.score)}</div><div class="r-contrib">${formatNum(b.contribution||0)}</div></div>`;
+                        } else rightHtml += `<div class="excel-row"><div class="r-rank">-</div><div class="r-name"></div><div class="r-score"></div><div class="r-contrib"></div></div>`;
+                    }
+                    document.getElementById('rank-left').innerHTML = leftHtml; document.getElementById('rank-right').innerHTML = rightHtml;
+
+                    document.getElementById('bot-name').innerText = '⚙️ ' + (bot.name || '운영비'); document.getElementById('bot-score').innerText = formatNum(bot.score);
+                    document.getElementById('ui-total-score').innerText = formatNum(tot);
+                    let pct = tgt > 0 ? (tot/tgt)*100 : 0; document.getElementById('goal-chunk').style.width = Math.min(100, pct) + '%';
+                    document.getElementById('goal-percent').innerText = `🔥 달성률: ${pct.toFixed(1)}%`; document.getElementById('goal-target').innerText = `목표: ${formatNum(tgt)}`;
+
+                    if(document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA") {
+                        if(d.account && (d.account.bank || d.account.acc_num)) { 
+                            document.getElementById('account').style.display = 'flex'; 
+                            document.getElementById('ui-bank').innerText = d.account.bank || ''; document.getElementById('ui-num').innerText = d.account.acc_num || ''; document.getElementById('ui-name').innerText = d.account.name || ''; 
+                            document.getElementById('admin-acc-bank').value = d.account.bank || ''; document.getElementById('admin-acc-num').value = d.account.acc_num || ''; document.getElementById('admin-acc-name').value = d.account.name || '';
+                        } else { document.getElementById('account').style.display = 'none'; }
+                    }
+
+                    let md = d.match_data || {active: false, players: []};
+                    if(md.active) {
+                        document.getElementById('match').style.display = 'flex';
+                        let ma = document.getElementById('m-players-area'); let cols = ['#ff4d4d', '#00e676', '#3399ff', '#FFD700']; let mHtml = '';
+                        md.players.forEach((p, i) => { mHtml += `<div class="m-team-box"><div class="m-score-box">${formatNum(p.score)}</div><div class="m-name-box" style="--team-color:${cols[i%4]};">${p.name}</div></div>`; });
+                        ma.innerHTML = mHtml; 
+                        
+                        let left = md.is_running ? Math.max(0, md.end_time_ms - Date.now()) : (md.time_left_ms || 0); let sec = Math.ceil(left/1000); 
+                        let timerEl = document.getElementById('m-timer');
+                        timerEl.innerText = `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+                        
+                        if(md.is_running && left <= 10000 && left > 0) {
+                            let intensity = (10000 - left) / 10000;
+                            timerEl.style.backgroundColor = `rgba(255, ${255 * (1-intensity)}, ${255 * (1-intensity)}, 0.5)`;
+                            timerEl.style.boxShadow = `0 0 ${intensity * 40}px rgba(255, 0, 0, ${intensity})`;
+                            timerEl.style.color = `rgb(255, ${255 * (1-intensity)}, ${255 * (1-intensity)})`;
+                            timerEl.style.transform = `scale(${1 + intensity * 0.3})`;
+                            timerEl.classList.remove('timer-explode');
+                            window._adminTimerExploded = false;
+                        } else if (md.is_running && left <= 0 && !window._adminTimerExploded) {
+                            window._adminTimerExploded = true;
+                            timerEl.style = ''; timerEl.classList.add('timer-explode');
+                            
+                            let timeUpEl = document.getElementById('time-up-message-layer');
+                            if(timeUpEl) {
+                                timeUpEl.classList.remove('show'); void timeUpEl.offsetWidth; timeUpEl.classList.add('show');
+                                setTimeout(() => { timeUpEl.classList.remove('show'); }, 3000);
+                            }
+                        } else if (!md.is_running || left > 10000) {
+                            timerEl.style = ''; timerEl.classList.remove('timer-explode');
+                            window._adminTimerExploded = false;
+                        }
+                    } else document.getElementById('match').style.display = 'none';
+
+
+
+                    let tText = d.ticker_text || '📢 상단 전광판'; document.getElementById('ticker_top-text').innerText = tText; document.getElementById('ticker_bottom-text').innerText = tText;
+                    
+                    if (d.roulette_enabled) {
+                        document.getElementById('roulette').style.display = 'flex';
+                    } else {
+                        document.getElementById('roulette').style.display = 'none';
+                    }
+                } catch(e) {}
+            }
+
+
+
+            window.liveUpdateAccount = async function() {
+                if(!globalData) return;
+                globalData.account = { bank: document.getElementById('admin-acc-bank').value, acc_num: document.getElementById('admin-acc-num').value, name: document.getElementById('admin-acc-name').value };
+                try { await fetch('/api/data', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(globalData) }); } catch(e) {}
+            };
+
+            async function loadLayout() {
+                try { let res = await fetch('/api/layout'); if (res.ok) layout = await res.json(); } catch (e) { }
+                document.querySelectorAll('.widget').forEach(el => {
+                    let id = el.id; if (!layout[id] || typeof layout[id].x_px === 'undefined') { layout[id] = { x_px: parseInt(el.style.left)||0, y_px: parseInt(el.style.top)||0, scale: 1.0 }; }
+                    el.style.left = layout[id].x_px + 'px'; el.style.top = layout[id].y_px + 'px'; el.style.transform = `scale(${layout[id].scale})`; el.dataset.scale = layout[id].scale;
+                    const handle = document.createElement('div'); handle.className = 'resize-handle'; handle.addEventListener('mousedown', resizeStart); handle.addEventListener('touchstart', resizeStart, {passive: false}); el.appendChild(handle);
+                    el.addEventListener('mousedown', dragStart); el.addEventListener('touchstart', dragStart, {passive: false});
+                });
+            }
+
+            window.autoSaveLayout = async function() {
+                document.querySelectorAll('.widget').forEach(el => { let id = el.id; layout[id] = { x_px: parseInt(el.style.left) || 0, y_px: parseInt(el.style.top) || 0, scale: parseFloat(el.dataset.scale) || 1.0 }; });
+                try { await fetch('/api/layout', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(layout) }); } catch (e) {} 
+            }
+
+            window.resetLayout = function() {
+                if(!confirm("모든 위젯을 기본 위치로 돌릴까요?")) return;
+                document.querySelectorAll('.widget').forEach((el, index) => { el.style.left = '50px'; el.style.top = `${index * 120 + 50}px`; el.style.transform = `scale(1.0)`; el.dataset.scale = 1.0; });
+                closePropertyPanel(); autoSaveLayout(); 
+            }
+
+            function selectWidget(el) { 
+                if (activeWidget) activeWidget.classList.remove('selected'); 
+                activeWidget = el; activeWidget.classList.add('selected'); activeWidget.parentNode.appendChild(activeWidget); 
+                const panel = document.getElementById('property-panel'); panel.classList.add('active'); 
+                document.getElementById('prop-title').innerHTML = `<i class="fa-solid fa-cube"></i> ${widgetNames[el.id]}`; 
+                const scaleSlider = document.getElementById('prop-scale'); const currentScale = parseFloat(el.dataset.scale) || 1.0; scaleSlider.value = currentScale; document.getElementById('prop-scale-val').innerText = currentScale.toFixed(2); 
+                
+                if(el.id === 'account') document.getElementById('prop-account-edit').style.display = 'block';
+                else document.getElementById('prop-account-edit').style.display = 'none';
+            }
+            
+            function closePropertyPanel() { if (activeWidget) activeWidget.classList.remove('selected'); activeWidget = null; document.getElementById('property-panel').classList.remove('active'); document.getElementById('prop-account-edit').style.display = 'none'; }
+            document.getElementById('prop-scale').addEventListener('input', (e) => { if (!activeWidget) return; const val = parseFloat(e.target.value).toFixed(2); activeWidget.style.transform = `scale(${val})`; activeWidget.dataset.scale = val; document.getElementById('prop-scale-val').innerText = val; }); document.getElementById('prop-scale').addEventListener('change', autoSaveLayout); canvasBoard.addEventListener('mousedown', (e) => { if(e.target === canvasBoard) closePropertyPanel(); });
+
+            function dragStart(e) {
+                if (e.target.classList.contains('resize-handle')) return;
+                const widgetEl = e.target.closest('.widget');
+                if (widgetEl) {
+                    selectWidget(widgetEl);
+                    isDragging = true;
+                    startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                    startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+                    initialX = parseInt(activeWidget.style.left) || 0;
+                    initialY = parseInt(activeWidget.style.top) || 0;
+                    document.addEventListener('mousemove', dragging);
+                    document.addEventListener('touchmove', dragging, {passive: false});
+                    document.addEventListener('mouseup', dragEnd);
+                    document.addEventListener('touchend', dragEnd);
+                }
+            }
+            function dragging(e) { if (!isDragging || !activeWidget) return; e.preventDefault(); const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; const dx = (clientX - startX) / scaleRatio; const dy = (clientY - startY) / scaleRatio; activeWidget.style.left = `${initialX + dx}px`; activeWidget.style.top = `${initialY + dy}px`; }
+            function dragEnd() { if(isDragging) { isDragging = false; autoSaveLayout(); } document.removeEventListener('mousemove', dragging); document.removeEventListener('touchmove', dragging); document.removeEventListener('mouseup', dragEnd); document.removeEventListener('touchend', dragEnd); }
+            function resizeStart(e) { e.stopPropagation(); isResizing = true; startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; startScale = parseFloat(activeWidget.dataset.scale) || 1.0; baseWidth = activeWidget.offsetWidth; document.addEventListener('mousemove', resizing); document.addEventListener('touchmove', resizing, {passive: false}); document.addEventListener('mouseup', resizeEnd); document.addEventListener('touchend', resizeEnd); }
+            function resizing(e) { if (!isResizing || !activeWidget) return; e.preventDefault(); const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const dx = (clientX - startX) / scaleRatio; let newScale = startScale + (dx / baseWidth); newScale = Math.max(0.3, Math.min(newScale, 3.0)); activeWidget.style.transform = `scale(${newScale})`; activeWidget.dataset.scale = newScale; const scaleSlider = document.getElementById('prop-scale'); if(scaleSlider) { scaleSlider.value = newScale; document.getElementById('prop-scale-val').innerText = newScale.toFixed(2); } }
+            function resizeEnd() { if(isResizing) { isResizing = false; autoSaveLayout(); } document.removeEventListener('mousemove', resizing); document.removeEventListener('touchmove', resizing); document.removeEventListener('mouseup', resizeEnd); document.removeEventListener('touchend', resizeEnd); }
+
+            setTimeout(loadLayout, 100); fetchRealData(); setInterval(fetchRealData, 1000);
+        });
+    </script>
+</body>
+</html>

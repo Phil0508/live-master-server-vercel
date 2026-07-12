@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>📱 라이브 마스터 - 모바일 (타이머 자동 동기화)</title>
+    <style>@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');</style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-body: #f5f7fb;
+            --bg-panel: rgba(255, 255, 255, 0.56);
+            --bg-card: rgba(255, 255, 255, 0.48);
+            --bg-input: rgba(255, 255, 255, 0.34);
+            --glass-tint: rgba(255, 255, 255, 0.58);
+            --glass-tint-strong: rgba(255, 255, 255, 0.72);
+            --glass-stroke: rgba(255, 255, 255, 0.72);
+            --glass-edge: rgba(60, 60, 67, 0.12);
+            --border-light: rgba(60, 60, 67, 0.12);
+            --text-main: #111114;
+            --text-muted: #6e6e73;
+            --accent: #007aff;
+            --accent-soft: rgba(0, 122, 255, 0.16);
+            --success: #34c759;
+            --danger: #ff3b30;
+            --gold: #ff9f0a;
+            --shadow-card: 0 18px 44px rgba(21, 28, 40, 0.13), 0 2px 10px rgba(255, 255, 255, 0.24) inset;
+            --shadow-float: 0 22px 60px rgba(21, 28, 40, 0.20);
+            --inner-shine: inset 0 1px 0 rgba(255, 255, 255, 0.92), inset 0 -1px 0 rgba(255, 255, 255, 0.22);
+            --blur: blur(26px) saturate(180%);
+            --radius-lg: 8px;
+            --radius-md: 8px;
+            --radius-sm: 8px;
+        }
+
+        body.theme-pink {
+            --bg-body: #1c0a13;
+            --bg-panel: rgba(45, 15, 30, 0.56);
+            --bg-card: rgba(45, 15, 30, 0.48);
+            --bg-input: rgba(255, 0, 127, 0.1);
+            --glass-tint: rgba(45, 15, 30, 0.58);
+            --glass-tint-strong: rgba(45, 15, 30, 0.72);
+            --glass-stroke: rgba(255, 0, 127, 0.3);
+            --text-main: #ffb6c1;
+            --text-muted: #d48da6;
+            --accent: #ff007f;
+            --accent-soft: rgba(255, 0, 127, 0.16);
+            --gold: #ff007f;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            position: relative;
+            background:
+                linear-gradient(145deg, rgba(0, 122, 255, 0.16) 0%, transparent 26%),
+                linear-gradient(215deg, rgba(52, 199, 89, 0.13) 0%, transparent 34%),
+                linear-gradient(335deg, rgba(255, 159, 10, 0.12) 0%, transparent 30%),
+                var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-main);
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            padding: env(safe-area-inset-top) 14px calc(102px + env(safe-area-inset-bottom)) 14px;
+            -webkit-font-smoothing: antialiased;
+            touch-action: manipulation;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                linear-gradient(90deg, rgba(255,255,255,0.42) 0 1px, transparent 1px 100%),
+                linear-gradient(0deg, rgba(255,255,255,0.34) 0 1px, transparent 1px 100%);
+            background-size: 34px 34px;
+            opacity: 0.22;
+            mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 78%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 78%, transparent 100%);
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0 -14px 10px;
+            padding: 14px 14px 12px;
+            background: linear-gradient(to bottom, rgba(245, 247, 251, 0.84), rgba(245, 247, 251, 0.42));
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+        }
+        .eyebrow { color: var(--text-muted); font-size: 11px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; }
+        .header h1 { margin: 2px 0 0; font-size: 24px; line-height: 1.1; font-weight: 900; letter-spacing: 0; }
+        
+        .reaction-pill {
+            display: inline-flex; align-items: center; gap: 8px; width: auto; min-height: 44px; margin: 0; padding: 7px 10px 7px 12px;
+            position: relative; overflow: hidden; color: var(--text-main); background: var(--glass-tint); border: 1px solid var(--glass-stroke);
+            border-radius: 8px; box-shadow: var(--shadow-card); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); isolation: isolate;
+        }
+        .reaction-pill::before {
+            content: ""; position: absolute; inset: 0; z-index: -1;
+            background: linear-gradient(135deg, rgba(255,255,255,0.72), rgba(255,255,255,0.10) 46%, rgba(255,255,255,0.36)); box-shadow: var(--inner-shine);
+        }
+        .reaction-pill span { font-size: 12px; font-weight: 800; white-space: nowrap; }
+
+        .tabs {
+            position: fixed; left: 10px; right: 10px; bottom: 8px; z-index: 50; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 4px; padding: 7px 8px calc(7px + env(safe-area-inset-bottom)); background: var(--glass-tint-strong); border: 1px solid var(--glass-stroke);
+            border-radius: 8px; box-shadow: var(--shadow-float), var(--inner-shine); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+        }
+        .tab-btn {
+            min-width: 0; min-height: 52px; padding: 6px 2px; border: 0; border-radius: 8px; background: transparent; color: var(--text-muted);
+            font-size: 11px; font-weight: 800; line-height: 1.1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px;
+            transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+        }
+        .tab-btn i { font-size: 18px; }
+        .tab-btn.active { background: linear-gradient(180deg, rgba(255,255,255,0.74), rgba(255,255,255,0.32)); color: var(--accent); box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 6px 18px rgba(0, 122, 255, 0.16); transform: translateY(-1px); }
+
+        .tab-content { display: none; animation: fadeIn 0.18s ease-out; padding-bottom: 10px; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        .status-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 4px 0 14px; }
+        .stat-card {
+            min-height: 76px; padding: 13px 14px; position: relative; overflow: hidden; background: var(--glass-tint); border: 1px solid var(--glass-stroke);
+            border-radius: 8px; box-shadow: var(--shadow-card); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); isolation: isolate;
+        }
+        .stat-card::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(135deg, rgba(255,255,255,0.82), rgba(255,255,255,0.12) 48%, rgba(255,255,255,0.38)); box-shadow: var(--inner-shine); }
+        .stat-card span { display: block; color: var(--text-muted); font-size: 12px; font-weight: 800; margin-bottom: 7px; }
+        .stat-card strong { display: block; color: var(--text-main); font-size: 21px; line-height: 1.05; font-weight: 900; overflow-wrap: anywhere; }
+
+        .group-box {
+            position: relative; overflow: hidden; background: var(--glass-tint); border: 1px solid var(--glass-stroke); border-radius: var(--radius-lg);
+            padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow-card); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); isolation: isolate;
+        }
+        .group-box::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(145deg, rgba(255,255,255,0.78), rgba(255,255,255,0.16) 42%, rgba(255,255,255,0.34)); box-shadow: var(--inner-shine); }
+        .plain-section { padding: 0; margin-top: 4px; background: transparent; border: 0; box-shadow: none; }
+        .group-title { color: var(--text-main); font-weight: 900; font-size: 17px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .group-title i { color: var(--accent); }
+
+        .control-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 0; }
+        .control-row { display: flex; gap: 10px; align-items: center; width: 100%; }
+        .launch-row input { min-width: 0; }
+        .launch-btn { flex: none; width: 82px; white-space: nowrap; }
+        .section-head { display: flex; align-items: center; gap: 10px; margin: 18px 0 10px; }
+        .section-head h3 { flex: 1; margin: 0; font-size: 17px; font-weight: 900; }
+
+        button {
+            min-height: 46px; position: relative; overflow: hidden; background: rgba(255, 255, 255, 0.34); color: var(--text-main); border: 1px solid var(--glass-stroke);
+            border-radius: var(--radius-md); padding: 12px 14px; font-weight: 800; font-size: 15px; display: inline-flex; justify-content: center; align-items: center; gap: 8px;
+            flex: 1; box-shadow: inset 0 1px 0 rgba(255,255,255,0.74), 0 8px 18px rgba(21, 28, 40, 0.08); backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%); transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+        }
+        button:active { transform: scale(0.98); }
+        button.primary { background: linear-gradient(180deg, rgba(0, 138, 255, 0.92), rgba(0, 103, 218, 0.92)) !important; color: #fff !important; border-color: rgba(255,255,255,0.42) !important; }
+        button.danger { background: linear-gradient(180deg, rgba(255, 69, 58, 0.94), rgba(215, 0, 21, 0.92)) !important; color: #fff !important; border-color: rgba(255,255,255,0.38) !important; }
+        button.icon-only { flex: none; width: 46px; padding: 0; }
+
+        input[type="text"], input[type="number"], select, textarea {
+            background: rgba(255, 255, 255, 0.40); border: 1px solid rgba(255, 255, 255, 0.56); border-radius: var(--radius-sm); padding: 13px 14px; color: var(--text-main);
+            font-size: 16px !important; font-weight: 700; width: 100%; box-sizing: border-box; box-shadow: inset 0 1px 0 rgba(255,255,255,0.64), inset 0 -1px 0 rgba(60,60,67,0.04); backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%);
+        }
+        textarea { min-height: 150px; resize: vertical; line-height: 1.45; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); background: rgba(255, 255, 255, 0.78); }
+
+        .toggle-row {
+            display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 52px; background: rgba(255, 255, 255, 0.34);
+            padding: 12px 13px; border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.46); box-shadow: inset 0 1px 0 rgba(255,255,255,0.64); backdrop-filter: blur(16px) saturate(150%); -webkit-backdrop-filter: blur(16px) saturate(150%);
+        }
+        .toggle-row span { color: var(--text-main); font-size: 14px; font-weight: 800; }
+        .apple-switch { position: relative; display: inline-block; width: 52px; height: 30px; flex-shrink: 0; }
+        .apple-switch input { opacity: 0; width: 0; height: 0; }
+        .apple-slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #d1d1d6; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 30px; }
+        .apple-slider:before { position: absolute; content: ""; height: 24px; width: 24px; left: 3px; top: 3px; background-color: white; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        .apple-switch input:checked + .apple-slider { background-color: var(--success); }
+        .apple-switch input:checked + .apple-slider:before { transform: translateX(22px); }
+
+        .m-card {
+            position: relative; overflow: hidden; background: var(--glass-tint); border: 1px solid var(--glass-stroke); border-radius: var(--radius-md);
+            padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow-card); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); isolation: isolate;
+        }
+        .m-card::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(145deg, rgba(255,255,255,0.74), rgba(255,255,255,0.14) 42%, rgba(255,255,255,0.34)); box-shadow: var(--inner-shine); }
+        .m-card-top { display: flex; gap: 8px; margin-bottom: 12px; }
+        .m-card-mid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 800; background: transparent !important; padding: 0 !important; }
+        .metric { min-width: 0; padding: 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.36); border: 1px solid rgba(255, 255, 255, 0.44); box-shadow: inset 0 1px 0 rgba(255,255,255,0.58); }
+        .metric span { display: block; margin-top: 3px; color: var(--text-main) !important; font-size: 19px !important; font-weight: 900; overflow-wrap: anywhere; }
+        .metric.gold { color: var(--gold); }
+        .metric.accent { color: var(--accent); }
+        .metric.full { grid-column: 1 / -1; }
+        .m-card-bot { display: flex; gap: 8px; }
+        .m-card-bot input { flex: 2; min-width: 0; }
+        .m-card-bot button { flex: 1; }
+        .locked-card { border-color: rgba(0, 122, 255, 0.28); background: rgba(232, 243, 255, 0.56); }
+        .inline-edit { width: 100%; min-width: 0; text-align: center; color: var(--gold) !important; border: 1px solid var(--gold) !important; padding: 7px !important; font-size: 16px !important; font-weight: 900 !important; background: rgba(255, 250, 240, 0.76) !important; }
+
+        .color-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .color-slot { display: flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.34); padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.46); box-shadow: inset 0 1px 0 rgba(255,255,255,0.64); backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%); }
+        .color-slot input[type="color"] { flex: none; width: 42px; height: 42px; padding: 0; border: 0; border-radius: 8px; overflow: hidden; }
+        .color-slot button { min-height: 42px; padding: 8px; font-size: 13px; }
+
+        .log-box { background: rgba(255, 255, 255, 0.34); border: 1px solid rgba(255, 255, 255, 0.46); border-radius: var(--radius-sm); padding: 13px; height: 220px; overflow-y: auto; font-size: 13px; color: var(--text-muted); line-height: 1.7; margin-bottom: 10px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.58); backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%); }
+        .log-item { padding: 8px 0; border-bottom: 1px solid rgba(60, 60, 67, 0.1); }
+        .log-item:last-child { border-bottom: 0; }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-body: #050507; --bg-panel: rgba(34, 34, 38, 0.52); --bg-card: rgba(34, 34, 38, 0.48); --bg-input: rgba(255, 255, 255, 0.10);
+                --glass-tint: rgba(34, 34, 38, 0.54); --glass-tint-strong: rgba(34, 34, 38, 0.76); --glass-stroke: rgba(255, 255, 255, 0.16);
+                --glass-edge: rgba(255, 255, 255, 0.08); --border-light: rgba(255, 255, 255, 0.1); --text-main: #f5f5f7; --text-muted: #a1a1a6;
+                --shadow-card: 0 18px 48px rgba(0, 0, 0, 0.46), inset 0 1px 0 rgba(255,255,255,0.12); --shadow-float: 0 22px 70px rgba(0, 0, 0, 0.62);
+                --inner-shine: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -1px 0 rgba(255,255,255,0.04);
+            }
+            body { background: linear-gradient(145deg, rgba(0, 122, 255, 0.18) 0%, transparent 28%), linear-gradient(220deg, rgba(52, 199, 89, 0.12) 0%, transparent 36%), linear-gradient(330deg, rgba(255, 159, 10, 0.12) 0%, transparent 32%), var(--bg-body); }
+            body::before { opacity: 0.10; } .header { background: linear-gradient(to bottom, rgba(5, 5, 7, 0.86), rgba(5, 5, 7, 0.38)); } .tabs { background: var(--glass-tint-strong); }
+            .reaction-pill::before, .stat-card::before, .group-box::before, .m-card::before { background: linear-gradient(145deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03) 44%, rgba(255,255,255,0.08)); }
+            .tab-btn.active { background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 8px 20px rgba(0, 122, 255, 0.16); }
+            button, input[type="text"], input[type="number"], select, textarea, .toggle-row, .metric, .color-slot, .log-box { background: rgba(255, 255, 255, 0.10); border-color: rgba(255, 255, 255, 0.12); }
+            input:focus, select:focus, textarea:focus { background: rgba(28, 28, 30, 0.76); } .locked-card { background: rgba(20, 46, 78, 0.48); } .inline-edit { background: rgba(70, 48, 18, 0.76) !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <div class="eyebrow">Live Master</div>
+            <h1>모바일 제어</h1>
+        </div>
+        <label class="reaction-pill">
+            <i class="fa-solid fa-eye" id="icon-reaction"></i>
+            <span id="lbl-reaction-mode">대기</span>
+            <div class="apple-switch"><input type="checkbox" id="chk-reaction" onchange="toggleOption('reaction_mode')"><span class="apple-slider"></span></div>
+        </label>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'tab-ranking')"><i class="fa-solid fa-ranking-star"></i><span>랭킹</span></button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-match')"><i class="fa-solid fa-stopwatch"></i><span>대결</span></button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-neon')"><i class="fa-solid fa-wand-magic-sparkles"></i><span>이펙트</span></button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-news')"><i class="fa-solid fa-bullhorn"></i><span>전광판</span></button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-logs')"><i class="fa-solid fa-list-ul"></i><span>로그</span></button>
+    </div>
+
+    <div id="tab-ranking" class="tab-content active">
+        <div class="status-grid">
+            <div class="stat-card"><span>총점</span><strong id="stat-total">0</strong></div>
+            <div class="stat-card"><span>목표</span><strong id="stat-goal">0</strong></div>
+            <div class="stat-card"><span>참가자</span><strong id="stat-members">0</strong></div>
+            <div class="stat-card"><span>모드</span><strong id="stat-mode">대기</strong></div>
+        </div>
+        <div class="group-box">
+            <div class="group-title"><i class="fa-solid fa-sliders"></i> 기능 설정</div>
+            <div class="control-row" style="margin-bottom: 10px;">
+                <select id="sel-theme" onchange="updateTheme()"><option value="default">기본 다크</option><option value="pink">네온 핑크</option></select>
+            </div>
+            <div class="control-row">
+                <label class="toggle-row" style="flex: 1;"><span>점수 팝업</span><div class="apple-switch"><input type="checkbox" id="chk-popup" onchange="toggleOption('popup_enabled')"><span class="apple-slider"></span></div></label>
+                <label class="toggle-row" style="flex: 1;"><span>1등 탈환</span><div class="apple-switch"><input type="checkbox" id="chk-takeover" onchange="toggleOption('takeover_enabled')"><span class="apple-slider"></span></div></label>
+            </div>
+        </div>
+        <div class="group-box">
+            <div class="group-title"><i class="fa-solid fa-rocket"></i> 방송 목표 & 특수 자막</div>
+            <div class="control-group">
+                <input type="number" id="in-goal" placeholder="목표 점수" onchange="updateGoal()">
+                <div class="control-row launch-row">
+                    <input type="text" id="in-up-text" placeholder="화면 중앙 발사 문구" onkeydown="if(event.key==='Enter') triggerUpText()">
+                    <button class="launch-btn" style="background: var(--gold); color: #fff;" onclick="triggerUpText()"><i class="fa-solid fa-paper-plane"></i> 발사</button>
+                </div>
+            </div>
+        </div>
+        <div class="plain-section">
+            <div class="section-head">
+                <h3><i class="fa-solid fa-users"></i> 참가자</h3>
+                <button class="primary icon-only" onclick="addRankPlayer()" aria-label="참가자 추가"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <div id="ranking-list"></div>
+        </div>
+    </div>
+
+    <div id="tab-match" class="tab-content">
+        <div class="status-grid">
+            <div class="stat-card"><span>타이머</span><strong id="stat-timer">00:00</strong></div>
+            <div class="stat-card"><span>상태</span><strong id="stat-match-state">대기</strong></div>
+        </div>
+        <div class="group-box">
+            <div class="group-title"><i class="fa-solid fa-tv"></i> 대결 화면 설정</div>
+            <div class="control-row" style="margin-bottom: 10px;">
+                <label class="toggle-row" style="flex: 1;"><span>위젯 표시</span><div class="apple-switch"><input type="checkbox" id="chk-match" onchange="toggleMatch()"><span class="apple-slider"></span></div></label>
+            </div>
+            <div class="control-row" style="margin-bottom: 15px;">
+                <label class="toggle-row" style="flex: 1;"><span><i class="fa-solid fa-fire" style="color:var(--danger);"></i> 불꽃 효과</span><div class="apple-switch"><input type="checkbox" id="chk-match-fire" onchange="toggleMatchFire()"><span class="apple-slider"></span></div></label>
+            </div>
+            <input type="text" id="in-match-title" placeholder="대결 타이틀 (선택)" oninput="updateMatchTitle()">
+        </div>
+        <div class="group-box">
+            <div class="group-title"><i class="fa-solid fa-stopwatch"></i> 타이머 제어</div>
+            <div class="control-row" style="margin-bottom: 10px;">
+                <input type="number" id="in-timer-m" value="3" placeholder="분"> <span style="font-weight:bold;">분</span>
+                <input type="number" id="in-timer-s" value="0" placeholder="초"> <span style="font-weight:bold;">초</span>
+            </div>
+            <div class="control-row">
+                <button onclick="setTimer()"><i class="fa-solid fa-rotate-right"></i> 적용</button>
+                <button class="primary" onclick="toggleTimer()" id="btn-timer-toggle"><i class="fa-solid fa-play"></i> 시작</button>
+            </div>
+        </div>
+        <div class="plain-section">
+            <div class="section-head">
+                <h3><i class="fa-solid fa-users"></i> 대결자</h3>
+                <button class="primary icon-only" onclick="addMatchPlayer()" aria-label="대결자 추가"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <div id="match-list"></div>
+        </div>
+    </div>
+
+    <div id="tab-neon" class="tab-content">
+
+        <div class="group-box">
+            <div class="group-title"><i class="fa-solid fa-lightbulb"></i> 리액션 조명 제어</div>
+            <div class="control-group">
+                <button id="btn-rainbow" onclick="triggerNeon('RAINBOW')" style="background: linear-gradient(90deg, #ff453a, #ff9f0a, #ffd60a, #34c759, #007aff, #5856d6); color: #fff;"><i class="fa-solid fa-rainbow"></i> 무지개 네온</button>
+                <div class="control-row">
+                    <button onclick="triggerNeon('AUDI')"><i class="fa-solid fa-car"></i> 아우디 빔</button>
+                    <button onclick="triggerNeon('OFF')" class="danger"><i class="fa-solid fa-power-off"></i> 전체 끄기</button>
+                </div>
+            </div>
+            <div style="height: 1px; background: var(--border-light); margin: 20px 0;"></div>
+            <div id="color-slots" class="color-grid"></div>
+        </div>
+    </div>
+
+    <div id="tab-news" class="tab-content">
+        <div class="group-box">
+            <div class="group-title"><i class="fa-solid fa-bullhorn"></i> 전광판 설정</div>
+            <label class="toggle-row" style="margin-bottom: 15px;"><span style="font-weight:bold;">화면에 표시하기</span><div class="apple-switch"><input type="checkbox" id="chk-ticker" onchange="toggleOption('ticker_enabled')"><span class="apple-slider"></span></div></label>
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 13px; font-weight:bold; color:var(--text-muted);">스크롤 속도: <span id="lbl-speed">70</span></label>
+                <input type="range" id="in-speed" min="1" max="100" onchange="updateSpeed(this.value)" style="width:100%; margin-top:10px; accent-color: var(--accent);">
+            </div>
+            <textarea id="in-ticker" placeholder="문구를 입력하세요. (엔터로 구분)" style="height: 150px;" oninput="updateTickerText()"></textarea>
+        </div>
+    </div>
+
+
+
+    <div id="tab-logs" class="tab-content">
+        <div class="group-box">
+            <div class="group-title"><i class="fa-solid fa-list-ol"></i> 랭킹 로그</div>
+            <div id="log-box-ranking" class="log-box"></div>
+            <button style="width: 100%;" onclick="clearLogs('rank')"><i class="fa-solid fa-trash-can"></i> 랭킹 로그 비우기</button>
+        </div>
+        <div class="group-box">
+            <div class="group-title"><i class="fa-solid fa-swords"></i> 대결 로그</div>
+            <div id="log-box-match" class="log-box"></div>
+            <button style="width: 100%;" onclick="clearLogs('match')"><i class="fa-solid fa-trash-can"></i> 대결 로그 비우기</button>
+        </div>
+    </div>
+
+    <script>
+        function openTab(evt, tabId) { 
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); 
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
+            document.getElementById(tabId).classList.add('active'); 
+            evt.currentTarget.classList.add('active'); 
+        }
+        
+        let gd = null; let isPushing = false; 
+        let lastRHtml = ""; let lastMHtml = ""; let lastColorHtml = ""; let lastRankLogHtml = ""; let lastMatchLogHtml = "";
+
+        async function fetchAPI() {
+            if (isPushing) return; 
+            try { 
+                const res = await fetch('/api/data'); const newData = await res.json(); 
+                gd = newData;
+                if(!gd.bjs || gd.bjs.length === 0) { gd.bjs = []; for(let i=1; i<=3; i++) gd.bjs.push({name: `Player ${i}`, score: 0, contribution: 0}); }
+                else { gd.bjs.forEach(bj => { if(bj.contribution === undefined) bj.contribution = bj.score > 0 ? bj.score : 0; }); }
+                if(!gd.match_data) gd.match_data = { active: false, fire_effect: false, is_running: false, time_left_ms: 180000, end_time_ms: 0, players: [{name:'팀 A', score:0}, {name:'팀 B', score:0}] };
+                if(!gd.bottom_fixed) gd.bottom_fixed = {name: "운영비", score: 0};
+                renderUI(); 
+            } catch (e) {}
+        }
+
+        function pushAPI() {
+            if(!gd) return;
+            isPushing = true; gd.bjs.sort((a, b) => (b.contribution || 0) - (a.contribution || 0)); renderUI(); 
+            fetch('/api/data', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(gd) }).catch(e => console.error("⚠️ pushAPI Error:", e));
+            setTimeout(() => { isPushing = false; }, 80); 
+        }
+
+        function readableTextColor(hex) {
+            let clean = String(hex || '').replace('#', '').trim();
+            if (clean.length === 3) clean = clean.split('').map(ch => ch + ch).join('');
+            if (clean.length !== 6) return '#fff';
+            let r = parseInt(clean.slice(0, 2), 16);
+            let g = parseInt(clean.slice(2, 4), 16);
+            let b = parseInt(clean.slice(4, 6), 16);
+            return ((r * 299 + g * 587 + b * 114) / 1000) > 170 ? '#1d1d1f' : '#fff';
+        }
+
+        function renderUI() {
+            if(document.activeElement.tagName === "INPUT" && !document.activeElement.id.startsWith("chk") || document.activeElement.tagName === "TEXTAREA") return;
+            
+
+
+            const setVal = (id, val) => { let el = document.getElementById(id); if(el && el.value != val) el.value = val; };
+            const setChk = (id, val) => { let el = document.getElementById(id); if(el && el.checked !== val) el.checked = val; };
+            const setHtml = (id, val) => { let el = document.getElementById(id); if(el && el.innerHTML !== val) el.innerHTML = val; };
+
+            setVal('sel-theme', gd.theme || 'default');
+            setVal('in-goal', gd.target_goal);
+            
+            setChk('chk-reaction', gd.reaction_mode);
+            document.getElementById('icon-reaction').style.color = gd.reaction_mode ? "var(--danger)" : "var(--text-main)";
+            document.getElementById('icon-reaction').className = gd.reaction_mode ? "fa-solid fa-eye-slash" : "fa-solid fa-eye";
+            setHtml('lbl-reaction-mode', gd.reaction_mode ? '리액션' : '대기');
+            
+            setChk('chk-popup', gd.popup_enabled);
+            setChk('chk-takeover', gd.takeover_enabled);
+            setChk('chk-match', gd.match_data.active);
+            setChk('chk-match-fire', gd.match_data.fire_effect || false);
+            setChk('chk-ticker', gd.ticker_enabled);
+
+            let totalScore = (gd.bottom_fixed?.score || 0) + gd.bjs.reduce((sum, bj) => sum + (bj.score || 0), 0);
+            setHtml('stat-total', totalScore.toLocaleString());
+            setHtml('stat-goal', (gd.target_goal || 0).toLocaleString());
+            setHtml('stat-members', gd.bjs.length.toLocaleString());
+            setHtml('stat-mode', gd.reaction_mode ? '리액션' : '대기');
+
+            let currentNeon = (gd.effect_trigger && gd.effect_trigger.color !== 'OFF') ? gd.effect_trigger.color : ''; 
+            let rbBtn = document.getElementById('btn-rainbow'); 
+            if(currentNeon === 'RAINBOW') { 
+                if(rbBtn.innerText.indexOf("끄기") === -1) {
+                    rbBtn.innerHTML = "<i class='fa-solid fa-rainbow'></i> 무지개 끄기"; rbBtn.style.background = "#1d1d1f"; rbBtn.style.color = "#fff"; 
+                }
+            } else { 
+                if(rbBtn.innerText.indexOf("네온") === -1) {
+                    rbBtn.innerHTML = "<i class='fa-solid fa-rainbow'></i> 무지개 네온"; rbBtn.style.background = "linear-gradient(90deg, #ff453a, #ff9f0a, #ffd60a, #34c759, #007aff, #5856d6)"; rbBtn.style.color = "#fff"; 
+                }
+            }
+
+            if (!gd.saved_colors) gd.saved_colors = ['#ff0055', '#00e5ff', '#ff9100', '#00ff00']; 
+            let colorHtml = ''; 
+            gd.saved_colors.forEach((col, i) => { 
+                let isAct = (currentNeon === col); 
+                let textCol = readableTextColor(col);
+                let btnStyle = isAct ? `background:#1d1d1f; color:#fff; border-color:${col};` : `background:${col}; color:${textCol}; border-color:${col};`; 
+                colorHtml += `<div class="color-slot"><input type="color" value="${col}" onchange="gd.saved_colors[${i}]=this.value; pushAPI();"><button style="${btnStyle}" onclick="triggerNeon('${col}')">${isAct ? '<i class="fa-solid fa-check"></i> ON' : '적용'}</button></div>`; 
+            }); 
+            if (lastColorHtml !== colorHtml) { document.getElementById('color-slots').innerHTML = colorHtml; lastColorHtml = colorHtml; }
+
+            let rHtml = '';
+            gd.bjs.forEach((bj, i) => { 
+                rHtml += `
+                <div class="m-card">
+                    <div class="m-card-top">
+                        <input type="text" value="${bj.name}" onchange="gd.bjs[${i}].name=this.value; pushAPI();" style="flex:1; font-weight:900;">
+                        <button class="danger icon-only" onclick="gd.bjs.splice(${i},1); pushAPI();" aria-label="참가자 삭제"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    <div class="m-card-mid">
+                        <div class="metric accent">점수<span>${bj.score.toLocaleString()}</span></div>
+                        <div class="metric gold" style="position: relative;" onclick="editContrib(${i}, this, event)">기여<span>${(bj.contribution||0).toLocaleString()}</span></div>
+                    </div>
+                    <div class="m-card-bot">
+                        <input type="number" id="rank-add-${i}" placeholder="+ 점수 (엔터)" onkeydown="if(event.key==='Enter') addScore('rank', ${i})">
+                        <button class="primary" onclick="addScore('rank', ${i})"><i class="fa-solid fa-plus"></i> 추가</button>
+                    </div>
+                </div>`; 
+            });
+            rHtml += `
+            <div class="m-card locked-card">
+                <div class="m-card-top">
+                    <input type="text" value="${gd.bottom_fixed.name}" onchange="gd.bottom_fixed.name=this.value; pushAPI();" style="flex:1; font-weight:900; color:var(--accent);">
+                    <button disabled class="icon-only" aria-label="고정 항목"><i class="fa-solid fa-lock" style="color:var(--text-muted);"></i></button>
+                </div>
+                <div class="m-card-mid">
+                    <div class="metric accent full">누적 점수<span>${gd.bottom_fixed.score.toLocaleString()}</span></div>
+                </div>
+                <div class="m-card-bot">
+                    <input type="number" id="rank-add-bot" placeholder="+ 점수 (엔터)" onkeydown="if(event.key==='Enter') addScore('bot', 0)">
+                    <button class="primary" onclick="addScore('bot', 0)"><i class="fa-solid fa-plus"></i> 추가</button>
+                </div>
+            </div>`;
+            if (lastRHtml !== rHtml) { document.getElementById('ranking-list').innerHTML = rHtml; lastRHtml = rHtml; }
+
+            let md = gd.match_data; 
+            setVal('in-match-title', md.title || ''); 
+            
+            let timerBtn = document.getElementById('btn-timer-toggle');
+            let newTimerHtml = md.is_running ? "<i class='fa-solid fa-pause'></i> 정지" : "<i class='fa-solid fa-play'></i> 시작";
+            if (timerBtn.innerHTML !== newTimerHtml) {
+                timerBtn.innerHTML = newTimerHtml;
+                timerBtn.className = md.is_running ? "danger" : "primary";
+            }
+            
+            let totalSec = Math.max(0, Math.floor((md.is_running ? Math.max(0, md.end_time_ms - Date.now()) : md.time_left_ms) / 1000)); 
+            setVal('in-timer-m', Math.floor(totalSec / 60)); 
+            setVal('in-timer-s', totalSec % 60);
+            if (totalSec <= 0) {
+                setHtml('stat-timer', '시간종료');
+            } else {
+                setHtml('stat-timer', `${String(Math.floor(totalSec / 60)).padStart(2, '0')}:${String(totalSec % 60).padStart(2, '0')}`);
+            }
+            setHtml('stat-match-state', md.active ? (md.is_running ? '진행' : '표시') : '숨김');
+
+            let mHtml = ''; 
+            md.players.forEach((p, i) => { 
+                mHtml += `
+                <div class="m-card">
+                    <div class="m-card-top">
+                        <input type="text" value="${p.name}" onchange="gd.match_data.players[${i}].name=this.value; pushAPI();" style="flex:1; font-weight:900;">
+                        <button class="danger icon-only" onclick="gd.match_data.players.splice(${i},1); pushAPI();" aria-label="대결자 삭제"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    <div class="m-card-mid">
+                        <div class="metric accent full">현재 점수<span>${p.score.toLocaleString()}</span></div>
+                    </div>
+                    <div class="m-card-bot">
+                        <input type="number" id="match-add-${i}" placeholder="+ 점수 (엔터)" onkeydown="if(event.key==='Enter') addScore('match', ${i})">
+                        <button class="primary" onclick="addScore('match', ${i})"><i class="fa-solid fa-plus"></i> 추가</button>
+                    </div>
+                </div>`; 
+            }); 
+            if (lastMHtml !== mHtml) { document.getElementById('match-list').innerHTML = mHtml; lastMHtml = mHtml; }
+
+            setVal('in-speed', gd.ticker_speed || 70); 
+            setHtml('lbl-speed', gd.ticker_speed || 70); 
+            setVal('in-ticker', (gd.ticker_text||'').replace(/ \/ /g, '\n')); 
+            
+
+
+            if (gd.logs) {
+                let rankLogHtml = gd.logs.map(log => `<div class="log-item"><span style="color:var(--text-muted);">[${log.time}]</span> <span style="font-weight:900;">${log.name}</span> <span style="color:var(--accent); font-weight:900;">${log.val > 0 ? '+'+log.val.toLocaleString() : log.val.toLocaleString()}점</span></div>`).join('');
+                if (lastRankLogHtml !== rankLogHtml) { document.getElementById('log-box-ranking').innerHTML = rankLogHtml; lastRankLogHtml = rankLogHtml; }
+            }
+            if (gd.match_logs) {
+                let matchLogHtml = gd.match_logs.map(log => `<div class="log-item"><span style="color:var(--text-muted);">[${log.time}]</span> <span style="font-weight:900;">${log.name}</span> <span style="color:var(--accent); font-weight:900;">${log.val > 0 ? '+'+log.val.toLocaleString() : log.val.toLocaleString()}점</span></div>`).join('');
+                if (lastMatchLogHtml !== matchLogHtml) { document.getElementById('log-box-match').innerHTML = matchLogHtml; lastMatchLogHtml = matchLogHtml; }
+            }
+        }
+
+        function editContrib(idx, el, event) {
+            if (event && event.target.closest('#contrib-popover')) return;
+            
+            let popover = el.querySelector('#contrib-popover');
+            if (popover) {
+                popover.remove();
+                return;
+            }
+            
+            // Remove any existing popover in the document
+            let existing = document.getElementById('contrib-popover');
+            if (existing) {
+                existing.remove();
+            }
+            
+            let isExtra = gd.extra_game_active || false;
+            let targetList = isExtra ? gd.extra_bjs : gd.bjs;
+            let currentVal = targetList[idx].contribution || 0;
+            
+            let pop = document.createElement('div');
+            pop.id = 'contrib-popover';
+            pop.style.cssText = `
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 9999;
+                background: var(--bg-body);
+                border: 2px solid var(--gold);
+                padding: 10px;
+                border-radius: var(--radius-md);
+                box-shadow: var(--shadow-float);
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                align-items: center;
+                min-width: 150px;
+                margin-top: 8px;
+            `;
+            
+            pop.innerHTML = `
+                <div style="font-size: 11px; color: var(--text-muted); font-weight: bold; user-select: none;">기여도 수정</div>
+                <input type="number" id="edit-contrib-popover-input" value="${currentVal}" style="width: 100px; text-align: center; color: var(--gold); border: 1px solid var(--border-light); padding: 4px; font-size: 16px; font-weight: 800; background: var(--bg-input); border-radius: var(--radius-sm); outline: none; box-sizing: border-box;" onkeydown="if(event.key==='Enter') confirmContribChange(${idx})">
+                <div style="display: flex; gap: 4px; justify-content: center; width: 100%;">
+                    <button type="button" onclick="adjustContrib(${idx}, -50)" style="flex: 1; padding: 6px 0; font-size: 12px; background: rgba(255, 59, 48, 0.15); border: 1px solid rgba(255, 59, 48, 0.3); color: var(--danger); border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; display: inline-flex; justify-content: center; align-items: center;">-50</button>
+                    <button type="button" onclick="adjustContrib(${idx}, 50)" style="flex: 1; padding: 6px 0; font-size: 12px; background: rgba(0, 122, 255, 0.15); border: 1px solid rgba(0, 122, 255, 0.3); color: var(--accent); border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; display: inline-flex; justify-content: center; align-items: center;">+50</button>
+                    <button type="button" onclick="adjustContrib(${idx}, 100)" style="flex: 1; padding: 6px 0; font-size: 12px; background: rgba(255, 159, 10, 0.15); border: 1px solid rgba(255, 159, 10, 0.3); color: var(--gold); border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; display: inline-flex; justify-content: center; align-items: center;">+100</button>
+                </div>
+                <div style="display: flex; gap: 6px; width: 100%; justify-content: center; margin-top: 4px;">
+                    <button type="button" onclick="confirmContribChange(${idx})" style="flex: 1; padding: 6px 0; font-size: 12px; background: var(--accent); border: 1px solid var(--accent); color: #fff; border-radius: var(--radius-sm); font-weight: bold; cursor: pointer; display: inline-flex; justify-content: center; align-items: center;">확인</button>
+                    <button type="button" onclick="cancelContribEdit()" style="flex: 1; padding: 6px 0; font-size: 12px; background: var(--bg-input); border: 1px solid var(--border-light); color: var(--text-main); border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; justify-content: center; align-items: center;">취소</button>
+                </div>
+            `;
+            
+            // Add style rules for arrow dynamically if not already present
+            let style = document.getElementById('contrib-popover-arrow-style');
+            if (!style) {
+                style = document.createElement('style');
+                style.id = 'contrib-popover-arrow-style';
+                style.innerHTML = `
+                    #contrib-popover::after {
+                        content: "";
+                        position: absolute;
+                        top: -6px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        border-width: 0 6px 6px 6px;
+                        border-style: solid;
+                        border-color: transparent transparent var(--bg-body) transparent;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            el.appendChild(pop);
+            
+            setTimeout(() => {
+                let inputEl = document.getElementById('edit-contrib-popover-input');
+                if (inputEl) {
+                    inputEl.focus();
+                    inputEl.select();
+                }
+            }, 10);
+        }
+
+        function confirmContribChange(idx) {
+            let inputEl = document.getElementById('edit-contrib-popover-input');
+            if (inputEl) {
+                let parsed = parseInt(inputEl.value);
+                if (!isNaN(parsed)) {
+                    let isExtra = gd.extra_game_active || false;
+                    let targetList = isExtra ? gd.extra_bjs : gd.bjs;
+                    targetList[idx].contribution = parsed;
+                    pushAPI();
+                } else {
+                    cancelContribEdit();
+                }
+            }
+        }
+
+        function adjustContrib(idx, amount) {
+            let isExtra = gd.extra_game_active || false;
+            let targetList = isExtra ? gd.extra_bjs : gd.bjs;
+            let currentVal = targetList[idx].contribution || 0;
+            targetList[idx].contribution = currentVal + amount;
+            
+            let currentScore = targetList[idx].score || 0;
+            targetList[idx].score = currentScore + amount;
+            
+            pushAPI();
+        }
+
+        function cancelContribEdit() {
+            let existing = document.getElementById('contrib-popover');
+            if (existing) {
+                existing.remove();
+            }
+        }
+
+        function saveContrib(idx, val) {
+            let parsed = parseInt(val);
+            if (!isNaN(parsed)) {
+                let isExtra = gd.extra_game_active || false;
+                let targetList = isExtra ? gd.extra_bjs : gd.bjs;
+                targetList[idx].contribution = parsed;
+                pushAPI();
+            } else {
+                renderUI();
+            }
+        }
+        function triggerUpText() { let txt = document.getElementById('in-up-text').value; if (txt.trim() === "") { alert("문구를 먼저 입력해주세요!"); return; } gd.up_trigger = { time: Date.now(), text: txt }; pushAPI(); document.getElementById('in-up-text').value = ''; }
+        
+        function toggleOption(key) { 
+            gd[key] = !gd[key]; 
+            if (key === 'reaction_mode') {
+                let audio = document.getElementById('bgm-audio');
+                let md = gd.match_data;
+                
+                if (gd[key]) { 
+                    if (audio && !audio.paused) { audio.dataset.wasPlaying = "true"; audio.pause(); } else if(audio) { audio.dataset.wasPlaying = "false"; }
+                    if (md && md.is_running) {
+                        md.time_left_ms = Math.max(0, md.end_time_ms - Date.now());
+                        md.is_running = false;
+                        md.was_running_before_reaction = true;
+                    }
+                } else { 
+                    if (audio && audio.dataset.wasPlaying === "true") { audio.play().catch(e=>{}); }
+                    if (md && md.was_running_before_reaction) {
+                        if(md.time_left_ms <= 0) md.time_left_ms = md.paused_time_left;
+                        md.end_time_ms = Date.now() + md.time_left_ms;
+                        md.is_running = true;
+                        md.was_running_before_reaction = false;
+                    }
+                }
+            }
+            pushAPI(); 
+        }
+
+        function toggleMatch() { gd.match_data.active = !gd.match_data.active; pushAPI(); }
+        function toggleMatchFire() { gd.match_data.fire_effect = !gd.match_data.fire_effect; pushAPI(); }
+        function updateTheme() { gd.theme = document.getElementById('sel-theme').value; pushAPI(); }
+        function updateGoal() { gd.target_goal = parseInt(document.getElementById('in-goal').value)||0; pushAPI(); }
+        function addRankPlayer() { gd.bjs.push({name:"새 참가자", score:0, contribution:0}); pushAPI(); }
+        function triggerNeon(color) { if (!gd.reaction_mode && color !== 'OFF') { alert("👀 리액션 모드(눈알 아이콘)가 켜져있어야 화면에 보입니다."); return; } gd.effect_trigger = {time: Date.now(), color: color, infinite: true}; pushAPI(); }
+        
+        function addScore(type, idx) {
+            let val = 0; let target = null; let elId = '';
+            if(type === 'rank') { elId = `rank-add-${idx}`; target = gd.bjs[idx]; } else if(type === 'bot') { elId = `rank-add-bot`; target = gd.bottom_fixed; } else if(type === 'match') { elId = `match-add-${idx}`; target = gd.match_data.players[idx]; }
+            val = parseInt(document.getElementById(elId).value); if(isNaN(val) || val===0) return;
+            let timeStr = new Date().toLocaleTimeString('ko-KR', { hour12: false });
+            if (type === 'rank' || type === 'bot') { if (!gd.logs) gd.logs = []; gd.logs.unshift({time: timeStr, name: target.name, val: val}); if(gd.logs.length > 200) gd.logs.pop(); } else if (type === 'match') { if (!gd.match_logs) gd.match_logs = []; gd.match_logs.unshift({time: timeStr, name: target.name, val: val}); if(gd.match_logs.length > 200) gd.match_logs.pop(); }
+            let prev1st = (type === 'rank' && gd.bjs.length > 0) ? gd.bjs[0].name : null; 
+            target.score += val;
+            if (type === 'rank') { if (target.contribution === undefined) target.contribution = 0; target.contribution += val; }
+            if(val > 0) gd.latest_popup = {time: Date.now(), name: target.name, diff: val};
+            if (type === 'rank') { gd.bjs.sort((a, b) => (b.contribution || 0) - (a.contribution || 0)); let curr1st = gd.bjs.length > 0 ? gd.bjs[0].name : null; if (val > 0 && prev1st && curr1st && prev1st !== curr1st && curr1st === target.name) { gd.latest_takeover = {time: Date.now(), name: curr1st}; } }
+            document.getElementById(elId).value = ''; document.getElementById(elId).blur(); pushAPI();
+        }
+
+        function clearLogs(type) { if(type === 'rank') gd.logs = []; if(type === 'match') gd.match_logs = []; pushAPI(); }
+        function updateMatchTitle() { gd.match_data.title = document.getElementById('in-match-title').value; pushAPI(); }
+        function addMatchPlayer() { if(gd.match_data.players.length<4) { gd.match_data.players.push({name:"새 팀", score:0}); pushAPI(); } }
+        function setTimer() { let ms = ((parseInt(document.getElementById('in-timer-m').value)||0)*60 + (parseInt(document.getElementById('in-timer-s').value)||0))*1000; gd.match_data.paused_time_left = ms; gd.match_data.time_left_ms = ms; gd.match_data.is_running = false; pushAPI(); }
+        
+        function toggleTimer() { 
+            let md = gd.match_data; 
+            if(md.is_running) { 
+                md.time_left_ms = Math.max(0, md.end_time_ms - Date.now()); 
+                md.is_running = false; 
+                md.was_running_before_reaction = false;
+            } else { 
+                if(md.time_left_ms <= 0) md.time_left_ms = md.paused_time_left; 
+                md.end_time_ms = Date.now() + md.time_left_ms; 
+                md.is_running = true; 
+                md.was_running_before_reaction = false;
+            } 
+            pushAPI(); 
+        }
+
+        function updateSpeed(val) { gd.ticker_speed = parseInt(val); document.getElementById('lbl-speed').innerText = val; pushAPI(); }
+        function updateTickerText() { gd.ticker_text = document.getElementById('in-ticker').value.replace(/\n/g, ' / '); pushAPI(); }
+
+
+        fetchAPI(); setInterval(fetchAPI, 250); 
+
+        document.addEventListener('mousedown', function(event) {
+            let popover = document.getElementById('contrib-popover');
+            if (popover) {
+                if (!popover.contains(event.target) && !event.target.closest('.metric.gold')) {
+                    popover.remove();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
