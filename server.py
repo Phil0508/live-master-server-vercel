@@ -590,7 +590,11 @@ def sse_stream():
             if q in sse_clients:
                 sse_clients.remove(q)
                 
-    return app.response_class(event_generator(), mimetype='text/event-stream')
+    resp = app.response_class(event_generator(), mimetype='text/event-stream')
+    resp.headers['X-Accel-Buffering'] = 'no'
+    resp.headers['Cache-Control'] = 'no-cache'
+    resp.headers['Connection'] = 'keep-alive'
+    return resp
 
 @app.route('/api/ping')
 def api_ping():
