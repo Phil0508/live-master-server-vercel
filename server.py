@@ -1265,6 +1265,12 @@ def api_data():
         if request.method == 'POST':
             with file_lock:
                 state = request.json or {}
+                
+                # [버그 패치] 조종실에서 수동 리액션 스위치를 끌 때(False) 
+                # 큐에 대기열이 차 있으면 동기화 루프로 인해 즉시 다시 켜지는 현상을 원천 방지
+                if 'reaction_mode' in state and state['reaction_mode'] is False:
+                    state['reaction_queue'] = []
+                    
                 current_state = load_data()
                 
                 # [수정] 409 conflict로 인한 경고창(Alert) 발생을 원천 차단하기 위해 409 검증을 제거하고,
@@ -1883,10 +1889,33 @@ def get_reaction_file(file_id):
                 if not row:
                     return jsonify({"status": "error", "message": "File not found"}), 404
                 filename, content_type, file_data = row
-                data_bytes = bytes(file_data)
-                response = make_response(data_bytes)
-                response.headers.set('Content-Type', content_type)
-                response.headers.set('Content-Disposition', f'inline; filename="{filename}"')
+                
+                # psycopg2.Binary 또는 memoryview 형태를 bytes로 안전하게 변환
+                if file_data is not None:
+                    if isinstance(file_data, memoryview):
+                        data_bytes = file_data.tobytes()
+                    elif hasattr(file_data, 'tobytes'):
+                        data_bytes = file_data.tobytes()
+                    else:
+                        data_bytes = bytes(file_data)
+                else:
+                    data_bytes = b""
+                    
+                import io
+                from flask import send_file
+                
+                # 파일 이름을 안전하게 인코딩 (한글 깨짐 방지)
+                import urllib.parse
+                safe_filename = urllib.parse.quote(filename.encode('utf-8'))
+                
+                response = send_file(
+                    io.BytesIO(data_bytes),
+                    mimetype=content_type,
+                    as_attachment=False,
+                    download_name=filename,
+                    conditional=True
+                )
+                response.headers.set('Content-Disposition', f'inline; filename*=UTF-8\'\'{safe_filename}')
                 response.headers.set('Cache-Control', 'public, max-age=31536000')
                 return response
         
