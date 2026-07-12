@@ -606,12 +606,14 @@ def api_ping():
 @app.route('/api/debug')
 def api_debug():
     """Vercel/Supabase 연결 디버그 엔드포인트"""
+    import traceback
     result = {
         'is_vercel': IS_VERCEL,
         'is_postgres': IS_POSTGRES,
         'has_database_url': bool(DATABASE_URL),
         'database_url_prefix': DATABASE_URL[:20] + '...' if DATABASE_URL else None,
         'has_psycopg2': psycopg2 is not None,
+        'python_version': sys.version,
     }
     # DB 연결 테스트
     try:
@@ -626,9 +628,37 @@ def api_debug():
                 result['tables'] = tables
             except Exception as e:
                 result['tables_error'] = str(e)
+            # kv_store 데이터 확인
+            try:
+                cursor.execute("SELECT key FROM kv_store")
+                kv_keys = [row[0] for row in cursor.fetchall()]
+                result['kv_keys'] = kv_keys
+                result['kv_count'] = len(kv_keys)
+            except Exception as e:
+                result['kv_error'] = str(e)
+            # players 데이터 확인
+            try:
+                cursor.execute("SELECT COUNT(*) FROM players")
+                result['player_count'] = cursor.fetchone()[0]
+            except Exception as e:
+                result['players_error'] = str(e)
     except Exception as e:
         result['db_connect'] = 'failed'
         result['db_error'] = str(e)
+    # load_data() 테스트
+    try:
+        global MEMORY_STATE
+        old_state = MEMORY_STATE
+        MEMORY_STATE = None  # 강제 리로드
+        data = load_data()
+        result['load_data'] = 'success'
+        result['load_data_keys'] = list(data.keys()) if isinstance(data, dict) else str(type(data))
+        result['bjs_count'] = len(data.get('bjs', [])) if isinstance(data, dict) else 0
+    except Exception as e:
+        result['load_data'] = 'failed'
+        result['load_data_error'] = str(e)
+        result['load_data_traceback'] = traceback.format_exc()
+        MEMORY_STATE = old_state  # 실패 시 원상복구
     return jsonify(result)
 
 # ==========================================
@@ -1134,29 +1164,33 @@ def yt_search():
 
 @app.route('/api/data', methods=['GET', 'POST'])
 def api_data():
-    if request.method == 'POST':
-        with file_lock:
-            state = request.json or {}
-            current_state = load_data()
+    try:
+        if request.method == 'POST':
+            with file_lock:
+                state = request.json or {}
+                current_state = load_data()
+                
+                # [수정] 409 conflict로 인한 경고창(Alert) 발생을 원천 차단하기 위해 409 검증을 제거하고,
+                # 마지막으로 전송된 상태를 기준으로 버전을 갱신하여 저장합니다. (Last-Write-Wins)
+                client_version = state.get('version', 0)
+                server_version = current_state.get('version', 1)
+                
+                state['version'] = max(client_version, server_version) + 1
+                save_data(state)
+                broadcast_event('update', state)
+            return jsonify({"status": "success"})
             
-            # [수정] 409 conflict로 인한 경고창(Alert) 발생을 원천 차단하기 위해 409 검증을 제거하고,
-            # 마지막으로 전송된 상태를 기준으로 버전을 갱신하여 저장합니다. (Last-Write-Wins)
-            client_version = state.get('version', 0)
-            server_version = current_state.get('version', 1)
-            
-            state['version'] = max(client_version, server_version) + 1
-            save_data(state)
-            broadcast_event('update', state)
-        return jsonify({"status": "success"})
-        
-    state = load_data()
-    if isinstance(state, dict):
-        state = state.copy()
-        state['server_time'] = int(time.time() * 1000)
-        # 조종실 웹에 로그인 세션이 있을 경우 보안 API 토큰을 제공
-        if session.get('authenticated'):
-            state['api_token'] = load_auth_config()['session_secret']
-    return jsonify(state)
+        state = load_data()
+        if isinstance(state, dict):
+            state = state.copy()
+            state['server_time'] = int(time.time() * 1000)
+            # 조종실 웹에 로그인 세션이 있을 경우 보안 API 토큰을 제공
+            if session.get('authenticated'):
+                state['api_token'] = load_auth_config()['session_secret']
+        return jsonify(state)
+    except Exception as e:
+        import traceback
+        return jsonify({'status': 'error', 'message': str(e), 'traceback': traceback.format_exc()}), 500
 
 @app.route('/api/roulette/winner', methods=['POST'])
 def api_roulette_winner():
