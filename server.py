@@ -400,18 +400,20 @@ def init_db():
             """)
         
         # 💡 [스키마 마이그레이션 패치] 기존 테이블 스키마 동적 추가 및 안전성 유지
-        try:
-            cursor.execute("ALTER TABLE snapshots ADD COLUMN summary TEXT")
-        except Exception:
-            pass
-        try:
-            cursor.execute("ALTER TABLE donation_history ADD COLUMN tx_id TEXT")
-        except Exception:
-            pass
-        try:
-            cursor.execute("ALTER TABLE reaction_items ADD COLUMN is_enabled BOOLEAN DEFAULT TRUE")
-        except Exception:
-            pass
+        # PostgreSQL에서는 IF NOT EXISTS로 이미 컬럼이 생성되어 있으므로 ALTER는 건너뜀
+        if not IS_POSTGRES:
+            try:
+                cursor.execute("ALTER TABLE snapshots ADD COLUMN summary TEXT")
+            except Exception:
+                pass
+            try:
+                cursor.execute("ALTER TABLE donation_history ADD COLUMN tx_id TEXT")
+            except Exception:
+                pass
+            try:
+                cursor.execute("ALTER TABLE reaction_items ADD COLUMN is_enabled BOOLEAN DEFAULT TRUE")
+            except Exception:
+                pass
 
 def load_data():
     global MEMORY_STATE
