@@ -484,10 +484,14 @@ def save_data_sync(new_data, is_initial=False):
 
 def save_data(new_data, is_initial=False):
     global MEMORY_STATE
-    # 메모리 상의 캐시 상태는 즉시 최신화하여 조종실과 오버레이에 즉시 전송되게 함 (0ms 레이턴시)
     MEMORY_STATE = new_data
-    # 실제 원격 DB 저장은 백그라운드 큐에 넣어 비동기로 처리
-    db_write_queue.put((new_data, is_initial))
+    
+    # Vercel 서버리스 환경일 때는 백그라운드 큐를 거치지 않고 즉시 DB에 직접 저장합니다.
+    if IS_VERCEL:
+        save_data_sync(new_data, is_initial)
+    else:
+        # 일반 PC나 Render 서버 환경에서는 기존처럼 비동기 큐를 사용합니다.
+        db_write_queue.put((new_data, is_initial))
 
 def time_machine_recovery():
     try:
