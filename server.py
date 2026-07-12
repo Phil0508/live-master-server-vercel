@@ -415,6 +415,55 @@ def init_db():
                 cursor.execute("ALTER TABLE reaction_items ADD COLUMN is_enabled BOOLEAN DEFAULT TRUE")
             except Exception:
                 pass
+        else:
+            # PostgreSQL 전용: players 테이블 컬럼 검증 및 자동 복구
+            try:
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_schema = 'public' AND table_name = 'players'
+                """)
+                existing_cols = {row[0] for row in cursor.fetchall()}
+                
+                if existing_cols and 'score' not in existing_cols:
+                    # score 컬럼이 없으면 추가
+                    try:
+                        cursor.execute("ALTER TABLE players ADD COLUMN score INTEGER DEFAULT 0")
+                    except Exception:
+                        pass
+                if existing_cols and 'contribution' not in existing_cols:
+                    # contribution 컬럼이 없으면 추가
+                    try:
+                        cursor.execute("ALTER TABLE players ADD COLUMN contribution INTEGER DEFAULT 0")
+                    except Exception:
+                        pass
+                if existing_cols and 'name' not in existing_cols:
+                    # 핵심 name 컬럼도 없으면 테이블 자체가 잘못된 것이므로 재생성
+                    cursor.execute("DROP TABLE IF EXISTS players")
+                    cursor.execute("CREATE TABLE players (name TEXT PRIMARY KEY, score INTEGER, contribution INTEGER)")
+            except Exception as e:
+                print(f"⚠️ [PostgreSQL 스키마 복구] players 테이블 복구 실패: {e}")
+            
+            # donation_history tx_id 컬럼 확인 및 추가
+            try:
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_schema = 'public' AND table_name = 'donation_history' AND column_name = 'tx_id'
+                """)
+                if not cursor.fetchone():
+                    cursor.execute("ALTER TABLE donation_history ADD COLUMN tx_id TEXT")
+            except Exception:
+                pass
+            
+            # snapshots summary 컬럼 확인 및 추가
+            try:
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_schema = 'public' AND table_name = 'snapshots' AND column_name = 'summary'
+                """)
+                if not cursor.fetchone():
+                    cursor.execute("ALTER TABLE snapshots ADD COLUMN summary TEXT")
+            except Exception:
+                pass
 
 def load_data():
     global MEMORY_STATE
@@ -642,6 +691,23 @@ def api_debug():
                 result['player_count'] = cursor.fetchone()[0]
             except Exception as e:
                 result['players_error'] = str(e)
+            # 각 테이블의 실제 컬럼 구조 확인
+            try:
+                cursor.execute("""
+                    SELECT table_name, column_name, data_type 
+                    FROM information_schema.columns 
+                    WHERE table_schema = 'public' 
+                    ORDER BY table_name, ordinal_position
+                """)
+                schema_info = {}
+                for row in cursor.fetchall():
+                    tbl = row[0]
+                    if tbl not in schema_info:
+                        schema_info[tbl] = []
+                    schema_info[tbl].append({'col': row[1], 'type': row[2]})
+                result['schema'] = schema_info
+            except Exception as e:
+                result['schema_error'] = str(e)
     except Exception as e:
         result['db_connect'] = 'failed'
         result['db_error'] = str(e)
