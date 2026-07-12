@@ -2398,41 +2398,37 @@
             }
         }
 
-        let sseSource = null;
+        let pollInterval = null;
+        let lastPollData = null;
         window.userInitiatedEnd = false;
         window.restorePromptShown = false;
-        function initSSE() {
-            if (sseSource) {
-                sseSource.close();
-            }
-            updateConnectionStatus('connecting'); // 🟢 재연결 중 상태 스위칭
-            sseSource = new EventSource('/api/stream');
-            
-            sseSource.onopen = function() {
+        async function initSSE() {
+            updateConnectionStatus('connecting');
+            try {
+                const res = await fetch('/api/data');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const newData = await res.json();
                 updateConnectionStatus('connected');
-            };
-            
-            sseSource.addEventListener('init', function(e) {
-                updateConnectionStatus('connected');
-                const newData = JSON.parse(e.data);
                 handleStreamData(newData);
-            });
-            
-            sseSource.addEventListener('update', function(e) {
-                updateConnectionStatus('connected');
-                if (isPushing || (Date.now() - lastPushTime < 200)) return;
-                const newData = JSON.parse(e.data);
-                handleStreamData(newData);
-            });
-            
-
-            
-            sseSource.onerror = function(err) {
-                console.error("SSE connection error. Retrying in 1.5 seconds...", err);
+            } catch (err) {
+                console.error("Poll error:", err);
                 updateConnectionStatus('disconnected');
-                sseSource.close();
-                setTimeout(initSSE, 1500); // 1.5초만에 더욱 신속하고 쫄깃한 재연결!
-            };
+            }
+            // 폴링 시작 (1.5초 간격)
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/data');
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const newData = await res.json();
+                    updateConnectionStatus('connected');
+                    if (isPushing || (Date.now() - lastPushTime < 200)) return;
+                    handleStreamData(newData);
+                } catch (err) {
+                    console.error("Poll error:", err);
+                    updateConnectionStatus('disconnected');
+                }
+            }, 1500);
         }
 
         function handleStreamData(newData) {
