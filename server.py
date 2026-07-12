@@ -194,6 +194,7 @@ def require_login():
         '/alertbox.html',
         '/api/stream',
         '/api/ping',
+        '/api/debug',
         '/api/donation',
         '/api/streamdeck/neon',
         '/api/streamdeck/save',
