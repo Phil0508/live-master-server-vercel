@@ -2,6 +2,9 @@ import sys
 import os
 import io
 
+# Vercel 서버리스 환경 감지
+IS_VERCEL = bool(os.environ.get('VERCEL'))
+
 # GUI 모드(console=False)에서 발생하는 모든 에러를 파일로 로깅하여 크래시 분석
 if getattr(sys, 'frozen', False):
     try:
@@ -70,12 +73,16 @@ def get_db_connection():
         conn.close()
 from flask import Flask, jsonify, request, send_from_directory, redirect, url_for, session
 from flask_cors import CORS
-try:
-    import tkinter as tk
-    from tkinter import messagebox
-except ImportError:
+if IS_VERCEL:
     tk = None
     messagebox = None
+else:
+    try:
+        import tkinter as tk
+        from tkinter import messagebox
+    except ImportError:
+        tk = None
+        messagebox = None
 import webbrowser
 
 if getattr(sys, 'frozen', False):
@@ -84,6 +91,9 @@ if getattr(sys, 'frozen', False):
 else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     BUNDLE_DIR = BASE_DIR
+
+# Vercel 서버리스: 쓰기 가능한 임시 디렉토리
+TMP_DIR = '/tmp' if IS_VERCEL else BASE_DIR
 
 DB_FILE = os.path.join(BASE_DIR, 'live_master.db')
 LAYOUT_FILE = os.path.join(BASE_DIR, 'layout.json')
@@ -127,6 +137,8 @@ def load_auth_config():
     return config
 
 def save_auth_config(config):
+    if IS_VERCEL:
+        return  # Vercel 서버리스: 읽기전용 파일시스템, 환경변수로만 관리
     try:
         with open(AUTH_CONFIG_FILE, 'w', encoding='utf-8') as f:
             json.dump(config, f, indent=4)
@@ -1639,7 +1651,23 @@ def get_reaction_file(file_id):
     try:
         import os
         import json
-        from flask import send_file
+        from flask import send_file, make_response
+        
+        # Vercel 서버리스: DB에서 직접 메모리 스트림으로 응답 (파일시스템 우회)
+        if IS_VERCEL:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(db_query("SELECT filename, content_type, file_data FROM reaction_files WHERE id = ?"), (file_id,))
+                row = cursor.fetchone()
+                if not row:
+                    return jsonify({"status": "error", "message": "File not found"}), 404
+                filename, content_type, file_data = row
+                data_bytes = bytes(file_data)
+                response = make_response(data_bytes)
+                response.headers.set('Content-Type', content_type)
+                response.headers.set('Content-Disposition', f'inline; filename="{filename}"')
+                response.headers.set('Cache-Control', 'public, max-age=31536000')
+                return response
         
         cache_dir = os.path.join(app.root_path, 'media_cache')
         cache_path = os.path.join(cache_dir, file_id)
@@ -2061,6 +2089,8 @@ def start_self_ping():
     import threading
     import time
     
+    if IS_VERCEL:
+        return  # Vercel 서버리스: self-ping 불필요
     url = os.environ.get('RENDER_EXTERNAL_URL')
     if not url:
         return
