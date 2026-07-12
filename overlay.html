@@ -1747,6 +1747,9 @@
         }
 
         function onReactionEnded() {
+            // 💡 [버그 수정] 리액션 종료 시 화면 비주얼 요소들을 숨김 처리
+            stopReactionVisuals();
+            
             const popId = currentPlayingId;
             currentPlayingId = null;
             
