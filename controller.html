@@ -1442,8 +1442,9 @@
                 }
             } catch(e) {
                 console.error("⚠️ pushAPI Error:", e);
+            } finally {
+                setTimeout(() => { isPushing = false; }, 80);
             }
-            setTimeout(() => { isPushing = false; }, 80);
         }
 
         function renderUI() {
