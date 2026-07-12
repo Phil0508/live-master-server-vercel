@@ -419,14 +419,14 @@ def init_db():
             # PostgreSQL 전용: 테이블 스키마 검증 및 자동 복구
             # Supabase 대시보드에서 다른 스키마로 생성된 테이블이 있을 수 있으므로 확인 후 재생성
             
-            # 각 테이블의 필수 컬럼 정의
-            required_schemas = {
+            # 각 테이블의 정확한 컬럼 세트 정의 (이 컬럼만 존재해야 함)
+            exact_schemas = {
                 'players': {'name', 'score', 'contribution'},
                 'reaction_files': {'id', 'filename', 'content_type', 'file_data'},
                 'reaction_items': {'id', 'title', 'amount', 'audio_file_id', 'image_file_id', 'is_enabled'},
             }
             
-            for table_name, required_cols in required_schemas.items():
+            for table_name, expected_cols in exact_schemas.items():
                 try:
                     cursor.execute("""
                         SELECT column_name FROM information_schema.columns 
@@ -434,10 +434,18 @@ def init_db():
                     """, (table_name,))
                     existing_cols = {row[0] for row in cursor.fetchall()}
                     
-                    # 필수 컬럼이 부족하면 테이블을 드롭하고 재생성
-                    missing_cols = required_cols - existing_cols
-                    if missing_cols:
-                        print(f"⚠️ [PostgreSQL 스키마 복구] {table_name}: 누락 컬럼 {missing_cols} → 테이블 재생성")
+                    # 필수 컬럼 부족 또는 불필요한 컬럼 존재 시 테이블 재생성
+                    missing_cols = expected_cols - existing_cols
+                    extra_cols = existing_cols - expected_cols
+                    needs_recreate = bool(missing_cols) or bool(extra_cols)
+                    
+                    if needs_recreate:
+                        reason = []
+                        if missing_cols:
+                            reason.append(f"누락={missing_cols}")
+                        if extra_cols:
+                            reason.append(f"불필요={extra_cols}")
+                        print(f"⚠️ [PostgreSQL 스키마 복구] {table_name}: {', '.join(reason)} → 테이블 재생성")
                         cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE")
                         conn.commit()
                         
