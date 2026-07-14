@@ -2528,6 +2528,7 @@
         window.restorePromptShown = false;
         async function initSSE() {
             updateConnectionStatus('connecting');
+            loadVipList().catch(e => console.error("VIP list initial load failed:", e));
             try {
                 const res = await fetch('/api/data');
                 if (!res.ok) throw new Error('HTTP ' + res.status);
