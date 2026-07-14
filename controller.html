@@ -1354,26 +1354,81 @@
         let lastRHtml = ""; let lastMHtml = ""; let lastColorHtml = ""; let lastRankLogHtml = ""; let lastMatchLogHtml = ""; let lastPendingHtml = "";
         let ytWasPlaying = false;
 
+        let bgmFadeInterval = null;
+        let ytFadeInterval = null;
+
+        // 💡 오디오 볼륨을 서서히 부드럽게 전환(덕킹)해주는 페이드 헬퍼 함수
+        function fadeAudioVolume(audioEl, targetVolume, durationMs) {
+            if (!audioEl) return;
+            if (bgmFadeInterval) clearInterval(bgmFadeInterval);
+            
+            const startVolume = audioEl.volume;
+            const stepCount = 20;
+            const stepTime = durationMs / stepCount;
+            const volumeStep = (targetVolume - startVolume) / stepCount;
+            let currentStep = 0;
+
+            bgmFadeInterval = setInterval(() => {
+                currentStep++;
+                audioEl.volume = Math.max(0, Math.min(1, startVolume + (volumeStep * currentStep)));
+                if (currentStep >= stepCount) {
+                    audioEl.volume = targetVolume;
+                    clearInterval(bgmFadeInterval);
+                    bgmFadeInterval = null;
+                }
+            }, stepTime);
+        }
+
+        // 💡 유튜브 플레이어 볼륨을 부드럽게 전환(덕킹)해주는 페이드 헬퍼 함수
+        function fadeYoutubeVolume(player, targetVolume, durationMs) {
+            try {
+                if (!player || typeof player.setVolume !== 'function' || typeof player.getVolume !== 'function') return;
+                if (ytFadeInterval) clearInterval(ytFadeInterval);
+
+                const startVolume = player.getVolume();
+                const stepCount = 20;
+                const stepTime = durationMs / stepCount;
+                const volumeStep = (targetVolume - startVolume) / stepCount;
+                let currentStep = 0;
+
+                ytFadeInterval = setInterval(() => {
+                    currentStep++;
+                    player.setVolume(Math.max(0, Math.min(100, Math.round(startVolume + (volumeStep * currentStep)))));
+                    if (currentStep >= stepCount) {
+                        player.setVolume(targetVolume);
+                        clearInterval(ytFadeInterval);
+                        ytFadeInterval = null;
+                    }
+                }, stepTime);
+            } catch(e) {
+                console.error("Failed to fade youtube volume:", e);
+            }
+        }
+
         // 💡 [통합 패치] 리액션 모드 상태에 따른 노래 일시정지/재개 및 대결 타이머 일시정지/재개 통합 제어기
         function applyReactionModeEffects(isReactionOn) {
             let audio = document.getElementById('bgm-audio');
             let md = gd ? gd.match_data : null;
             
+            // 사용자가 선택한 BGM 슬라이더 값이나 현재 오디오 플레이어 기본 음량 획득
+            const volSlider = document.querySelector('.ios-slider-volume');
+            const originalBgmVol = volSlider ? parseFloat(volSlider.value) : 0.5;
+            
             if (isReactionOn) {
-                // 1. BGM 일시정지
+                // 1. BGM 볼륨 0.05로 페이드아웃 (완전히 끄지 않고 잔잔히 유지)
                 if (audio) {
-                    if (!audio.paused) { 
-                        audio.dataset.wasPlaying = "true"; 
-                        audio.pause(); 
-                    } else { 
-                        audio.dataset.wasPlaying = "false"; 
+                    if (audio.paused) {
+                        audio.dataset.wasPlaying = "false";
+                    } else {
+                        audio.dataset.wasPlaying = "true";
+                        fadeAudioVolume(audio, 0.05, 500); // 0.5초 동안 서서히 줄임
                     }
                 }
-                // 2. 유튜브 일시정지
+                // 2. 유튜브 볼륨 5%로 페이드아웃
                 try {
                     if (ytPlayer && typeof ytPlayer.getPlayerState === 'function' && ytPlayer.getPlayerState() === 1) {
                         ytWasPlaying = true;
-                        ytPlayer.pauseVideo();
+                        fadeYoutubeVolume(ytPlayer, 5, 500); // 5% 볼륨으로 페이드아웃
                     } else {
                         ytWasPlaying = false;
                     }
@@ -1389,14 +1444,16 @@
                 }
                 showReactionToast();
             } else {
-                // 4. BGM 재생 재개
+                // 4. BGM 원래 음량으로 페이드인 재개
                 if (audio && audio.dataset.wasPlaying === "true") {
-                    audio.play().catch(e=>{});
+                    if (audio.paused) audio.play().catch(e=>{});
+                    fadeAudioVolume(audio, originalBgmVol, 800); // 0.8초 동안 원래 음량 복원
                 }
-                // 5. 유튜브 재생 재개
+                // 5. 유튜브 원래 음량(100% 혹은 기존 설정 볼륨 50%)으로 페이드인 재개
                 try {
-                    if (ytWasPlaying && ytPlayer && typeof ytPlayer.playVideo === 'function') {
-                        ytPlayer.playVideo();
+                    if (ytWasPlaying && ytPlayer) {
+                        if (typeof ytPlayer.playVideo === 'function') ytPlayer.playVideo();
+                        fadeYoutubeVolume(ytPlayer, 50, 800); // 50% 볼륨으로 페이드인 복원
                         ytWasPlaying = false;
                     }
                 } catch(ytErr) {
