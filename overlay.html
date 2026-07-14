@@ -631,6 +631,17 @@
         let toonPopupTimer = null;
         let isDonationPopupShowing = false;
 
+        // XSS 방지용 HTML 이스케이프 헬퍼 함수
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         // 👑 [특별 후원자 캐싱 및 동기화 장치]
         window.vipCache = {};
         async function loadVipsToCache() {
