@@ -416,24 +416,6 @@
             100% { box-shadow: inset 0 0 120px rgba(255, 100, 0, 0.95); filter: saturate(1.5); }
         }
 
-        /* 🌊 [네온 회전 그라데이션] 리액션 재생용 특수 효과 (기존 네온 보존하며 다이내믹 믹스) */
-        .neon-layer.neon-chroma-wave {
-            border: 15px solid transparent;
-            border-image: linear-gradient(var(--chroma-angle, 0deg), var(--glow-color, #ff0055), #00ffcc, var(--glow-color, #ff0055)) 1;
-            animation: rotate-chroma 2.5s linear infinite;
-        }
-        @keyframes rotate-chroma {
-            0% { --chroma-angle: 0deg; }
-            100% { --chroma-angle: 360deg; }
-        }
-        
-        /* 🎨 CSS Custom Property 허용 선언 */
-        @property --chroma-angle {
-            syntax: '<angle>';
-            inherits: false;
-            initial-value: 0deg;
-        }
-
         /* 🔥 [점수 타격 바운스 효과] */
         .score-scale-bounce {
             animation: score-bounce-anim 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
@@ -449,9 +431,6 @@
     
     <!-- 🏆 [피버 타임 화염 일렁임 레이어] -->
     <div id="fever-fire-overlay" class="fever-border-fire"></div>
-    
-    <!-- 💰 [머니 샤워 파티클용 캔버스] -->
-    <canvas id="premium-effect-canvas"></canvas>
 
     <div id="fire-vignette" class="fire-vignette"></div>
     <div id="neon-overlay" class="neon-layer"></div>
@@ -638,239 +617,6 @@
 
         let audioCtx = null;
         
-        // 💰 [머니 샤워 파티클 물리 엔진]
-        class MoneyParticle {
-            constructor(canvas) {
-                this.canvas = canvas;
-                this.x = Math.random() * canvas.width;
-                this.y = -50 - Math.random() * 100;
-                this.vy = 4 + Math.random() * 6; // 수직 낙하 속도
-                this.vx = (Math.random() - 0.5) * 3; // 수평 흩날림 속도
-                this.rotation = Math.random() * 360;
-                this.rotationSpeed = (Math.random() - 0.5) * 8;
-                this.scale = 0.5 + Math.random() * 0.7;
-                this.type = Math.random() > 0.45 ? 'BILL' : 'COIN'; // 지폐와 동전 비율 설정
-                this.opacity = 1;
-                this.oscillateSpeed = 0.05 + Math.random() * 0.05;
-                this.oscillateTime = Math.random() * 10;
-            }
-
-            update() {
-                this.y += this.vy;
-                this.oscillateTime += this.oscillateSpeed;
-                this.x += this.vx + Math.sin(this.oscillateTime) * 1.5; // 살랑거리는 효과
-                this.rotation += this.rotationSpeed;
-                
-                // 화면 밖으로 완전히 나가려 할 때 서서히 소멸
-                if (this.y > this.canvas.height - 80) {
-                    this.opacity -= 0.04;
-                }
-            }
-
-            draw(ctx) {
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, this.opacity);
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.rotation * Math.PI / 180);
-                ctx.scale(this.scale, this.scale);
-
-                if (this.type === 'BILL') {
-                    // 💵 5만원권 색상의 직사각형 지폐 렌더링 (이미지 로드 차단 방지)
-                    ctx.fillStyle = '#dbb962'; // 지폐 바탕 황금색
-                    ctx.fillRect(-22, -11, 44, 22);
-                    
-                    ctx.strokeStyle = '#a38435';
-                    ctx.lineWidth = 1.5;
-                    ctx.strokeRect(-22, -11, 44, 22);
-                    
-                    // 지폐 안쪽 디테일 패턴
-                    ctx.fillStyle = '#bfa154';
-                    ctx.fillRect(-14, -7, 28, 14);
-                    
-                    ctx.fillStyle = '#4c3f1f'; // 신사임당 상징 타원 패턴
-                    ctx.beginPath();
-                    ctx.arc(8, 0, 5, 0, Math.PI * 2);
-                    ctx.fill();
-                } else {
-                    // 🪙 황금 동전 렌더링 (입체 엠보싱)
-                    const grad = ctx.createRadialGradient(0, 0, 1, 0, 0, 12);
-                    grad.addColorStop(0, '#ffe57f'); // 밝은 황금색
-                    grad.addColorStop(0.8, '#ffc107'); // 중간 황금색
-                    grad.addColorStop(1, '#b58500'); // 어두운 황금색 테두리
-                    
-                    ctx.fillStyle = grad;
-                    ctx.beginPath();
-                    ctx.arc(0, 0, 12, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // 동전 안쪽 원형 음각 테두리
-                    ctx.strokeStyle = '#ffe57f';
-                    ctx.lineWidth = 1.2;
-                    ctx.beginPath();
-                    ctx.arc(0, 0, 8, 0, Math.PI * 2);
-                    ctx.stroke();
-                    
-                    // 동전 내부 텍스트 심볼
-                    ctx.fillStyle = '#b58500';
-                    ctx.font = 'bold 9px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText('₩', 0, 0);
-                }
-                ctx.restore();
-            }
-        }
-
-        let particles = [];
-        let particleAnimationId = null;
-
-        // 🎆 [대결 점수 타격 파티클 엔진] 방사형 불꽃 스파크
-        class SparkParticle {
-            constructor(x, y, color) {
-                this.x = x;
-                this.y = y;
-                // 사방으로 뿜어지는 초속 분포
-                const angle = Math.random() * Math.PI * 2;
-                const speed = 2 + Math.random() * 6;
-                this.vx = Math.cos(angle) * speed;
-                this.vy = Math.sin(angle) * speed - 1.5; // 살짝 위쪽 편향
-                
-                this.color = color || (Math.random() > 0.5 ? '#ffe57f' : '#ff5722'); // 금빛 또는 다홍빛 불꽃
-                this.radius = 1.5 + Math.random() * 2.5;
-                this.opacity = 1;
-                this.gravity = 0.15; // 낙하 느낌을 주는 중력
-                this.decay = 0.02 + Math.random() * 0.03; // 서서히 사라짐
-            }
-
-            update() {
-                this.x += this.vx;
-                this.vy += this.gravity;
-                this.y += this.vy;
-                this.opacity -= this.decay;
-            }
-
-            draw(ctx) {
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, this.opacity);
-                ctx.fillStyle = this.color;
-                
-                // 빛나는 네온 광선 필터 느낌 재현
-                ctx.shadowBlur = 6;
-                ctx.shadowColor = this.color;
-                
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-
-        // 💡 지정된 좌표에서 불꽃 폭발 이펙트를 발생시키는 트리거 함수
-        function spawnSparks(x, y, color) {
-            const canvas = document.getElementById('premium-effect-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) return;
-
-            // 해상도 조절
-            if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-
-            // 스파크 25개 생성
-            for (let i = 0; i < 25; i++) {
-                particles.push(new SparkParticle(x, y, color));
-            }
-
-            // 기존 드로잉 루프가 실행 중이 아니라면 새로 구동
-            if (!particleAnimationId) {
-                function loop() {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    
-                    for (let i = particles.length - 1; i >= 0; i--) {
-                        const p = particles[i];
-                        p.update();
-                        p.draw(ctx);
-                        
-                        // 투명도가 소멸했거나 화면을 나가면 정리
-                        if (p.opacity <= 0 || p.y > canvas.height + 50 || p.x < -50 || p.x > canvas.width + 50) {
-                            particles.splice(i, 1);
-                        }
-                    }
-
-                    if (particles.length > 0) {
-                        particleAnimationId = requestAnimationFrame(loop);
-                    } else {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        particleAnimationId = null;
-                    }
-                }
-                particleAnimationId = requestAnimationFrame(loop);
-            }
-        }
-
-        function startMoneyShower(count) {
-            const canvas = document.getElementById('premium-effect-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) return;
-
-            // 크기 보정
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            // 기존 루프 정리
-            if (particleAnimationId) {
-                cancelAnimationFrame(particleAnimationId);
-                particleAnimationId = null;
-            }
-            particles = [];
-
-            // 파티클 생성
-            for (let i = 0; i < count; i++) {
-                particles.push(new MoneyParticle(canvas));
-            }
-
-            function loop() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                // 낙하하는 파티클 갱신 및 드로잉
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    const p = particles[i];
-                    p.update();
-                    p.draw(ctx);
-                    
-                    // 완전히 사라지거나 화면 밑을 벗어나면 제거
-                    if (p.opacity <= 0 || p.y > canvas.height + 50) {
-                        particles.splice(i, 1);
-                    }
-                }
-
-                // 큐가 남아있으면 계속 생성
-                if (particles.length > 0) {
-                    particleAnimationId = requestAnimationFrame(loop);
-                } else {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    particleAnimationId = null;
-                }
-            }
-            
-            particleAnimationId = requestAnimationFrame(loop);
-        }
-
-        function stopMoneyShower() {
-            if (particleAnimationId) {
-                cancelAnimationFrame(particleAnimationId);
-                particleAnimationId = null;
-            }
-            particles = [];
-            const canvas = document.getElementById('premium-effect-canvas');
-            if (canvas) {
-                const ctx = canvas.getContext('2d');
-                if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-            }
-        }
         function initAudio() {
             try {
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1931,9 +1677,6 @@
             const overlay = document.getElementById('reaction-screen-overlay');
             const img = document.getElementById('reaction-screen-image');
             const audio = document.getElementById('reaction-audio');
-            
-            // 💡 [추가] 파티클 샤워 애니메이션 정지 및 캔버스 클리어
-            stopMoneyShower();
 
             // 💡 [추가] 리액션 종료 시 오리지널 네온 조명 상태로 원복
             if (originalSavedNeon !== null) {
@@ -2117,15 +1860,12 @@
                     originalSavedNeon = globalNeon;
                 }
 
-                // 💡 [추가] 2톤 회전 그라데이션 조명 활성화
+                // 💡 [추가] 정적 싱글 네온 조명 활성화 (렉 방지용 최적화)
                 const neonEl = document.getElementById('neon-overlay');
                 if (neonEl) {
-                    neonEl.classList.remove('neon-single', 'neon-rainbow');
-                    neonEl.classList.add('neon-chroma-wave');
+                    neonEl.classList.remove('neon-rainbow');
+                    neonEl.classList.add('neon-single');
                 }
-
-                // 💡 [추가] 지폐/동전 파티클 샤워 폭발 가동
-                startMoneyShower(75);
 
                 // 💡 [추가] 첫 1초간 격렬한 타격 화면 진동/글리치 효과 인가
                 overlay.classList.remove('glitch-shake-active');
@@ -2165,7 +1905,9 @@
                             // 로컬 조명에 즉시 반영
                             globalNeon = extractedColor;
                             const neonEl = document.getElementById('neon-overlay');
-                            if (neonEl && !neonEl.classList.contains('neon-rainbow')) {
+                            if (neonEl) {
+                                neonEl.classList.remove('neon-rainbow');
+                                neonEl.classList.add('neon-single');
                                 neonEl.style.setProperty('--glow-color', extractedColor);
                             }
                             
