@@ -6,7 +6,7 @@
 // @match        https://toon.at/widget/alertbox/*
 // @noframes
 // @grant        GM_xmlhttpRequest
-// @connect      live-master-server.onrender.com
+// @connect      live-master-server-vercel.vercel.app
 // @connect      127.0.0.1
 // @connect      localhost
 // ==/UserScript==
@@ -217,7 +217,7 @@
             const txId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : (Math.random().toString(36).substring(2) + Date.now().toString(36));
             GM_xmlhttpRequest({
                 method: "POST",
-                url: "https://live-master-server.onrender.com/api/donation",
+                url: "https://live-master-server-vercel.vercel.app/api/donation",
                 headers: { 
                     "Content-Type": "application/json",
                     "Authorization": "Bearer isacbin_master_key_0508"
