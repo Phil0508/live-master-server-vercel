@@ -1424,10 +1424,11 @@
                 if (newData && newData.server_time) {
                     serverTimeOffset = newData.server_time - Date.now();
                 }
-                if (gd && gd.reaction_mode !== newData.reaction_mode) {
+                const oldReactionMode = gd ? gd.reaction_mode : false;
+                gd = newData;
+                if (oldReactionMode !== newData.reaction_mode) {
                     applyReactionModeEffects(newData.reaction_mode);
                 }
-                gd = newData;
                 if(!gd.bjs) { gd.bjs = []; }
                 else { gd.bjs.forEach(bj => { if(bj.contribution === undefined) bj.contribution = bj.score > 0 ? bj.score : 0; }); }
                 if(!gd.match_data) gd.match_data = { active: false, fire_effect: false, is_running: false, time_left_ms: 180000, end_time_ms: 0, players: [{name:'팀 A', score:0}, {name:'팀 B', score:0}] };
