@@ -2265,6 +2265,29 @@
         }
 
         initSSE();
+
+        // 📡 [2중 백업 폴링 연동 시스템]
+        // 서버리스 환경(Vercel)에서 실시간 SSE(EventSource) 연결이 끊겼을 때를 대비하여
+        // 1.5초 간격으로 서버 데이터를 긁어와 화면을 100% 끊김 없이 동기화시킵니다.
+        let fallbackInterval = null;
+        function initPollingFallback() {
+            if (fallbackInterval) clearInterval(fallbackInterval);
+            fallbackInterval = setInterval(async () => {
+                try {
+                    // SSE 상태가 정상적으로 연결되어 있지 않거나 끊겼을 때 보조로 동작
+                    if (!sseSource || sseSource.readyState !== 1) { 
+                        const res = await fetch('/api/data');
+                        if (res.ok) {
+                            const newData = await res.json();
+                            handleData(newData);
+                        }
+                    }
+                } catch(e) {
+                    console.warn("Fallback poll error (network offline?):", e);
+                }
+            }, 1500);
+        }
+        initPollingFallback();
     </script>
 </body>
 </html>
