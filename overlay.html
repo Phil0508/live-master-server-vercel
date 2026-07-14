@@ -2014,10 +2014,12 @@
                     }
                     console.log("Stopping reaction visuals via SSE reaction_stop event.");
                     currentPlayingId = null;
+                    isEndingReaction = false; // 💡 [추가] 긴급 중단 시 종료 락 완전 해제
                     stopReactionVisuals();
                 } catch(err) {
                     console.error("Error parsing reaction_stop data:", err);
                     currentPlayingId = null;
+                    isEndingReaction = false; // 💡 [추가] 에러 시에도 락 해제
                     stopReactionVisuals();
                 }
             });

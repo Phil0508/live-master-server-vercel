@@ -3784,6 +3784,7 @@
                 let data = await res.json();
                 if (data.status === 'success') {
                     showReactionToast();
+                    await fetchAPI(); // 💡 [개선] 즉시 최신 상태를 강제 갱신하여 UI 동기화
                 } else {
                     premiumAlert("리액션 중단 실패: " + data.message, "오류", "warning");
                 }
