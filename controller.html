@@ -677,6 +677,7 @@
         <button class="tab-btn" onclick="openTab(event, 'tab-reaction')"><i class="fa-solid fa-compact-disc"></i> 리액션</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-roulette')"><i class="fa-solid fa-circle-notch"></i> 룰렛</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-logs')"><i class="fa-solid fa-list-ul"></i> 로그</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-vip')"><i class="fa-solid fa-crown"></i> 특별 후원자</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-system')"><i class="fa-solid fa-server"></i> 시스템</button>
     </div>
 
@@ -1148,11 +1149,71 @@
         </div>
     </div>
 
+    <!-- 👑 [VIP 등록/수정 모달창] -->
+    <div id="vip-modal" class="modal-backdrop" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100000; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
+        <div class="group-box" style="width: 100%; max-width: 420px; background: #1c1c1e; border: 1px solid var(--border-light); border-radius: var(--radius-xl); box-shadow: 0 20px 40px rgba(0,0,0,0.5); position: relative; margin: 0 15px;">
+            <div class="group-title" id="vip-modal-title" style="border-bottom: 1px solid var(--border-light); font-size: 16px; font-weight: bold; color: #fff;"><i class="fa-solid fa-crown" style="color: var(--gold);"></i> 특별 후원자 등록</div>
+            <button onclick="closeVipModal()" style="position: absolute; top: 12px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+            
+            <form id="vip-form" onsubmit="saveVipData(event)" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
+                <input type="hidden" id="vip-old-name">
+                
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 12px; font-weight: bold; color: var(--text-muted);">후원자 닉네임 *</label>
+                    <input type="text" id="vip-name" required placeholder="예: 찬바람" style="width: 100%; height: 42px; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: rgba(255,255,255,0.03); color: #fff; padding: 0 12px; font-size: 14px; box-sizing: border-box;">
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 12px; font-weight: bold; color: var(--text-muted);">VIP 등급 *</label>
+                    <div style="display: flex; gap: 10px; align-items: center; width: 100%;">
+                        <label style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; height: 42px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); border-radius: var(--radius-md); color: #fff; cursor: pointer; font-size: 13px;">
+                            <input type="radio" name="vip-grade" value="VVIP" required style="accent-color: var(--danger);">
+                            <span style="color: #ff3b30; font-weight: 800;">VVIP</span>
+                        </label>
+                        <label style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; height: 42px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); border-radius: var(--radius-md); color: #fff; cursor: pointer; font-size: 13px;">
+                            <input type="radio" name="vip-grade" value="VIP">
+                            <span style="color: #af52de; font-weight: 800;">VIP</span>
+                        </label>
+                        <label style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; height: 42px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); border-radius: var(--radius-md); color: #fff; cursor: pointer; font-size: 13px;">
+                            <input type="radio" name="vip-grade" value="GOLD">
+                            <span style="color: #ffcc00; font-weight: 800;">GOLD</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; width: 100%;">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                        <label style="font-size: 12px; font-weight: bold; color: var(--text-muted);">전용 조명색 *</label>
+                        <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
+                            <input type="color" id="vip-color" value="#ffd700" style="width: 44px; height: 42px; border: 1px solid var(--border-light); border-radius: var(--radius-md); background: none; cursor: pointer; padding: 0; box-sizing: border-box;">
+                            <input type="text" id="vip-color-text" value="#ffd700" oninput="document.getElementById('vip-color').value = this.value" style="flex: 1; height: 42px; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: rgba(255,255,255,0.03); color: #fff; padding: 0 10px; font-size: 13px; font-weight: bold; text-align: center; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                        <label style="font-size: 12px; font-weight: bold; color: var(--text-muted);">이모지 뱃지 *</label>
+                        <select id="vip-badge" style="width: 100%; height: 42px; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: #1c1c1e; color: #fff; padding: 0 10px; font-size: 14px; box-sizing: border-box;">
+                            <option value="👑">👑 왕관</option>
+                            <option value="💎">💎 다이아몬드</option>
+                            <option value="🔥">🔥 불꽃</option>
+                            <option value="❤️">❤️ 하트</option>
+                            <option value="⭐">⭐ 별</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px; width: 100%;">
+                    <button type="button" class="danger" onclick="closeVipModal()" style="flex: 1; height: 42px; border-radius: var(--radius-md); font-weight: bold;">취소</button>
+                    <button type="submit" class="primary" style="flex: 1; height: 42px; border-radius: var(--radius-md); font-weight: bold;">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="tab-system" class="tab-content">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
             <div class="group-box" style="margin-bottom: 0;">
                 <div class="group-title"><i class="fa-solid fa-shield-halved"></i> OTP 보안 설정</div>
-                <div style="display: flex; flex-direction: column; gap: 15px;">
                     <div style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">
                         현재 모바일 구글 OTP 연동 보안 설정입니다. 신규 기기를 등록하거나 보안 설정을 확인하시려면 아래 페어링 페이지로 이동하세요.
                     </div>
@@ -1336,7 +1397,7 @@
             return originalFetch(resource, init);
         };
 
-        function openTab(evt, tabId) { document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(tabId).classList.add('active'); evt.currentTarget.classList.add('active'); if (tabId === 'tab-system') { refreshSystemStatus(); } if (tabId === 'tab-logs') { loadManualLogs(1); } if (tabId === 'tab-reaction') { loadReactionList(); } }
+        function openTab(evt, tabId) { document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(tabId).classList.add('active'); evt.currentTarget.classList.add('active'); if (tabId === 'tab-system') { refreshSystemStatus(); } if (tabId === 'tab-logs') { loadManualLogs(1); } if (tabId === 'tab-reaction') { loadReactionList(); } if (tabId === 'tab-vip') { loadVipList(); } }
         let gd = null; let isPushing = false; let lastPushTime = 0;
         let lastReactionToastTime = 0;
         let serverTimeOffset = 0;
@@ -4050,6 +4111,176 @@
                 console.error("복사 실패:", err);
                 premiumAlert("스크립트 코드 복사 실패: " + err.message, "오류", "warning");
             }
+        }
+
+        // ==========================================
+        // 👑 특별 후원자(VIP) 관리 비즈니스 로직
+        // ==========================================
+        async function loadVipList() {
+            const tbody = document.getElementById('vip-tbody');
+            if (!tbody) return;
+            
+            try {
+                tbody.innerHTML = '<tr><td colspan="5" style="padding: 30px; text-align: center; color: var(--text-muted); font-weight: 600;">VIP 데이터를 불러오는 중...</td></tr>';
+                const res = await fetch('/api/vips');
+                const data = await res.json();
+                
+                if (data.status !== 'success') {
+                    throw new Error(data.message);
+                }
+                
+                const vips = data.vips || [];
+                if (vips.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="padding: 40px; text-align: center; color: var(--text-muted); font-weight: 600;"><i class="fa-solid fa-face-meh" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>등록된 특별 후원자가 없습니다.</td></tr>';
+                    return;
+                }
+                
+                let html = '';
+                vips.forEach(vip => {
+                    let gradeColor = '#ffcc00'; // GOLD
+                    if (vip.grade === 'VVIP') gradeColor = '#ff3b30';
+                    else if (vip.grade === 'VIP') gradeColor = '#af52de';
+                    
+                    html += `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.01)';" onmouseout="this.style.background='transparent';">
+                            <td style="padding: 12px 14px; text-align: left; font-weight: bold; color: #fff; font-size: 14px;">${escapeHtml(vip.name)}</td>
+                            <td style="padding: 12px 14px; text-align: center;">
+                                <span style="background: ${gradeColor}20; color: ${gradeColor}; border: 1px solid ${gradeColor}40; padding: 3px 8px; border-radius: 20px; font-weight: 800; font-size: 11px; display: inline-block;">
+                                    ${vip.grade}
+                                </span>
+                            </td>
+                            <td style="padding: 12px 14px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${vip.custom_color}; border: 1.5px solid rgba(255,255,255,0.15);"></span>
+                                <span style="font-family: monospace; font-size: 12px; font-weight: bold; color: var(--text-muted);">${vip.custom_color.toUpperCase()}</span>
+                            </td>
+                            <td style="padding: 12px 14px; text-align: center; font-size: 16px;">${vip.badge || '👑'}</td>
+                            <td style="padding: 12px 14px; text-align: center;">
+                                <div style="display: flex; gap: 6px; justify-content: center;">
+                                    <button class="primary" onclick='openVipModal(${JSON.stringify(vip)})' style="height: 28px; font-size: 11px; padding: 0 10px; border-radius: 8px; font-weight: bold;"><i class="fa-solid fa-pen"></i> 수정</button>
+                                    <button class="danger" onclick="deleteVip('${vip.name.replace(/'/g, "\\'")}')" style="height: 28px; font-size: 11px; padding: 0 10px; border-radius: 8px; font-weight: bold;"><i class="fa-solid fa-trash"></i> 삭제</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (err) {
+                console.error("Failed to load VIP list:", err);
+                tbody.innerHTML = `<tr><td colspan="5" style="padding: 30px; text-align: center; color: var(--danger); font-weight: bold;">데이터 로드 실패: ${err.message}</td></tr>`;
+            }
+        }
+
+        function openVipModal(editData = null) {
+            const modal = document.getElementById('vip-modal');
+            const title = document.getElementById('vip-modal-title');
+            const form = document.getElementById('vip-form');
+            
+            if (!modal || !form) return;
+            
+            form.reset();
+            
+            if (editData) {
+                title.innerHTML = '<i class="fa-solid fa-crown" style="color: var(--gold);"></i> 특별 후원자 정보 수정';
+                document.getElementById('vip-old-name').value = editData.name;
+                document.getElementById('vip-name').value = editData.name;
+                document.getElementById('vip-name').disabled = true;
+                
+                const gradeRadios = document.getElementsByName('vip-grade');
+                for (let r of gradeRadios) {
+                    if (r.value === editData.grade) r.checked = true;
+                }
+                
+                document.getElementById('vip-color').value = editData.custom_color;
+                document.getElementById('vip-color-text').value = editData.custom_color;
+                document.getElementById('vip-badge').value = editData.badge || '👑';
+            } else {
+                title.innerHTML = '<i class="fa-solid fa-crown" style="color: var(--gold);"></i> 특별 후원자 신규 등록';
+                document.getElementById('vip-old-name').value = '';
+                document.getElementById('vip-name').disabled = false;
+                
+                const vvipRadio = document.querySelector('input[name="vip-grade"][value="VVIP"]');
+                if (vvipRadio) vvipRadio.checked = true;
+            }
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeVipModal() {
+            const modal = document.getElementById('vip-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function saveVipData(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('vip-name').value.trim();
+            const oldName = document.getElementById('vip-old-name').value;
+            
+            let grade = 'VVIP';
+            const gradeRadios = document.getElementsByName('vip-grade');
+            for (let r of gradeRadios) {
+                if (r.checked) grade = r.value;
+            }
+            
+            const customColor = document.getElementById('vip-color').value;
+            const badge = document.getElementById('vip-badge').value;
+            
+            if (!name) {
+                premiumAlert("닉네임을 정확히 입력해 주세요.", "입력 오류", "warning");
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/vips', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, grade, custom_color: customColor, badge })
+                });
+                const resData = await res.json();
+                
+                if (resData.status !== 'success') {
+                    throw new Error(resData.message);
+                }
+                
+                closeVipModal();
+                premiumAlert(oldName ? "성공적으로 수정되었습니다." : "성공적으로 등록되었습니다.", "완료", "success");
+                loadVipList();
+            } catch (err) {
+                console.error("VIP save error:", err);
+                premiumAlert("VIP 저장 실패: " + err.message, "오류", "danger");
+            }
+        }
+
+        async function deleteVip(name) {
+            premiumConfirm(`정말로 '${name}' 님을 특별 후원자에서 해제하시겠습니까?`, async (confirmed) => {
+                if (!confirmed) return;
+                
+                try {
+                    const res = await fetch(`/api/vips?name=${encodeURIComponent(name)}`, {
+                        method: 'DELETE'
+                    });
+                    const resData = await res.json();
+                    
+                    if (resData.status !== 'success') {
+                        throw new Error(resData.message);
+                    }
+                    
+                    premiumAlert("특별 후원자 등록이 해제되었습니다.", "해제 완료", "success");
+                    loadVipList();
+                } catch (err) {
+                    console.error("VIP delete error:", err);
+                    premiumAlert("삭제 실패: " + err.message, "오류", "danger");
+                }
+            });
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
     </script>
 

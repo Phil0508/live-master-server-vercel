@@ -400,6 +400,26 @@ def init_db():
                 )
             """)
         
+        # 💡 [추가] 특별 후원자(VIP) 테이블 생성 (PostgreSQL / SQLite 공용)
+        if IS_POSTGRES:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS vip_donators (
+                    name TEXT PRIMARY KEY,
+                    grade TEXT NOT NULL,
+                    custom_color TEXT DEFAULT '#ffd700',
+                    badge TEXT DEFAULT '👑'
+                )
+            """)
+        else:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS vip_donators (
+                    name TEXT PRIMARY KEY,
+                    grade TEXT NOT NULL,
+                    custom_color TEXT DEFAULT '#ffd700',
+                    badge TEXT DEFAULT '👑'
+                )
+            """)
+        
         # 💡 [스키마 마이그레이션 패치] 기존 테이블 스키마 동적 추가 및 안전성 유지
         # PostgreSQL에서는 IF NOT EXISTS로 이미 컬럼이 생성되어 있으므로 ALTER는 건너뜀
         if not IS_POSTGRES:
@@ -2309,6 +2329,93 @@ def stop_reaction():
         return jsonify({"status": "success", "message": "All reactions stopped"})
     except Exception as e:
         print(f"Error in stop_reaction: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/vips', methods=['GET'])
+def get_vips():
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            if IS_POSTGRES:
+                cursor.execute("SELECT name, grade, custom_color, badge FROM vip_donators ORDER BY name ASC")
+            else:
+                cursor.execute("SELECT name, grade, custom_color, badge FROM vip_donators ORDER BY name ASC")
+            vips = []
+            for row in cursor.fetchall():
+                vips.append({
+                    "name": row[0],
+                    "grade": row[1],
+                    "custom_color": row[2],
+                    "badge": row[3]
+                })
+            return jsonify({"status": "success", "vips": vips})
+    except Exception as e:
+        print(f"Error in get_vips: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/vips', methods=['POST'])
+def add_or_update_vip():
+    try:
+        data = request.get_json(silent=True) or {}
+        name = data.get('name')
+        grade = data.get('grade')
+        custom_color = data.get('custom_color', '#ffd700')
+        badge = data.get('badge', '👑')
+        
+        if not name or not grade:
+            return jsonify({"status": "error", "message": "닉네임과 등급은 필수 항목입니다."}), 400
+            
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            if IS_POSTGRES:
+                cursor.execute("""
+                    INSERT INTO vip_donators (name, grade, custom_color, badge)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (name) DO UPDATE 
+                    SET grade = EXCLUDED.grade,
+                        custom_color = EXCLUDED.custom_color,
+                        badge = EXCLUDED.badge
+                """, (name, grade, custom_color, badge))
+            else:
+                cursor.execute("""
+                    INSERT OR REPLACE INTO vip_donators (name, grade, custom_color, badge)
+                    VALUES (?, ?, ?, ?)
+                """, (name, grade, custom_color, badge))
+            conn.commit()
+        
+        with file_lock:
+            state = load_data()
+            broadcast_event('update', state)
+            broadcast_event('vips_updated', {})
+            
+        return jsonify({"status": "success", "message": "VIP 정보가 성공적으로 저장되었습니다."})
+    except Exception as e:
+        print(f"Error in add_or_update_vip: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/vips', methods=['DELETE'])
+def delete_vip():
+    try:
+        name = request.args.get('name')
+        if not name:
+            return jsonify({"status": "error", "message": "닉네임이 누락되었습니다."}), 400
+            
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            if IS_POSTGRES:
+                cursor.execute("DELETE FROM vip_donators WHERE name = %s", (name,))
+            else:
+                cursor.execute("DELETE FROM vip_donators WHERE name = ?", (name,))
+            conn.commit()
+            
+        with file_lock:
+            state = load_data()
+            broadcast_event('update', state)
+            broadcast_event('vips_updated', {})
+            
+        return jsonify({"status": "success", "message": "VIP 해제 완료!"})
+    except Exception as e:
+        print(f"Error in delete_vip: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/api/reaction/queue/remove/<string:rq_id>', methods=['POST'])

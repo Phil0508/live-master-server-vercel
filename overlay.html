@@ -404,6 +404,46 @@
             30% { transform: scale(1.4); filter: brightness(1.8); }
             100% { transform: scale(1); filter: brightness(1); }
         }
+
+        /* 👑 [특별 후원자 VIP 프리미엄 카드 알림창 스타일] */
+        .toon-popup.vip-premium-card {
+            border: 3px solid #ffd700 !important;
+            background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%) !important;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.4), inset 0 0 15px rgba(255, 215, 0, 0.1) !important;
+            animation: vip-gold-glow 2s infinite alternate !important;
+        }
+        @keyframes vip-gold-glow {
+            0% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.3), inset 0 0 10px rgba(255, 215, 0, 0.05); }
+            100% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.15); }
+        }
+        .toon-name.vip-vvip-text {
+            color: #ff3b30 !important;
+            text-shadow: 0 0 8px rgba(255, 59, 48, 0.5);
+            font-weight: 900 !important;
+        }
+        .toon-name.vip-vip-text {
+            color: #af52de !important;
+            text-shadow: 0 0 8px rgba(175, 82, 222, 0.5);
+            font-weight: 900 !important;
+        }
+        .toon-name.vip-gold-text {
+            color: #ffcc00 !important;
+            text-shadow: 0 0 8px rgba(255, 204, 0, 0.5);
+            font-weight: 900 !important;
+        }
+        .vip-badge-tag {
+            display: inline-block;
+            background: rgba(255, 215, 0, 0.15);
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            padding: 1px 6px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 800;
+            margin-right: 6px;
+            vertical-align: middle;
+            text-shadow: none;
+        }
     </style>
 </head>
 <body>
@@ -590,6 +630,30 @@
         let globalAudi = false;
         let toonPopupTimer = null;
         let isDonationPopupShowing = false;
+
+        // 👑 [특별 후원자 캐싱 및 동기화 장치]
+        window.vipCache = {};
+        async function loadVipsToCache() {
+            try {
+                const res = await fetch('/api/vips');
+                const data = await res.json();
+                if (data.status === 'success') {
+                    const temp = {};
+                    (data.vips || []).forEach(v => {
+                        temp[v.name] = {
+                            grade: v.grade,
+                            custom_color: v.custom_color,
+                            badge: v.badge
+                        };
+                    });
+                    window.vipCache = temp;
+                    console.log("👑 [VIP 동기화 완결]:", window.vipCache);
+                }
+            } catch(e) {
+                console.error("Failed to load VIP list into overlay cache:", e);
+            }
+        }
+        loadVipsToCache();
 
         let lastRosterStr = ""; 
         let lastExtraRosterStr = "";  
@@ -1838,16 +1902,24 @@
                     originalSavedNeon = globalNeon;
                 }
 
-                // 💡 [추가] 정적 싱글 네온 조명 활성화 (렉 방지용 최적화)
-                const neonEl = document.getElementById('neon-overlay');
-                if (neonEl) {
-                    neonEl.classList.remove('neon-rainbow');
-                    neonEl.classList.add('neon-single');
-                }
-                
                 // 2. 새로운 리액션 데이터 입력 (후원자명 + 금액 / 메시지)
                 let donatorName = data.donator || '익명';
                 let donationAmount = data.amount ? formatNum(data.amount) + '원' : '';
+                
+                // 💡 [추가] 정적 싱글 네온 조명 활성화 및 VIP 조명 우선 매칭 (렉 방지용 최적화)
+                const neonEl = document.getElementById('neon-overlay');
+                const vipInfo = window.vipCache[donatorName];
+                
+                if (neonEl) {
+                    neonEl.classList.remove('neon-rainbow');
+                    neonEl.classList.add('neon-single');
+                    if (vipInfo && vipInfo.custom_color) {
+                        neonEl.style.setProperty('--glow-color', vipInfo.custom_color);
+                        globalNeon = vipInfo.custom_color;
+                        console.log(`👑 [VIP 조명 적용]: ${donatorName} (${vipInfo.custom_color})`);
+                    }
+                }
+                
                 if (donatorEl) {
                     donatorEl.innerText = donatorName + (donationAmount ? ' · ' + donationAmount : '');
                 }
@@ -1869,21 +1941,23 @@
                     // 💡 [지능형 색감 분석] 사진 로드 성공 시 색감 분석 리스너 트리거
                     img.onload = function() {
                         try {
-                            const extractedColor = getDominantNeonColor(img);
-                            console.log("🎨 [지능형 색감 분석] 분석된 네온 색상 코드:", extractedColor);
-                            
-                            // 로컬 조명에 즉시 반영
-                            globalNeon = extractedColor;
-                            const neonEl = document.getElementById('neon-overlay');
-                            if (neonEl) {
-                                neonEl.classList.remove('neon-rainbow');
-                                neonEl.classList.add('neon-single');
-                                neonEl.style.setProperty('--glow-color', extractedColor);
+                            // VIP가 아닐 때만 이미지의 색감을 분석하여 대입합니다.
+                            if (!window.vipCache[donatorName]) {
+                                const extractedColor = getDominantNeonColor(img);
+                                console.log("🎨 [지능형 색감 분석] 분석된 네온 색상 코드:", extractedColor);
+                                
+                                globalNeon = extractedColor;
+                                const neonEl = document.getElementById('neon-overlay');
+                                if (neonEl) {
+                                    neonEl.classList.remove('neon-rainbow');
+                                    neonEl.classList.add('neon-single');
+                                    neonEl.style.setProperty('--glow-color', extractedColor);
+                                }
+                                
+                                // 서버에도 이펙트 상태를 푸시하여 조종실 화면 동기화
+                                fetch(`/api/streamdeck/neon?color=${encodeURIComponent(extractedColor.replace('#', ''))}`)
+                                    .catch(e => console.error("Server sync error for neon color:", e));
                             }
-                            
-                            // 서버에도 이펙트 상태를 푸시하여 조종실 화면 동기화
-                            fetch(`/api/streamdeck/neon?color=${encodeURIComponent(extractedColor.replace('#', ''))}`)
-                                .catch(e => console.error("Server sync error for neon color:", e));
                         } catch (loadErr) {
                             console.warn("Neon extraction load error:", loadErr);
                         }
@@ -2025,7 +2099,46 @@
                 }
             }
 
-            document.getElementById('toon-name').innerText = finalName;
+            const p = document.getElementById('toon-popup');
+            const nameEl = document.getElementById('toon-name');
+            const emojiEl = p ? p.querySelector('.toon-emoji') : null;
+            
+            // 👑 [특별 후원자 연출 분기 검출]
+            const vipInfo = window.vipCache[finalName];
+            
+            if (p) {
+                p.classList.remove('vip-premium-card');
+                if (nameEl) {
+                    nameEl.className = 'toon-name';
+                }
+            }
+            
+            if (vipInfo) {
+                console.log(`👑 [VIP 후원 감지]: ${finalName} (${vipInfo.grade})`);
+                if (p) p.classList.add('vip-premium-card');
+                
+                const badge = vipInfo.badge || '👑';
+                const grade = vipInfo.grade || 'VIP';
+                
+                let gradeClass = 'vip-gold-text';
+                if (grade === 'VVIP') gradeClass = 'vip-vvip-text';
+                else if (grade === 'VIP') gradeClass = 'vip-vip-text';
+                
+                if (nameEl) {
+                    nameEl.innerHTML = `<span class="vip-badge-tag">${grade}</span> ${badge} ${escapeHtml(finalName)}`;
+                    nameEl.className = `toon-name ${gradeClass}`;
+                }
+                if (emojiEl) {
+                    emojiEl.innerText = badge;
+                }
+            } else {
+                if (nameEl) {
+                    nameEl.innerText = finalName;
+                }
+                if (emojiEl) {
+                    emojiEl.innerText = '🎉';
+                }
+            }
             
             const actionTextEl = document.getElementById('toon-action-text');
             const amountEl = document.getElementById('toon-amount');
@@ -2137,6 +2250,11 @@
                     isEndingReaction = false; // 💡 [추가] 에러 시에도 락 해제
                     stopReactionVisuals();
                 }
+            });
+
+            sseSource.addEventListener('vips_updated', function(e) {
+                console.log("👑 [VIP 변경 신호 감지] SSE 캐시 리프레시를 작동합니다.");
+                loadVipsToCache();
             });
             
             sseSource.onerror = function(err) {
