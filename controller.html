@@ -1210,6 +1210,37 @@
         </div>
     </div>
 
+    <!-- 👑 [특별 후원자(VIP) 목록 탭 본문] -->
+    <div id="tab-vip" class="tab-content">
+        <div class="group-box" style="margin-bottom: 0;">
+            <div class="group-title" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span><i class="fa-solid fa-crown" style="color: var(--gold);"></i> 특별 후원자(VIP) 관리 대시보드</span>
+                <button class="primary" onclick="openVipModal()" style="height: 32px; border-radius: 12px; font-size: 12px; padding: 0 15px; font-weight: bold;"><i class="fa-solid fa-plus"></i> 특별 후원자 등록</button>
+            </div>
+            
+            <p style="color: var(--text-muted); font-size: 13px; margin: 10px 0 15px 0; font-weight: 500;">
+                이곳에 등록된 닉네임으로 후원이 유입되면 오버레이 화면에 <strong>황금 왕관 프리미엄 알림 카드</strong>가 활성화되며, 지정한 전용 네온 조명이 매칭됩니다.
+            </p>
+
+            <div class="ios-table-container">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-light);">
+                            <th style="padding: 10px 14px; text-align: left; color: var(--text-muted); font-weight: 600; white-space: nowrap;">닉네임 (후원자명)</th>
+                            <th style="padding: 10px 14px; text-align: center; color: var(--text-muted); font-weight: 600; white-space: nowrap;">VIP 등급</th>
+                            <th style="padding: 10px 14px; text-align: center; color: var(--text-muted); font-weight: 600; white-space: nowrap;">전용 네온 조명색</th>
+                            <th style="padding: 10px 14px; text-align: center; color: var(--text-muted); font-weight: 600; white-space: nowrap;">이모지 뱃지</th>
+                            <th style="padding: 10px 14px; text-align: center; color: var(--text-muted); font-weight: 600; white-space: nowrap;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vip-tbody">
+                        <tr><td colspan="5" style="padding: 30px; text-align: center; color: var(--text-muted); font-weight: 600;">등록된 특별 후원자가 없습니다.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <div id="tab-system" class="tab-content">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
             <div class="group-box" style="margin-bottom: 0;">
