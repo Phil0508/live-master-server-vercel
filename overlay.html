@@ -389,7 +389,7 @@
     
     <!-- 🎵 리액션 음원/사진 송출 전광판 및 오디오 객체 -->
     <div id="reaction-screen-overlay" class="reaction-screen-overlay">
-        <img id="reaction-screen-image" src="" alt="Reaction Image">
+        <img id="reaction-screen-image" crossorigin="anonymous" src="" alt="Reaction Image">
         <div id="reaction-donator-info" class="reaction-text-donator"></div>
         <div id="reaction-message-info" class="reaction-text-message"></div>
     </div>
@@ -1710,6 +1710,8 @@
             if (!overlay || !img || !audio) return;
             
             // 1. 기존 진행 중인 리액션 및 오디오 강제 중지
+            isEndingReaction = false; // 새로운 리액션 시작 시 락 리셋
+            img.onload = null; // 이전 로드 핸들러 초기화
             if (reactionTimeout) clearTimeout(reactionTimeout);
             if (reactionMinimizeTimeout) clearTimeout(reactionMinimizeTimeout);
             // ⚠️ 이전 stopReactionVisuals의 지연된 img.src="" 타이머를 반드시 취소!
@@ -1845,7 +1847,15 @@
             });
         }
 
+        let isEndingReaction = false; // [버그 수정] 리액션 중복 팝 요청 방어 락
+
         function onReactionEnded() {
+            if (isEndingReaction) {
+                console.warn("⚠️ onReactionEnded is already running. Ignoring duplicate call.");
+                return;
+            }
+            isEndingReaction = true;
+            
             // 💡 [버그 수정] 리액션 종료 시 화면 비주얼 요소들을 숨김 처리
             stopReactionVisuals();
             
@@ -1862,9 +1872,11 @@
                 return fetch('/api/data');
             }).then(res => res.json()).then(data => {
                 globalData = data;
+                isEndingReaction = false; // 완료 후 락 해제
                 checkReactionQueue();
             }).catch(err => {
                 console.error("Failed to advance reaction queue:", err);
+                isEndingReaction = false; // 실패 시에도 락 해제
             });
         }
 
