@@ -200,6 +200,7 @@ def require_login():
         '/api/streamdeck/save',
         '/api/roulette/winner',
         '/api/data',
+        '/api/vips',
         '/api/reaction/next',
         '/toonation_tampermonkey.user.js',
         '/setup'
