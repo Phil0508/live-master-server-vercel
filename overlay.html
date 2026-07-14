@@ -724,6 +724,92 @@
         let particles = [];
         let particleAnimationId = null;
 
+        // 🎆 [대결 점수 타격 파티클 엔진] 방사형 불꽃 스파크
+        class SparkParticle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                // 사방으로 뿜어지는 초속 분포
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 2 + Math.random() * 6;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed - 1.5; // 살짝 위쪽 편향
+                
+                this.color = color || (Math.random() > 0.5 ? '#ffe57f' : '#ff5722'); // 금빛 또는 다홍빛 불꽃
+                this.radius = 1.5 + Math.random() * 2.5;
+                this.opacity = 1;
+                this.gravity = 0.15; // 낙하 느낌을 주는 중력
+                this.decay = 0.02 + Math.random() * 0.03; // 서서히 사라짐
+            }
+
+            update() {
+                this.x += this.vx;
+                this.vy += this.gravity;
+                this.y += this.vy;
+                this.opacity -= this.decay;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.opacity);
+                ctx.fillStyle = this.color;
+                
+                // 빛나는 네온 광선 필터 느낌 재현
+                ctx.shadowBlur = 6;
+                ctx.shadowColor = this.color;
+                
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // 💡 지정된 좌표에서 불꽃 폭발 이펙트를 발생시키는 트리거 함수
+        function spawnSparks(x, y, color) {
+            const canvas = document.getElementById('premium-effect-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            // 해상도 조절
+            if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            // 스파크 25개 생성
+            for (let i = 0; i < 25; i++) {
+                particles.push(new SparkParticle(x, y, color));
+            }
+
+            // 기존 드로잉 루프가 실행 중이 아니라면 새로 구동
+            if (!particleAnimationId) {
+                function loop() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    for (let i = particles.length - 1; i >= 0; i--) {
+                        const p = particles[i];
+                        p.update();
+                        p.draw(ctx);
+                        
+                        // 투명도가 소멸했거나 화면을 나가면 정리
+                        if (p.opacity <= 0 || p.y > canvas.height + 50 || p.x < -50 || p.x > canvas.width + 50) {
+                            particles.splice(i, 1);
+                        }
+                    }
+
+                    if (particles.length > 0) {
+                        particleAnimationId = requestAnimationFrame(loop);
+                    } else {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        particleAnimationId = null;
+                    }
+                }
+                particleAnimationId = requestAnimationFrame(loop);
+            }
+        }
+
         function startMoneyShower(count) {
             const canvas = document.getElementById('premium-effect-canvas');
             if (!canvas) return;
@@ -847,6 +933,17 @@
                 void parentBox.offsetWidth; // reflow trigger
                 parentBox.classList.add('score-scale-bounce');
                 setTimeout(() => parentBox.classList.remove('score-scale-bounce'), 500);
+
+                // 💡 [대결 점수 방사형 파티클 스파크 폭발 효과 적용]
+                try {
+                    const rect = parentBox.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    // 금빛 스파크 팡 터트리기
+                    spawnSparks(centerX, centerY, '#ffca28');
+                } catch(e) {
+                    console.error("Failed to spawn score sparks:", e);
+                }
             }
             
             const p = document.createElement('div');
