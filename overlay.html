@@ -1707,8 +1707,11 @@
         let originalSavedNeon = null; // 💡 [추가] 리액션 시작 전 기존 네온 조명 상태 임시 보관함
 
 
+        window.isReactionCurrentlyActive = false;
+
         function checkReactionQueue() {
             if (isDonationPopupShowing) return;
+            if (window.isReactionCurrentlyActive) return;
             
             // 💡 [개조] 리액션 모드(reaction_mode)가 꺼져있거나 대기열이 비었으면 리액션 화면을 즉시 내립니다.
             if (!globalData || !globalData.reaction_mode || !globalData.reaction_queue || globalData.reaction_queue.length === 0) {
@@ -1794,6 +1797,8 @@
             // 이미지 초기화를 취소 가능한 타이머로 변경 (다음 playReaction에서 취소 가능)
             if (reactionImgClearTimeout) clearTimeout(reactionImgClearTimeout);
             reactionImgClearTimeout = setTimeout(() => { if (img) img.src = ""; }, 500);
+            
+            window.isReactionCurrentlyActive = false;
         }
 
         // 🎨 [지능형 색감 분석] RGB ➡️ HSL ➡️ RGB 변환을 활용한 채도/명도 증폭 네온 컬러 생성 함수
@@ -1876,6 +1881,7 @@
 
         function playReaction(data) {
             console.log('Playing reaction:', data);
+            window.isReactionCurrentlyActive = true;
             
             const overlay = document.getElementById('reaction-screen-overlay');
             const img = document.getElementById('reaction-screen-image');
