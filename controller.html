@@ -3867,7 +3867,12 @@
                 let res = await fetch('/api/reaction/stop', { method: 'POST' });
                 let data = await res.json();
                 if (data.status === 'success') {
-                    showReactionToast();
+                    if (gd) {
+                        gd.reaction_mode = false;
+                        gd.reaction_queue = [];
+                        applyReactionModeEffects(false);
+                        renderUI();
+                    }
                     await fetchAPI(); // 💡 [개선] 즉시 최신 상태를 강제 갱신하여 UI 동기화
                 } else {
                     premiumAlert("리액션 중단 실패: " + data.message, "오류", "warning");
