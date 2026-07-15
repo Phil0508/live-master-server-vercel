@@ -407,35 +407,27 @@
 
         /* 👑 [특별 후원자 VIP 프리미엄 카드 알림창 스타일] */
         .toon-popup.vip-premium-card {
-            border: 3px solid #ffd700 !important;
+            border: 3px solid var(--vip-glow-color, #ffd700) !important;
             background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%) !important;
-            box-shadow: 0 0 25px rgba(255, 215, 0, 0.4), inset 0 0 15px rgba(255, 215, 0, 0.1) !important;
+            box-shadow: 0 0 25px var(--vip-glow-color, rgba(255, 215, 0, 0.4)), inset 0 0 15px var(--vip-glow-color, rgba(255, 215, 0, 0.1)) !important;
             animation: vip-gold-glow 2s infinite alternate !important;
         }
         @keyframes vip-gold-glow {
-            0% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.3), inset 0 0 10px rgba(255, 215, 0, 0.05); }
-            100% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.15); }
+            0% { box-shadow: 0 0 15px var(--vip-glow-color, rgba(255, 215, 0, 0.3)), inset 0 0 10px rgba(255, 215, 0, 0.05); }
+            100% { box-shadow: 0 0 30px var(--vip-glow-color, rgba(255, 215, 0, 0.6)), inset 0 0 20px rgba(255, 215, 0, 0.15); }
         }
-        .toon-name.vip-vvip-text {
-            color: #ffd700 !important;
-            text-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
-            font-weight: 900 !important;
-        }
-        .toon-name.vip-vip-text {
-            color: #ffcc00 !important;
-            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
-            font-weight: 900 !important;
-        }
+        .toon-name.vip-vvip-text,
+        .toon-name.vip-vip-text,
         .toon-name.vip-gold-text {
-            color: #ffeb3b !important;
-            text-shadow: 0 0 8px rgba(255, 235, 59, 0.5);
+            color: var(--vip-glow-color, #ffd700) !important;
+            text-shadow: 0 0 12px var(--vip-glow-color, rgba(255, 215, 0, 0.8));
             font-weight: 900 !important;
         }
         .vip-badge-tag {
             display: inline-block;
-            background: rgba(255, 215, 0, 0.15);
-            color: #ffd700;
-            border: 1px solid rgba(255, 215, 0, 0.3);
+            background: var(--vip-glow-color-bg, rgba(255, 215, 0, 0.15));
+            color: var(--vip-glow-color, #ffd700);
+            border: 1px solid var(--vip-glow-color-border, rgba(255, 215, 0, 0.3));
             padding: 1px 6px;
             border-radius: 6px;
             font-size: 10px;
@@ -2115,6 +2107,9 @@
             
             if (p) {
                 p.classList.remove('vip-premium-card');
+                p.style.removeProperty('--vip-glow-color');
+                p.style.removeProperty('--vip-glow-color-bg');
+                p.style.removeProperty('--vip-glow-color-border');
                 if (nameEl) {
                     nameEl.className = 'toon-name';
                 }
@@ -2122,7 +2117,24 @@
             
             if (vipInfo) {
                 console.log(`👑 [VIP 후원 감지]: ${finalName} (${vipInfo.grade})`);
-                if (p) p.classList.add('vip-premium-card');
+                if (p) {
+                    p.classList.add('vip-premium-card');
+                    
+                    const color = vipInfo.custom_color || '#ffd700';
+                    p.style.setProperty('--vip-glow-color', color);
+                    
+                    let r = 255, g = 215, b = 0;
+                    if (color.startsWith('#')) {
+                        const hex = color.replace('#', '');
+                        if (hex.length === 6) {
+                            r = parseInt(hex.substring(0, 2), 16);
+                            g = parseInt(hex.substring(2, 4), 16);
+                            b = parseInt(hex.substring(4, 6), 16);
+                        }
+                    }
+                    p.style.setProperty('--vip-glow-color-bg', `rgba(${r}, ${g}, ${b}, 0.15)`);
+                    p.style.setProperty('--vip-glow-color-border', `rgba(${r}, ${g}, ${b}, 0.3)`);
+                }
                 
                 const badge = vipInfo.badge || '👑';
                 const grade = vipInfo.grade || 'VIP';
