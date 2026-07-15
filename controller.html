@@ -1185,7 +1185,7 @@
                     <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
                         <label style="font-size: 12px; font-weight: bold; color: var(--text-muted);">전용 조명색 *</label>
                         <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
-                            <input type="color" id="vip-color" value="#ffd700" style="width: 44px; height: 42px; border: 1px solid var(--border-light); border-radius: var(--radius-md); background: none; cursor: pointer; padding: 0; box-sizing: border-box;">
+                            <input type="color" id="vip-color" value="#ffd700" oninput="document.getElementById('vip-color-text').value = this.value" style="width: 44px; height: 42px; border: 1px solid var(--border-light); border-radius: var(--radius-md); background: none; cursor: pointer; padding: 0; box-sizing: border-box;">
                             <input type="text" id="vip-color-text" value="#ffd700" oninput="document.getElementById('vip-color').value = this.value" style="flex: 1; height: 42px; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: rgba(255,255,255,0.03); color: #fff; padding: 0 10px; font-size: 13px; font-weight: bold; text-align: center; box-sizing: border-box;">
                         </div>
                     </div>
