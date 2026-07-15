@@ -535,7 +535,7 @@ def load_data():
         # DB 로드 실패 시 데이터를 덮어써서 날려버리는 것을 막기 위해 예외를 상위로 전파합니다.
         raise e
 
-    if not kv_data and not bjs:
+    if len(kv_data) == 0 and len(bjs) == 0:
         MEMORY_STATE = DEFAULT_STATE.copy()
         save_data(MEMORY_STATE, is_initial=True)
         return MEMORY_STATE
