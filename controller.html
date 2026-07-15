@@ -4284,26 +4284,25 @@
         }
 
         async function deleteVip(name) {
-            premiumConfirm(`정말로 '${name}' 님을 특별 후원자에서 해제하시겠습니까?`, async (confirmed) => {
-                if (!confirmed) return;
+            const confirmed = await premiumConfirm(`정말로 '${name}' 님을 특별 후원자에서 해제하시겠습니까?`, "특별 후원자 해제", "warning");
+            if (!confirmed) return;
+            
+            try {
+                const res = await fetch(`/api/vips?name=${encodeURIComponent(name)}`, {
+                    method: 'DELETE'
+                });
+                const resData = await res.json();
                 
-                try {
-                    const res = await fetch(`/api/vips?name=${encodeURIComponent(name)}`, {
-                        method: 'DELETE'
-                    });
-                    const resData = await res.json();
-                    
-                    if (resData.status !== 'success') {
-                        throw new Error(resData.message);
-                    }
-                    
-                    premiumAlert("특별 후원자 등록이 해제되었습니다.", "해제 완료", "success");
-                    loadVipList();
-                } catch (err) {
-                    console.error("VIP delete error:", err);
-                    premiumAlert("삭제 실패: " + err.message, "오류", "danger");
+                if (resData.status !== 'success') {
+                    throw new Error(resData.message);
                 }
-            });
+                
+                premiumAlert("특별 후원자 등록이 해제되었습니다.", "해제 완료", "success");
+                loadVipList();
+            } catch (err) {
+                console.error("VIP delete error:", err);
+                premiumAlert("삭제 실패: " + err.message, "오류", "danger");
+            }
         }
 
         function escapeHtml(str) {
