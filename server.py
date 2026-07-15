@@ -184,7 +184,7 @@ def require_login():
         return
         
     # 세션 검증 예외 경로 리스트
-    exempt_routes = [
+    public_routes = [
         '/login',
         '/logout',
         '/',
@@ -194,24 +194,27 @@ def require_login():
         '/alertbox.html',
         '/api/stream',
         '/api/ping',
-        '/api/debug',
         '/api/donation',
         '/api/streamdeck/neon',
         '/api/streamdeck/save',
         '/api/roulette/winner',
-        '/api/data',
-        '/api/vips',
         '/api/reaction/next',
         '/toonation_tampermonkey.user.js',
         '/setup'
     ]
     
     decoded_path = urllib.parse.unquote(path)
-    if (path in exempt_routes or 
+    if (path in public_routes or
         path.startswith('/uploads/') or 
         path == '/upload' or 
         decoded_path == '/노래등록' or 
         path == '/api/reaction/add'):
+        return
+
+    # Public display surfaces need read-only state/VIP data, but writes must stay authenticated.
+    if path == '/api/data' and request.method == 'GET':
+        return
+    if path == '/api/vips' and request.method == 'GET':
         return
          
     # HTTP Authorization Bearer 토큰 및 ?token= 파라미터 검증 지원
@@ -579,15 +582,17 @@ threading.Thread(target=db_worker, daemon=True).start()
 
 def save_data_sync(new_data, is_initial=False):
     global MEMORY_STATE
-    old_data = MEMORY_STATE if MEMORY_STATE else DEFAULT_STATE
     
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
+            old_scores = {}
+            if not is_initial:
+                cursor.execute(db_query("SELECT name, score FROM players"))
+                old_scores = {row[0]: row[1] for row in cursor.fetchall()}
             
             # 1. 수동 조작 시 장부 누적 (영수증 발급)
             if not is_initial:
-                old_scores = {p["name"]: p["score"] for p in old_data.get("bjs", [])}
                 for new_p in new_data.get("bjs", []):
                     p_name = new_p["name"]
                     p_score = new_p["score"]
@@ -609,23 +614,20 @@ def save_data_sync(new_data, is_initial=False):
             for key, value in new_data.items():
                 if key != "bjs":
                     new_val_str = json.dumps(value, ensure_ascii=False)
-                    old_val = old_data.get(key)
-                    old_val_str = json.dumps(old_val, ensure_ascii=False) if old_val is not None else None
-                    
-                    if is_initial or old_val_str != new_val_str:
-                        if IS_POSTGRES:
-                            cursor.execute(
-                                "INSERT INTO kv_store (key, value) VALUES (%s, %s) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
-                                (key, new_val_str)
-                            )
-                        else:
-                            cursor.execute(
-                                "INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?)",
-                                (key, new_val_str)
-                            )
+                    if IS_POSTGRES:
+                        cursor.execute(
+                            "INSERT INTO kv_store (key, value) VALUES (%s, %s) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
+                            (key, new_val_str)
+                        )
+                    else:
+                        cursor.execute(
+                            "INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?)",
+                            (key, new_val_str)
+                        )
                             
     except Exception as e:
         print(f"❌ [DB 동기화 저장 실패] {e}")
+        raise
 
 def save_data(new_data, is_initial=False):
     global MEMORY_STATE
@@ -776,7 +778,8 @@ def api_debug():
         result['load_data'] = 'failed'
         result['load_data_error'] = str(e)
         result['load_data_traceback'] = traceback.format_exc()
-        MEMORY_STATE = old_state  # 실패 시 원상복구
+    finally:
+        MEMORY_STATE = old_state  # 디버그 조회가 라이브 메모리 상태를 바꾸지 않도록 복구
     return jsonify(result)
 
 # ==========================================

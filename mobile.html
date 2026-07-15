@@ -614,6 +614,16 @@
     </div>
 
     <script>
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         // 전역 fetch 인터셉터 (인증 토큰 자동 주입)
         const originalFetch = window.fetch;
         window.fetch = function(resource, init) {
@@ -795,11 +805,11 @@
             setVal('in-ticker', (gd.ticker_text||'').replace(/ \/ /g, '\n')); 
 
             if (gd.logs) {
-                let rankLogHtml = gd.logs.map(log => `<div class="log-item"><span style="color:var(--text-muted);">[${log.time}]</span> <span style="font-weight:900;">${log.name}</span> <span style="color:var(--accent); font-weight:900;">${log.val > 0 ? '+'+log.val.toLocaleString() : log.val.toLocaleString()}점</span></div>`).join('');
+                let rankLogHtml = gd.logs.map(log => `<div class="log-item"><span style="color:var(--text-muted);">[${escapeHTML(log.time)}]</span> <span style="font-weight:900;">${escapeHTML(log.name)}</span> <span style="color:var(--accent); font-weight:900;">${log.val > 0 ? '+'+log.val.toLocaleString() : log.val.toLocaleString()}점</span></div>`).join('');
                 if (lastRankLogHtml !== rankLogHtml) { document.getElementById('log-box-ranking').innerHTML = rankLogHtml; lastRankLogHtml = rankLogHtml; }
             }
             if (gd.match_logs) {
-                let matchLogHtml = gd.match_logs.map(log => `<div class="log-item"><span style="color:var(--text-muted);">[${log.time}]</span> <span style="font-weight:900;">${log.name}</span> <span style="color:var(--accent); font-weight:900;">${log.val > 0 ? '+'+log.val.toLocaleString() : log.val.toLocaleString()}점</span></div>`).join('');
+                let matchLogHtml = gd.match_logs.map(log => `<div class="log-item"><span style="color:var(--text-muted);">[${escapeHTML(log.time)}]</span> <span style="font-weight:900;">${escapeHTML(log.name)}</span> <span style="color:var(--accent); font-weight:900;">${log.val > 0 ? '+'+log.val.toLocaleString() : log.val.toLocaleString()}점</span></div>`).join('');
                 if (lastMatchLogHtml !== matchLogHtml) { document.getElementById('log-box-match').innerHTML = matchLogHtml; lastMatchLogHtml = matchLogHtml; }
             }
         }

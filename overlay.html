@@ -855,13 +855,13 @@
                         if(i < extraBjs.length) {
                             let b = extraBjs[i]; let id = 'ex-' + safeId(b.name); let rankStr = i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
                             let rowClass = i < 3 ? `rank-${i+1}` : '';
-                            leftHtml += `<div class="excel-row ${rowClass}" id="${id}"><div class="r-rank" style="color:#ff3366;">${rankStr}</div><div class="r-name">${b.name}</div><div class="r-score" id="sc-${id}">${formatNum(b.score)}</div><div class="r-contrib" id="cb-${id}" style="color:#ff85a2;">${formatNum(b.contribution || 0)}</div></div>`;
+                            leftHtml += `<div class="excel-row ${rowClass}" id="${id}"><div class="r-rank" style="color:#ff3366;">${rankStr}</div><div class="r-name">${escapeHtml(b.name)}</div><div class="r-score" id="sc-${id}">${formatNum(b.score)}</div><div class="r-contrib" id="cb-${id}" style="color:#ff85a2;">${formatNum(b.contribution || 0)}</div></div>`;
                         } else { leftHtml += `<div class="excel-row"><div class="r-rank">-</div><div class="r-name"></div><div class="r-score"></div><div class="r-contrib"></div></div>`; }
                     }
                     for(let i=leftCount; i<leftCount*2; i++) {
                         if(i < extraBjs.length) {
                             let b = extraBjs[i]; let id = 'ex-' + safeId(b.name); let rankStr = (i+1);
-                            rightHtml += `<div class="excel-row" id="${id}"><div class="r-rank" style="color:#ff3366;">${rankStr}</div><div class="r-name">${b.name}</div><div class="r-score" id="sc-${id}">${formatNum(b.score)}</div><div class="r-contrib" id="cb-${id}" style="color:#ff85a2;">${formatNum(b.contribution || 0)}</div></div>`;
+                            rightHtml += `<div class="excel-row" id="${id}"><div class="r-rank" style="color:#ff3366;">${rankStr}</div><div class="r-name">${escapeHtml(b.name)}</div><div class="r-score" id="sc-${id}">${formatNum(b.score)}</div><div class="r-contrib" id="cb-${id}" style="color:#ff85a2;">${formatNum(b.contribution || 0)}</div></div>`;
                         } else { rightHtml += `<div class="excel-row"><div class="r-rank">-</div><div class="r-name"></div><div class="r-score"></div><div class="r-contrib"></div></div>`; }
                     }
 
@@ -1025,7 +1025,7 @@
                     let colsRgb = ['255, 77, 77', '0, 230, 118', '51, 153, 255', '255, 215, 0'];
                     if(ma.children.length !== md.players.length) { 
                         ma.innerHTML = ''; 
-                        md.players.forEach((p, i) => ma.innerHTML += `<div class="m-team-box" style="--team-color:${cols[i%4]}; --team-color-rgb:${colsRgb[i%4]};"><div class="m-score-box" id="mp-${i}">0</div><div class="m-name-box" id="mp-name-${i}">${p.name}</div></div>`); 
+                        md.players.forEach((p, i) => ma.innerHTML += `<div class="m-team-box" style="--team-color:${cols[i%4]}; --team-color-rgb:${colsRgb[i%4]};"><div class="m-score-box" id="mp-${i}">0</div><div class="m-name-box" id="mp-name-${i}">${escapeHtml(p.name)}</div></div>`);
                     } 
                     md.players.forEach((p, i) => { 
                         let nameEl = document.getElementById(`mp-name-${i}`); 
@@ -1070,13 +1070,13 @@
                         if(i < bjs.length) {
                             let b = bjs[i]; let id = safeId(b.name); let rankStr = i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
                             let rowClass = i < 3 ? `rank-${i+1}` : '';
-                            leftHtml += `<div class="excel-row ${rowClass}" id="${id}"><div class="r-rank">${rankStr}</div><div class="r-name">${b.name}</div><div class="r-score" id="sc-${id}">${formatNum(b.score)}</div><div class="r-contrib" id="cb-${id}">${formatNum(b.contribution || 0)}</div></div>`;
+                            leftHtml += `<div class="excel-row ${rowClass}" id="${id}"><div class="r-rank">${rankStr}</div><div class="r-name">${escapeHtml(b.name)}</div><div class="r-score" id="sc-${id}">${formatNum(b.score)}</div><div class="r-contrib" id="cb-${id}">${formatNum(b.contribution || 0)}</div></div>`;
                         } else { leftHtml += `<div class="excel-row"><div class="r-rank">-</div><div class="r-name"></div><div class="r-score"></div><div class="r-contrib"></div></div>`; }
                     }
                     for(let i=leftCount; i<leftCount*2; i++) {
                         if(i < bjs.length) {
                             let b = bjs[i]; let id = safeId(b.name); let rankStr = (i+1);
-                            rightHtml += `<div class="excel-row" id="${id}"><div class="r-rank">${rankStr}</div><div class="r-name">${b.name}</div><div class="r-score" id="sc-${id}">${formatNum(b.score)}</div><div class="r-contrib" id="cb-${id}">${formatNum(b.contribution || 0)}</div></div>`;
+                            rightHtml += `<div class="excel-row" id="${id}"><div class="r-rank">${rankStr}</div><div class="r-name">${escapeHtml(b.name)}</div><div class="r-score" id="sc-${id}">${formatNum(b.score)}</div><div class="r-contrib" id="cb-${id}">${formatNum(b.contribution || 0)}</div></div>`;
                         } else { rightHtml += `<div class="excel-row"><div class="r-rank">-</div><div class="r-name"></div><div class="r-score"></div><div class="r-contrib"></div></div>`; }
                     }
 
@@ -1211,7 +1211,7 @@
                     }
                     
                     // Auto-stop the timer on the server
-                    if (globalData) {
+                    if (globalData && window.apiToken) {
                         globalData.match_data.is_running = false;
                         globalData.match_data.time_left_ms = 0;
                         fetch('/api/data', {
@@ -2152,7 +2152,7 @@
                 else if (grade === 'VIP') gradeClass = 'vip-vip-text';
                 
                 if (nameEl) {
-                    nameEl.innerHTML = `<span class="vip-badge-tag">${grade}</span> ${badge} ${escapeHtml(finalName)}`;
+                    nameEl.innerHTML = `<span class="vip-badge-tag">${escapeHtml(grade)}</span> ${escapeHtml(badge)} ${escapeHtml(finalName)}`;
                     nameEl.className = `toon-name ${gradeClass}`;
                 }
                 if (emojiEl) {
