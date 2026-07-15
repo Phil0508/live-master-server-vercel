@@ -417,18 +417,18 @@
             100% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.15); }
         }
         .toon-name.vip-vvip-text {
-            color: #ff3b30 !important;
-            text-shadow: 0 0 8px rgba(255, 59, 48, 0.5);
+            color: #ffd700 !important;
+            text-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
             font-weight: 900 !important;
         }
         .toon-name.vip-vip-text {
-            color: #af52de !important;
-            text-shadow: 0 0 8px rgba(175, 82, 222, 0.5);
+            color: #ffcc00 !important;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
             font-weight: 900 !important;
         }
         .toon-name.vip-gold-text {
-            color: #ffcc00 !important;
-            text-shadow: 0 0 8px rgba(255, 204, 0, 0.5);
+            color: #ffeb3b !important;
+            text-shadow: 0 0 8px rgba(255, 235, 59, 0.5);
             font-weight: 900 !important;
         }
         .vip-badge-tag {
@@ -1917,18 +1917,11 @@
                 let donatorName = data.donator || '익명';
                 let donationAmount = data.amount ? formatNum(data.amount) + '원' : '';
                 
-                // 💡 [추가] 정적 싱글 네온 조명 활성화 및 VIP 조명 우선 매칭 (렉 방지용 최적화)
+                // 💡 [추가] 정적 싱글 네온 조명 활성화 (렉 방지용 최적화)
                 const neonEl = document.getElementById('neon-overlay');
-                const vipInfo = window.vipCache[donatorName];
-                
                 if (neonEl) {
                     neonEl.classList.remove('neon-rainbow');
                     neonEl.classList.add('neon-single');
-                    if (vipInfo && vipInfo.custom_color) {
-                        neonEl.style.setProperty('--glow-color', vipInfo.custom_color);
-                        globalNeon = vipInfo.custom_color;
-                        console.log(`👑 [VIP 조명 적용]: ${donatorName} (${vipInfo.custom_color})`);
-                    }
                 }
                 
                 if (donatorEl) {
@@ -1952,23 +1945,20 @@
                     // 💡 [지능형 색감 분석] 사진 로드 성공 시 색감 분석 리스너 트리거
                     img.onload = function() {
                         try {
-                            // VIP가 아닐 때만 이미지의 색감을 분석하여 대입합니다.
-                            if (!window.vipCache[donatorName]) {
-                                const extractedColor = getDominantNeonColor(img);
-                                console.log("🎨 [지능형 색감 분석] 분석된 네온 색상 코드:", extractedColor);
-                                
-                                globalNeon = extractedColor;
-                                const neonEl = document.getElementById('neon-overlay');
-                                if (neonEl) {
-                                    neonEl.classList.remove('neon-rainbow');
-                                    neonEl.classList.add('neon-single');
-                                    neonEl.style.setProperty('--glow-color', extractedColor);
-                                }
-                                
-                                // 서버에도 이펙트 상태를 푸시하여 조종실 화면 동기화
-                                fetch(`/api/streamdeck/neon?color=${encodeURIComponent(extractedColor.replace('#', ''))}`)
-                                    .catch(e => console.error("Server sync error for neon color:", e));
+                            const extractedColor = getDominantNeonColor(img);
+                            console.log("🎨 [지능형 색감 분석] 분석된 네온 색상 코드:", extractedColor);
+                            
+                            globalNeon = extractedColor;
+                            const neonEl = document.getElementById('neon-overlay');
+                            if (neonEl) {
+                                neonEl.classList.remove('neon-rainbow');
+                                neonEl.classList.add('neon-single');
+                                neonEl.style.setProperty('--glow-color', extractedColor);
                             }
+                            
+                            // 서버에도 이펙트 상태를 푸시하여 조종실 화면 동기화
+                            fetch(`/api/streamdeck/neon?color=${encodeURIComponent(extractedColor.replace('#', ''))}`)
+                                .catch(e => console.error("Server sync error for neon color:", e));
                         } catch (loadErr) {
                             console.warn("Neon extraction load error:", loadErr);
                         }
