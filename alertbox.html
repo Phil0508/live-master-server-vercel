@@ -212,6 +212,26 @@
     <audio id="reaction-audio" style="display:none;"></audio>
 
     <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlToken = urlParams.get('token');
+        if (urlToken) {
+            window.apiToken = urlToken;
+        }
+
+        const originalFetch = window.fetch;
+        window.fetch = function(resource, init) {
+            if (window.apiToken && typeof resource === 'string' && resource.startsWith('/api/')) {
+                init = init || {};
+                init.headers = init.headers || {};
+                if (init.headers instanceof Headers) {
+                    init.headers.set('Authorization', 'Bearer ' + window.apiToken);
+                } else {
+                    init.headers['Authorization'] = 'Bearer ' + window.apiToken;
+                }
+            }
+            return originalFetch(resource, init);
+        };
+
         let globalData = null;
         let isDonationPopupShowing = false;
         let toonPopupTimer = null;

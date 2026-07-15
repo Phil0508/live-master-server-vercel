@@ -679,23 +679,11 @@
                     body: JSON.stringify(gd) 
                 });
                 if (res.status === 409) {
-                    console.warn("⚠️ 버전 충돌 감지, 자동 동기화 후 재전송...");
+                    console.warn("⚠️ 서버에 더 최신 상태가 있어 저장을 중단하고 다시 동기화합니다.");
                     isPushing = false;
-                    const freshRes = await fetch('/api/data');
-                    const freshData = await freshRes.json();
-                    gd.version = freshData.version; // 서버 최신 버전으로 갱신
-                    isPushing = true;
-                    const retryRes = await fetch('/api/data', {
-                        method: 'POST',
-                        headers:{'Content-Type':'application/json'},
-                        body: JSON.stringify(gd)
-                    });
-                    if (retryRes.status === 409) {
-                        console.warn("⚠️ 재시도에서도 충돌, 전체 동기화 수행");
-                        isPushing = false;
-                        await fetchAPI();
-                        return;
-                    }
+                    await fetchAPI();
+                    alert("다른 화면에서 더 최신 상태가 저장되어 현재 화면을 다시 불러왔습니다. 방금 조작은 한 번 더 적용해주세요.");
+                    return;
                 }
             } catch(e) {
                 console.error("⚠️ pushAPI Error:", e);

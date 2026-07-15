@@ -1597,29 +1597,14 @@
                     body: JSON.stringify(gd) 
                 });
                 if (res.status === 409) {
-                    // 🔄 버전 충돌 시 최신 데이터를 받아와서 버전만 갱신 후 자동 재전송
-                    console.warn("⚠️ 버전 충돌 감지, 자동 동기화 후 재전송...");
+                    console.warn("⚠️ 서버에 더 최신 상태가 있어 저장을 중단하고 다시 동기화합니다.");
                     isPushing = false;
                     lastPushTime = 0;
-                    const freshRes = await fetch('/api/data');
-                    const freshData = await freshRes.json();
-                    gd.version = freshData.version; // 서버 최신 버전으로 갱신
-                    // 즉시 재전송
-                    lastPushTime = Date.now();
-                    isPushing = true;
-                    const retryRes = await fetch('/api/data', {
-                        method: 'POST',
-                        headers:{'Content-Type':'application/json'},
-                        body: JSON.stringify(gd)
-                    });
-                    if (retryRes.status === 409) {
-                        // 두 번째 충돌 시에만 조용히 전체 동기화
-                        console.warn("⚠️ 재시도에서도 충돌, 전체 동기화 수행");
-                        isPushing = false;
-                        lastPushTime = 0;
-                        await fetchAPI();
-                        return;
+                    await fetchAPI();
+                    if (typeof premiumAlert === 'function') {
+                        premiumAlert("다른 화면에서 더 최신 상태가 저장되어 현재 화면을 다시 불러왔습니다. 방금 조작은 한 번 더 적용해주세요.", "동기화 충돌", "warning");
                     }
+                    return;
                 }
             } catch(e) {
                 console.error("⚠️ pushAPI Error:", e);
@@ -2851,7 +2836,7 @@
                         throw new Error("올바른 백업 파일 형식이 아닙니다.");
                     }
                     
-                    let res = await fetch('/api/data', {
+                    let res = await fetch('/api/data?force=1', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify(backupData)
@@ -3184,15 +3169,15 @@
                     let html = "";
                     data.forEach(item => {
                         html += `
-                            <div onclick="selectYoutubeVideo('${item.videoId}')" style="display: flex; gap: 12px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 10px; cursor: pointer; align-items: center;" class="yt-search-item">
+                            <div onclick='selectYoutubeVideo(${escapeHTML(JSON.stringify(item.videoId))})' style="display: flex; gap: 12px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 10px; cursor: pointer; align-items: center;" class="yt-search-item">
                                 <div style="position: relative; width: 100px; aspect-ratio: 16/9; border-radius: 6px; overflow: hidden; background: #111; flex-shrink: 0;">
-                                    <img src="${item.thumbnail}" style="width:100%; height:100%; object-fit: cover;">
-                                    <span style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.8); color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 4px; font-weight: bold;">${item.duration}</span>
+                                    <img src="${escapeHTML(item.thumbnail)}" style="width:100%; height:100%; object-fit: cover;">
+                                    <span style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.8); color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 4px; font-weight: bold;">${escapeHTML(item.duration)}</span>
                                 </div>
                                 <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
-                                    <div style="font-weight: 700; font-size: 13.5px; color: #fff; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.4;">${item.title}</div>
+                                    <div style="font-weight: 700; font-size: 13.5px; color: #fff; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.4;">${escapeHTML(item.title)}</div>
                                     <div style="font-size: 12px; color: #8e8e93;">
-                                        <span>${item.author}</span>
+                                        <span>${escapeHTML(item.author)}</span>
                                     </div>
                                 </div>
                             </div>

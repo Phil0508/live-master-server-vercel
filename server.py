@@ -195,10 +195,6 @@ def require_login():
         '/api/stream',
         '/api/ping',
         '/api/donation',
-        '/api/streamdeck/neon',
-        '/api/streamdeck/save',
-        '/api/roulette/winner',
-        '/api/reaction/next',
         '/toonation_tampermonkey.user.js',
         '/setup'
     ]
@@ -250,6 +246,18 @@ def broadcast_event(event_name, data):
                 client_q.put_nowait(message)
             except queue.Full:
                 pass
+
+def create_snapshot_record(label, state=None):
+    if state is None:
+        state = load_data()
+    timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            db_query("INSERT INTO snapshots (timestamp, state_json, summary) VALUES (?, ?, ?)"),
+            (timestamp, json.dumps(state, ensure_ascii=False), label)
+        )
+    return timestamp
 
 def get_or_create_totp_secret():
     return load_auth_config()['totp_secret']
@@ -519,7 +527,8 @@ def load_data():
 
     if len(kv_data) == 0 and len(bjs) == 0:
         MEMORY_STATE = DEFAULT_STATE.copy()
-        save_data(MEMORY_STATE, is_initial=True)
+        if not IS_POSTGRES:
+            save_data(MEMORY_STATE, is_initial=True)
         return MEMORY_STATE
 
     state = {}
@@ -1268,6 +1277,7 @@ def api_data():
         if request.method == 'POST':
             with file_lock:
                 state = request.json or {}
+                force_write = request.args.get('force') == '1' or state.pop('_force', False)
                 
                 # [버그 패치] 조종실에서 수동 리액션 스위치를 끌 때(False) 
                 # 큐에 대기열이 차 있으면 동기화 루프로 인해 즉시 다시 켜지는 현상을 원천 방지
@@ -1276,10 +1286,16 @@ def api_data():
                     
                 current_state = load_data()
                 
-                # [수정] 409 conflict로 인한 경고창(Alert) 발생을 원천 차단하기 위해 409 검증을 제거하고,
-                # 마지막으로 전송된 상태를 기준으로 버전을 갱신하여 저장합니다. (Last-Write-Wins)
                 client_version = state.get('version', 0)
                 server_version = current_state.get('version', 1)
+
+                if not force_write and client_version and client_version < server_version:
+                    return jsonify({
+                        "status": "conflict",
+                        "message": "Server state is newer. Reload before saving.",
+                        "server_version": server_version,
+                        "client_version": client_version
+                    }), 409
                 
                 state['version'] = max(client_version, server_version) + 1
                 save_data(state)
@@ -1441,15 +1457,7 @@ def create_manual_snapshot():
     try:
         req_data = request.json
         label = req_data.get("label", "수동 백업")
-        state = load_data()
-        timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
-        
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                db_query("INSERT INTO snapshots (timestamp, state_json, summary) VALUES (?, ?, ?)"),
-                (timestamp, json.dumps(state, ensure_ascii=False), label)
-            )
+        create_snapshot_record(label)
         return jsonify({"status": "success"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -1556,12 +1564,13 @@ def end_broadcast():
     try:
         global MEMORY_STATE
         with file_lock:
-            # 1. Clear database tables (donation history, snapshots, players)
+            current_state = load_data()
+            create_snapshot_record("방송 종료 전 자동 백업", current_state)
+
+            # 1. Clear today's live state only. Keep history and snapshots for recovery/audit.
             with get_db_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(db_query("DELETE FROM players"))
-                cursor.execute(db_query("DELETE FROM donation_history"))
-                cursor.execute(db_query("DELETE FROM snapshots"))
                 # Delete kv_store keys that are NOT persistent configurations
                 cursor.execute(
                     db_query("DELETE FROM kv_store WHERE key NOT IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"), 
@@ -1609,12 +1618,14 @@ def start_broadcast():
             return jsonify({"status": "error", "message": "플레이어는 최대 10명까지 등록할 수 있습니다."}), 400
             
         with file_lock:
-            # 1. Clear database tables (donation history, snapshots, players)
+            current_state = load_data()
+            if current_state.get('broadcast_active') or current_state.get('bjs'):
+                create_snapshot_record("방송 재시작 전 자동 백업", current_state)
+
+            # 1. Clear live player/state tables only. Keep history and snapshots.
             with get_db_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(db_query("DELETE FROM players"))
-                cursor.execute(db_query("DELETE FROM donation_history"))
-                cursor.execute(db_query("DELETE FROM snapshots"))
                 # Delete kv_store keys that are NOT persistent configurations
                 cursor.execute(
                     db_query("DELETE FROM kv_store WHERE key NOT IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"), 
@@ -1831,15 +1842,7 @@ def restore_by_time():
 @app.route('/api/streamdeck/save', methods=['GET'])
 def sd_save():
     try:
-        state = load_data()
-        timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
-        label = "스트림덱 수동 백업"
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                db_query("INSERT INTO snapshots (timestamp, state_json, summary) VALUES (?, ?, ?)"),
-                (timestamp, json.dumps(state, ensure_ascii=False), label)
-            )
+        create_snapshot_record("스트림덱 수동 백업")
         print("  💾 [스트림덱 명령] 수동 스냅샷 세이브포인트 저장 완료!")
         return jsonify({"status": "success", "message": "스냅샷 저장 완료"})
     except Exception as e:

@@ -269,6 +269,25 @@
 
     <script>
         let toastTimer = null;
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlToken = urlParams.get('token');
+        if (urlToken) {
+            window.apiToken = urlToken;
+        }
+
+        const originalFetch = window.fetch;
+        window.fetch = function(resource, init) {
+            if (window.apiToken && typeof resource === 'string' && resource.startsWith('/api/')) {
+                init = init || {};
+                init.headers = init.headers || {};
+                if (init.headers instanceof Headers) {
+                    init.headers.set('Authorization', 'Bearer ' + window.apiToken);
+                } else {
+                    init.headers['Authorization'] = 'Bearer ' + window.apiToken;
+                }
+            }
+            return originalFetch(resource, init);
+        };
 
         // 커스텀 색상 변경 호출
         function triggerCustomColor(hexColor) {

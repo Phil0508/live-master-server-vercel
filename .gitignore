@@ -10,3 +10,6 @@ __pycache__/
 auth_config.json
 .vercel/
 media_cache/
+
+.vercel
+.env*
