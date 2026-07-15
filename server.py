@@ -440,63 +440,40 @@ def init_db():
             except Exception:
                 pass
         else:
-            # PostgreSQL 전용: 테이블 스키마 검증 및 자동 복구
-            # Supabase 대시보드에서 다른 스키마로 생성된 테이블이 있을 수 있으므로 확인 후 재생성
-            
-            # 각 테이블의 정확한 컬럼 세트 정의 (이 컬럼만 존재해야 함)
-            exact_schemas = {
-                'players': {'name', 'score', 'contribution'},
-                'reaction_files': {'id', 'filename', 'content_type', 'file_data'},
-                'reaction_items': {'id', 'title', 'amount', 'audio_file_id', 'image_file_id', 'is_enabled'},
+            # PostgreSQL/Supabase 전용: 운영 데이터 보존을 최우선으로 두고 누락 컬럼만 추가합니다.
+            # 절대 테이블을 DROP하지 않습니다. Supabase에서 created_at 같은 추가 컬럼이 있어도 정상입니다.
+            pg_column_defaults = {
+                'players': {
+                    'score': 'INTEGER DEFAULT 0',
+                    'contribution': 'INTEGER DEFAULT 0',
+                },
+                'reaction_files': {
+                    'filename': 'TEXT',
+                    'content_type': 'TEXT',
+                    'file_data': 'BYTEA',
+                },
+                'reaction_items': {
+                    'title': 'TEXT',
+                    'amount': 'INTEGER DEFAULT 0',
+                    'audio_file_id': 'TEXT',
+                    'image_file_id': 'TEXT',
+                    'is_enabled': 'BOOLEAN DEFAULT TRUE',
+                },
             }
-            
-            for table_name, expected_cols in exact_schemas.items():
+
+            for table_name, optional_columns in pg_column_defaults.items():
                 try:
                     cursor.execute("""
                         SELECT column_name FROM information_schema.columns 
                         WHERE table_schema = 'public' AND table_name = %s
                     """, (table_name,))
                     existing_cols = {row[0] for row in cursor.fetchall()}
-                    
-                    # 필수 컬럼 부족 또는 불필요한 컬럼 존재 시 테이블 재생성
-                    missing_cols = expected_cols - existing_cols
-                    extra_cols = existing_cols - expected_cols
-                    needs_recreate = bool(missing_cols) or bool(extra_cols)
-                    
-                    if needs_recreate:
-                        reason = []
-                        if missing_cols:
-                            reason.append(f"누락={missing_cols}")
-                        if extra_cols:
-                            reason.append(f"불필요={extra_cols}")
-                        print(f"⚠️ [PostgreSQL 스키마 복구] {table_name}: {', '.join(reason)} → 테이블 재생성")
-                        cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE")
-                        conn.commit()
-                        
-                        if table_name == 'players':
-                            cursor.execute("CREATE TABLE IF NOT EXISTS players (name TEXT PRIMARY KEY, score INTEGER, contribution INTEGER)")
-                        elif table_name == 'reaction_files':
-                            cursor.execute("""
-                                CREATE TABLE IF NOT EXISTS reaction_files (
-                                    id TEXT PRIMARY KEY,
-                                    filename TEXT,
-                                    content_type TEXT,
-                                    file_data BYTEA
-                                )
-                            """)
-                        elif table_name == 'reaction_items':
-                            cursor.execute("""
-                                CREATE TABLE IF NOT EXISTS reaction_items (
-                                    id SERIAL PRIMARY KEY,
-                                    title TEXT,
-                                    amount INTEGER DEFAULT 0,
-                                    audio_file_id TEXT,
-                                    image_file_id TEXT,
-                                    is_enabled BOOLEAN DEFAULT TRUE
-                                )
-                            """)
+                    for col_name, col_def in optional_columns.items():
+                        if col_name not in existing_cols:
+                            print(f"⚠️ [PostgreSQL 스키마 보정] {table_name}.{col_name} 컬럼 추가")
+                            cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_def}")
                 except Exception as e:
-                    print(f"⚠️ [PostgreSQL 스키마 복구] {table_name} 복구 실패: {e}")
+                    print(f"⚠️ [PostgreSQL 스키마 보정] {table_name} 보정 실패: {e}")
             
             # donation_history tx_id 컬럼 확인 및 추가
             try:
@@ -522,7 +499,9 @@ def init_db():
 
 def load_data():
     global MEMORY_STATE
-    if MEMORY_STATE is not None:
+    # Vercel/Supabase에서는 여러 서버리스 인스턴스가 동시에 뜰 수 있으므로
+    # 메모리 캐시를 신뢰하면 오래된 초기 상태가 라이브 데이터를 덮어쓸 수 있습니다.
+    if MEMORY_STATE is not None and not IS_POSTGRES:
         return MEMORY_STATE
     init_db()
     
