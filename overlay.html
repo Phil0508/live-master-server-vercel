@@ -2301,13 +2301,16 @@
             if (fallbackInterval) clearInterval(fallbackInterval);
             fallbackInterval = setInterval(async () => {
                 try {
-                    // 👑 VIP Roster Cache 실시간 동기화
+                    // 👑 VIP Roster Cache 실시간 동기화 (상시 가동)
                     loadVipsToCache();
                     
-                    const res = await fetch('/api/data');
-                    if (res.ok) {
-                        const newData = await res.json();
-                        handleData(newData);
+                    // 📡 상태 데이터 수집은 SSE가 단절되었을 때만 안전 백업 기동
+                    if (!sseSource || sseSource.readyState !== 1) {
+                        const res = await fetch('/api/data');
+                        if (res.ok) {
+                            const newData = await res.json();
+                            handleData(newData);
+                        }
                     }
                 } catch(e) {
                     console.warn("Fallback poll error (network offline?):", e);
