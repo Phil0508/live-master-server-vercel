@@ -256,7 +256,7 @@
                     const data = jsonParse(e.data);
                     if (!data) return;
                     globalData = data;
-                    checkReactionQueue();
+                    // checkReactionQueue(); // ⚠️ [중복 실행 방지] 리액션과 슬롯머신은 overlay.html이 전담하므로 여기서는 재생하지 않습니다.
                 } catch(err) {
                     console.error("SSE parse error:", err);
                 }

@@ -2398,12 +2398,53 @@
                 }
             }, 1500);
         }
+
+        // 🖼️ 슬롯머신에 사용할 전체 리액션 이미지 썸네일 캐시 데이터베이스
+        window.slotReelImages = [];
+        async function loadSlotReelImages() {
+            try {
+                const res = await fetch('/api/reaction/list');
+                if (res.ok) {
+                    const list = await res.json();
+                    // 이미지가 정상적으로 등록되어 있는 활성 리액션들만 추출
+                    const urls = list.filter(item => item.image_url && item.is_enabled).map(item => item.image_url);
+                    if (urls.length > 0) {
+                        window.slotReelImages = urls;
+                        console.log("🎰 [슬롯 썸네일 수집 성공] 후보 이미지 수:", urls.length);
+                        return;
+                    }
+                }
+            } catch(e) {
+                console.warn("Failed to fetch slot reel images, using fallback default list:", e);
+            }
+            
+            // 등록된 이미지가 전혀 없을 때를 대비한 고화질 에셋 백업
+            window.slotReelImages = [
+                "/money.png", 
+                "https://cdn-icons-png.flaticon.com/512/3135/3135706.png", // 💎
+                "https://cdn-icons-png.flaticon.com/512/1041/1041916.png", // 👑
+                "https://cdn-icons-png.flaticon.com/512/2853/2853364.png", // 🍒
+                "https://cdn-icons-png.flaticon.com/512/1865/1865313.png", // ⭐
+                "https://cdn-icons-png.flaticon.com/512/9184/9184133.png"  // 🔔
+            ];
+        }
+        loadSlotReelImages();
+
         // 🎰 슬롯머신 실감나는 사운드 효과 및 3-Reel 회전 애니메이션 연출 제어장치
         function runSlotMachineAnimation(data, callback) {
             const slotOverlay = document.getElementById('slot-machine-overlay');
             const reel1 = document.getElementById('slot-reel-1');
             const reel2 = document.getElementById('slot-reel-2');
             const reel3 = document.getElementById('slot-reel-3');
+            
+            const img1 = document.getElementById('slot-reel-img-1');
+            const img2 = document.getElementById('slot-reel-img-2');
+            const img3 = document.getElementById('slot-reel-img-3');
+            
+            const txt1 = document.getElementById('slot-reel-txt-1');
+            const txt2 = document.getElementById('slot-reel-txt-2');
+            const txt3 = document.getElementById('slot-reel-txt-3');
+            
             const resultEl = document.getElementById('slot-machine-result');
 
             if (!slotOverlay || !reel1 || !reel2 || !reel3 || !resultEl) {
@@ -2413,25 +2454,32 @@
 
             // 초기화
             resultEl.innerText = "";
-            reel1.innerText = "🎰";
-            reel2.innerText = "🎰";
-            reel3.innerText = "🎰";
+            
+            // 텍스트는 숨기고 썸네일용 이미지 태그를 켭니다.
+            if (img1) { img1.src = ""; img1.style.display = "block"; }
+            if (img2) { img2.src = ""; img2.style.display = "block"; }
+            if (img3) { img3.src = ""; img3.style.display = "block"; }
+            
+            if (txt1) txt1.style.display = "none";
+            if (txt2) txt2.style.display = "none";
+            if (txt3) txt3.style.display = "none";
+
             reel1.classList.add('spinning');
             reel2.classList.add('spinning');
             reel3.classList.add('spinning');
             slotOverlay.classList.add('show');
 
-            // 릴 회전 중 임의의 캐릭터 롤링 연출
-            const slotSymbols = ["💎", "🍒", "👑", "🔥", "⭐", "🔔", "🍇", "🍋", "🍀"];
+            // 릴 회전 중 리액션 사진 후보 롤링 연출
             let spinInterval = setInterval(() => {
-                if (reel1.classList.contains('spinning')) {
-                    reel1.innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+                const imgList = window.slotReelImages.length > 0 ? window.slotReelImages : ["/money.png"];
+                if (reel1.classList.contains('spinning') && img1) {
+                    img1.src = imgList[Math.floor(Math.random() * imgList.length)];
                 }
-                if (reel2.classList.contains('spinning')) {
-                    reel2.innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+                if (reel2.classList.contains('spinning') && img2) {
+                    img2.src = imgList[Math.floor(Math.random() * imgList.length)];
                 }
-                if (reel3.classList.contains('spinning')) {
-                    reel3.innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+                if (reel3.classList.contains('spinning') && img3) {
+                    img3.src = imgList[Math.floor(Math.random() * imgList.length)];
                 }
             }, 60);
 
@@ -2458,29 +2506,33 @@
             }, 180);
 
             const targetTitle = data.title || "당첨";
-            const stopReel = (reel, symbol) => {
+            const targetImage = data.image_url || "/money.png";
+            
+            const stopReel = (reel, imgElement, winningSrc) => {
                 reel.classList.remove('spinning');
-                reel.innerText = symbol;
+                if (imgElement) {
+                    imgElement.src = winningSrc;
+                }
                 playBeep(440, 0.2, "square"); // 탁- 정지음 타격감
             };
 
             // 2.2초 후 1번 릴 정지
             setTimeout(() => {
-                stopReel(reel1, targetTitle.length >= 1 ? targetTitle[0] : "👑");
+                stopReel(reel1, img1, targetImage);
             }, 2200);
 
             // 2.8초 후 2번 릴 정지
             setTimeout(() => {
-                stopReel(reel2, targetTitle.length >= 2 ? targetTitle[1] : "💎");
+                stopReel(reel2, img2, targetImage);
             }, 2800);
 
-            // 3.4초 후 3번 릴 정지 및 최종 완성
+            // 3.4초 후 3번 릴 정지 및 최종 완성 (당첨 썸네일 일렬 정렬 잭팟)
             setTimeout(() => {
                 clearInterval(spinInterval);
                 clearInterval(soundTimer);
                 
-                // 3번째 릴 정지 및 단어 완성
-                stopReel(reel3, targetTitle.length >= 3 ? targetTitle[2] : "🔥");
+                // 3번째 릴 정지
+                stopReel(reel3, img3, targetImage);
                 
                 // 결과 문구 활성화
                 resultEl.innerText = `🎉 잭팟! [${targetTitle}] 당첨! (+2점 적립)`;
@@ -2516,9 +2568,18 @@
         <div class="slot-machine-box">
             <div class="slot-title">SLOT MACHINE</div>
             <div class="slot-reels">
-                <div class="slot-reel" id="slot-reel-1">?</div>
-                <div class="slot-reel" id="slot-reel-2">?</div>
-                <div class="slot-reel" id="slot-reel-3">?</div>
+                <div class="slot-reel" id="slot-reel-1">
+                    <img id="slot-reel-img-1" src="" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px; display: none;">
+                    <span id="slot-reel-txt-1">🎰</span>
+                </div>
+                <div class="slot-reel" id="slot-reel-2">
+                    <img id="slot-reel-img-2" src="" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px; display: none;">
+                    <span id="slot-reel-txt-2">🎰</span>
+                </div>
+                <div class="slot-reel" id="slot-reel-3">
+                    <img id="slot-reel-img-3" src="" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px; display: none;">
+                    <span id="slot-reel-txt-3">🎰</span>
+                </div>
             </div>
             <div class="slot-result" id="slot-machine-result"></div>
         </div>
