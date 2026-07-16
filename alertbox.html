@@ -357,86 +357,205 @@
                 amount: data.amount || 0,
                 message: data.message || ''
             }, () => {
-                // 팝업 연출이 완료된 후 콜백으로 리액션 재생
-                
-                let donatorName = data.donator || '익명';
-                let donationAmount = data.amount ? formatNum(data.amount) + '원' : '';
-                if (donatorEl) {
-                    donatorEl.innerText = donatorName + (donationAmount ? ' · ' + donationAmount : '');
-                }
-                
-                let msgText = data.message || '';
-                if (messageEl) {
-                    if (msgText && msgText !== '수동 후원 송출') {
-                        messageEl.innerText = msgText;
-                        messageEl.style.display = 'inline-block';
-                    } else {
-                        messageEl.innerText = '';
-                        messageEl.style.display = 'none';
-                    }
-                }
-                
-                if (data.image_url) {
-                    img.src = data.image_url;
-                    img.style.display = 'block';
-                } else {
-                    img.src = '';
-                    img.style.display = 'none';
-                }
-                
-                // 리액션 페이드인 노출 (중앙 고정 대형 스케일)
-                overlay.classList.add('show');
-                
-                // 오디오 소스 설정 및 재상
-                if (data.audio_url) {
-                    audio.src = data.audio_url + '?t=' + (data.id || Date.now());
-                    
-                    audio.onended = function() {
-                        console.log('Audio finished.');
-                        if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-                        onReactionEnded();
-                    };
-                    
-                    audio.onerror = function(err) {
-                        console.error('Audio load error:', err);
-                        if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-                        onReactionEnded();
-                    };
-                    
-                    const setupSafetyTimer = () => {
-                        if (audioSafetyTimeout) clearTimeout(audioSafetyTimeout);
-                        const duration = audio.duration;
-                        const safetyDuration = (isFinite(duration) && duration > 0) ? (duration * 1000 + 2000) : 30000;
-                        audioSafetyTimeout = setTimeout(() => {
-                            console.warn('Safety timeout reached!');
-                            onReactionEnded();
-                        }, safetyDuration);
-                    };
-
-                    if (audio.readyState >= 1) {
-                        setupSafetyTimer();
-                    } else {
-                        audio.onloadedmetadata = setupSafetyTimer;
+                // 팝업 연출이 완료된 후 실행될 실제 리액션 재생 함수
+                const proceedToReaction = () => {
+                    let donatorName = data.donator || '익명';
+                    let donationAmount = data.amount ? formatNum(data.amount) + '원' : '';
+                    if (donatorEl) {
+                        donatorEl.innerText = donatorName + (donationAmount ? ' · ' + donationAmount : '');
                     }
                     
-                    audio.play().then(() => {
-                        hideAutoplayWarning();
-                    }).catch(err => {
-                        console.error('Audio autoplay blocked:', err);
-                        showAutoplayWarning();
+                    let msgText = data.message || '';
+                    if (messageEl) {
+                        if (msgText && msgText !== '수동 후원 송출') {
+                            messageEl.innerText = msgText;
+                            messageEl.style.display = 'inline-block';
+                        } else {
+                            messageEl.innerText = '';
+                            messageEl.style.display = 'none';
+                        }
+                    }
+                    
+                    if (data.image_url) {
+                        img.src = data.image_url;
+                        img.style.display = 'block';
+                    } else {
+                        img.src = '';
+                        img.style.display = 'none';
+                    }
+                    
+                    // 리액션 페이드인 노출 (중앙 고정 대형 스케일)
+                    overlay.classList.add('show');
+                    
+                    // 오디오 소스 설정 및 재생
+                    if (data.audio_url) {
+                        audio.src = data.audio_url + '?t=' + (data.id || Date.now());
                         
-                        // 화면 클릭 활성화를 위해 5초 대기
+                        audio.onended = function() {
+                            console.log('Audio finished.');
+                            if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                            onReactionEnded();
+                        };
+                        
+                        audio.onerror = function(err) {
+                            console.error('Audio load error:', err);
+                            if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                            onReactionEnded();
+                        };
+                        
+                        const setupSafetyTimer = () => {
+                            if (audioSafetyTimeout) clearTimeout(audioSafetyTimeout);
+                            const duration = audio.duration;
+                            const safetyDuration = (isFinite(duration) && duration > 0) ? (duration * 1000 + 2000) : 30000;
+                            audioSafetyTimeout = setTimeout(() => {
+                                console.warn('Safety timeout reached!');
+                                onReactionEnded();
+                            }, safetyDuration);
+                        };
+
+                        if (audio.readyState >= 1) {
+                            setupSafetyTimer();
+                        } else {
+                            audio.onloadedmetadata = setupSafetyTimer;
+                        }
+                        
+                        audio.play().then(() => {
+                            hideAutoplayWarning();
+                        }).catch(err => {
+                            console.error('Audio autoplay blocked:', err);
+                            showAutoplayWarning();
+                            
+                            // 화면 클릭 활성화를 위해 5초 대기
+                            reactionTimeout = setTimeout(() => {
+                                stopReactionVisuals();
+                            }, 5000);
+                        });
+                    } else {
+                        // 음원이 없는 리액션인 경우 5초 후 종료
                         reactionTimeout = setTimeout(() => {
-                            stopReactionVisuals();
+                            onReactionEnded();
                         }, 5000);
-                    });
+                    }
+                };
+
+                // 슬롯머신 후원인 경우 스핀 연출 후 리액션 재생 진행
+                if (data.slot_machine) {
+                    runSlotMachineAnimation(data, proceedToReaction);
                 } else {
-                    // 음원이 없는 리액션인 경우 5초 후 종료
-                    reactionTimeout = setTimeout(() => {
-                        onReactionEnded();
-                    }, 5000);
+                    proceedToReaction();
                 }
             });
+        }
+
+        // 🎰 슬롯머신 실감나는 사운드 효과 및 3-Reel 회전 애니메이션 연출 제어장치
+        function runSlotMachineAnimation(data, callback) {
+            const slotOverlay = document.getElementById('slot-machine-overlay');
+            const reel1 = document.getElementById('slot-reel-1');
+            const reel2 = document.getElementById('slot-reel-2');
+            const reel3 = document.getElementById('slot-reel-3');
+            const resultEl = document.getElementById('slot-machine-result');
+
+            if (!slotOverlay || !reel1 || !reel2 || !reel3 || !resultEl) {
+                callback();
+                return;
+            }
+
+            // 초기화
+            resultEl.innerText = "";
+            reel1.innerText = "🎰";
+            reel2.innerText = "🎰";
+            reel3.innerText = "🎰";
+            reel1.classList.add('spinning');
+            reel2.classList.add('spinning');
+            reel3.classList.add('spinning');
+            slotOverlay.classList.add('show');
+
+            // 릴 회전 중 임의의 캐릭터 롤링 연출
+            const slotSymbols = ["💎", "🍒", "👑", "🔥", "⭐", "🔔", "🍇", "🍋", "🍀"];
+            let spinInterval = setInterval(() => {
+                if (reel1.classList.contains('spinning')) {
+                    reel1.innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+                }
+                if (reel2.classList.contains('spinning')) {
+                    reel2.innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+                }
+                if (reel3.classList.contains('spinning')) {
+                    reel3.innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+                }
+            }, 60);
+
+            // 신디사이저 릴 회전 비프음 (Web Audio API)
+            const playBeep = (freq, duration, type="sine") => {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + duration);
+                } catch(e){}
+            };
+
+            // 회전 시 주기적 사운드 효과
+            let soundTimer = setInterval(() => {
+                playBeep(880, 0.05, "triangle");
+            }, 180);
+
+            const targetTitle = data.title || "당첨";
+            const stopReel = (reel, symbol) => {
+                reel.classList.remove('spinning');
+                reel.innerText = symbol;
+                playBeep(440, 0.2, "square"); // 탁- 정지음 타격감
+            };
+
+            // 2.2초 후 1번 릴 정지
+            setTimeout(() => {
+                stopReel(reel1, targetTitle.length >= 1 ? targetTitle[0] : "👑");
+            }, 2200);
+
+            // 2.8초 후 2번 릴 정지
+            setTimeout(() => {
+                stopReel(reel2, targetTitle.length >= 2 ? targetTitle[1] : "💎");
+            }, 2800);
+
+            // 3.4초 후 3번 릴 정지 및 최종 완성
+            setTimeout(() => {
+                clearInterval(spinInterval);
+                clearInterval(soundTimer);
+                
+                // 3번째 릴 정지 및 단어 완성
+                stopReel(reel3, targetTitle.length >= 3 ? targetTitle[2] : "🔥");
+                
+                // 결과 문구 활성화
+                resultEl.innerText = `🎉 잭팟! [${targetTitle}] 당첨! (+2점 적립)`;
+                
+                // 잭팟 팡파레 효과음 재생
+                for (let i = 0; i < 4; i++) {
+                    setTimeout(() => {
+                        playBeep(523.25 * (1 + i * 0.25), 0.35, "sine");
+                    }, i * 120);
+                }
+
+                // 화려한 화이어웍스 효과 폭죽 발포
+                try {
+                    if (typeof confetti === 'function') {
+                        confetti({ particleCount: 150, spread: 80, origin: { y: 0.65 }, zIndex: 100005 });
+                    }
+                } catch(e){}
+
+                // 2.5초 간 결과를 보여준 후 슬롯창을 닫고 리액션으로 진입
+                setTimeout(() => {
+                    slotOverlay.classList.remove('show');
+                    setTimeout(() => {
+                        callback();
+                    }, 300);
+                }, 2500);
+            }, 3400);
         }
 
         function onReactionEnded() {

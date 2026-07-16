@@ -285,6 +285,13 @@ DEFAULT_STATE = {
     "account": {"bank": "기업은행", "acc_num": "464-068673-04-016", "name": "드래곤엔터"},
     "pending_donations": [],
     "latest_donation": {"name": "", "amount": 0, "message": "", "time": 0},
+    "slot_machine": {
+        "active": False,
+        "started_at": 0,
+        "duration_ms": 1200000,
+        "trigger_amount": 20000,
+        "selected_reaction_ids": []
+    },
     "extra_game_active": False,
     "extra_bjs": [],
     "roulette_enabled": False,
@@ -553,6 +560,76 @@ def load_data():
     
     MEMORY_STATE = state
     return MEMORY_STATE
+
+def normalize_slot_machine_state(state):
+    slot = state.get('slot_machine')
+    if not isinstance(slot, dict):
+        slot = DEFAULT_STATE['slot_machine'].copy()
+        state['slot_machine'] = slot
+
+    slot.setdefault('active', False)
+    slot.setdefault('started_at', 0)
+    slot.setdefault('duration_ms', 1200000)
+    slot.setdefault('trigger_amount', 20000)
+    slot.setdefault('selected_reaction_ids', [])
+
+    if slot.get('active'):
+        started_at = int(slot.get('started_at') or 0)
+        duration_ms = int(slot.get('duration_ms') or 1200000)
+        if started_at and int(time.time() * 1000) - started_at >= duration_ms:
+            slot['active'] = False
+    return slot
+
+def get_slot_reaction_candidate(selected_ids):
+    if not selected_ids:
+        return None
+
+    ids = []
+    for item_id in selected_ids:
+        try:
+            parsed_id = int(item_id)
+        except (TypeError, ValueError):
+            continue
+        if parsed_id not in ids:
+            ids.append(parsed_id)
+
+    if not ids:
+        return None
+
+    placeholders = ','.join(['?'] * len(ids))
+    query = f"""
+        SELECT id, title, audio_file_id, image_file_id, amount
+        FROM reaction_items
+        WHERE is_enabled = TRUE AND id IN ({placeholders})
+    """
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(db_query(query), tuple(ids))
+        rows = cursor.fetchall()
+
+    if not rows:
+        return None
+
+    import random
+    row = random.choice(rows)
+    return {
+        'id': row[0],
+        'title': row[1],
+        'audio_file_id': row[2],
+        'image_file_id': row[3],
+        'amount': int(row[4] or 0)
+    }
+
+def apply_slot_score(state, target_list_key, player_name, score_delta, contribution_delta):
+    target_list = state.get(target_list_key, [])
+    for bj in target_list:
+        if bj.get('name') == player_name:
+            bj['score'] = int(bj.get('score') or 0) + score_delta
+            bj['contribution'] = int(bj.get('contribution') or 0) + contribution_delta
+            target_list.sort(key=lambda a: int(a.get('contribution') or 0), reverse=True)
+            state[target_list_key] = target_list
+            return bj
+    return None
 
 db_write_queue = queue.Queue()
 
@@ -1168,6 +1245,64 @@ def receive_donation():
             
             if target_list_key == 'extra_bjs' and not state.get('extra_bjs'):
                 state['extra_bjs'] = [{"name": bj['name'], "score": 0, "contribution": 0} for bj in state.get('bjs', [])]
+
+            slot_result = None
+            slot = normalize_slot_machine_state(state)
+            if amount >= int(slot.get('trigger_amount') or 20000) and slot.get('active'):
+                try:
+                    candidate = get_slot_reaction_candidate(slot.get('selected_reaction_ids') or [])
+                    if candidate:
+                        result_amount = int(candidate.get('amount') or 0)
+                        score_delta = 2
+                        contribution_delta = max(0, int(result_amount / 10000 + 0.5))
+                        audio_url = f"/uploads/{candidate['audio_file_id']}" if candidate.get('audio_file_id') else ""
+                        image_url = f"/uploads/{candidate['image_file_id']}" if candidate.get('image_file_id') else ""
+
+                        slot_result = {
+                            "item_id": candidate['id'],
+                            "title": candidate['title'],
+                            "result_amount": result_amount,
+                            "score_delta": score_delta,
+                            "contribution_delta": contribution_delta,
+                            "audio_url": audio_url,
+                            "image_url": image_url
+                        }
+                        parsed_don_entry['slot_result'] = slot_result
+
+                        updated_player = apply_slot_score(state, target_list_key, parsed_name, score_delta, contribution_delta)
+                        if updated_player:
+                            current_total = updated_player.get('score', score_delta)
+                            if 'logs' not in state:
+                                state['logs'] = []
+                            state['logs'].insert(0, {
+                                'time': time.strftime('%H:%M:%S'),
+                                'name': f"슬롯머신 {parsed_name} - {candidate['title']}",
+                                'val': score_delta
+                            })
+                            if len(state['logs']) > 200:
+                                state['logs'] = state['logs'][:200]
+
+                        reaction_uuid = f"rq_{uuid.uuid4().hex}"
+                        state['reaction_queue'].append({
+                            "id": reaction_uuid,
+                            "item_id": candidate['id'],
+                            "title": candidate['title'],
+                            "audio_url": audio_url,
+                            "image_url": image_url,
+                            "amount": amount,
+                            "donator": parsed_name,
+                            "message": cleaned_msg,
+                            "slot_machine": True,
+                            "slot_result_amount": result_amount,
+                            "slot_score_delta": score_delta,
+                            "slot_contribution_delta": contribution_delta
+                        })
+                        state['reaction_mode'] = True
+                        print(f"  [슬롯머신] {parsed_name} {amount}원 -> '{candidate['title']}' / 점수 +{score_delta}, 기여도 +{contribution_delta}")
+                    else:
+                        print("  [슬롯머신] 켜져 있지만 선택된 리액션 후보가 없어 일반 리액션 매칭으로 처리합니다.")
+                except Exception as e:
+                    print(f"[슬롯머신 처리 오류] {e}")
                 
             # [비활성화] 닉네임 직접 매칭 자동 점수 가산 기능 해제 (모든 후원이 승인 대기함으로 모이도록 설정)
             # for bj in state.get(target_list_key, []):
@@ -1188,7 +1323,7 @@ def receive_donation():
                 print(f"[장부 기록 오류] {dbe}")
                 
             # 🎵 자동 리액션 송 연동 감지 (근사치 매칭: 후원금액 이하 중 가장 가까운 리액션)
-            if amount > 0:
+            if amount > 0 and not slot_result:
                 try:
                     with get_db_connection() as conn:
                         cursor = conn.cursor()
