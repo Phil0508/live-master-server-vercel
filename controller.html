@@ -953,6 +953,32 @@
                 </div>
 
                 <!-- 3. 쌓인 리액션 목록 (대기열) -->
+                <div style="display: flex; flex-direction: column; gap: 10px; padding: 12px; background: linear-gradient(135deg, rgba(255,0,85,0.12), rgba(0,229,255,0.08)); border-radius: 12px; border: 1px solid rgba(0,255,204,0.18);">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                        <div style="font-size: 13px; font-weight: bold; color: #fff;"><i class="fa-solid fa-dice" style="color:#ffd700;"></i> 슬롯머신 이벤트</div>
+                        <span id="slot-machine-status" style="font-size:11px; font-weight:900; color:#8e8e93;">꺼짐</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                        <label style="font-size:11px; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">발동 금액
+                            <input type="number" id="slot-trigger-amount" value="20000" style="height:30px; font-size:12px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; padding:0 8px;">
+                        </label>
+                        <label style="font-size:11px; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">진행 시간(분)
+                            <input type="number" id="slot-duration-minutes" value="20" style="height:30px; font-size:12px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; padding:0 8px;">
+                        </label>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted);">
+                        <span>남은 시간: <b id="slot-machine-remaining" style="color:#fff;">대기 중</b></span>
+                        <span>후보: <b id="slot-machine-selected-count" style="color:#ffd700;">0개 선택</b></span>
+                    </div>
+                    <div style="font-size:11px; color:#aaa; line-height:1.45;">
+                        선택한 리액션 중 하나가 랜덤으로 당첨됩니다. 슬롯 후원은 실제 점수 +2, 기여도는 당첨 리액션 금액/1만원으로 반영됩니다.
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="startSlotMachine()" class="primary" style="flex:1; height:34px; font-size:12px; font-weight:bold; border-radius:8px; justify-content:center;"><i class="fa-solid fa-play"></i> 시작</button>
+                        <button onclick="stopSlotMachine()" class="danger" style="flex:1; height:34px; font-size:12px; font-weight:bold; border-radius:8px; justify-content:center;"><i class="fa-solid fa-stop"></i> 종료</button>
+                    </div>
+                </div>
+
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                     <div style="font-size: 13px; font-weight: bold; color: #fff; display: flex; justify-content: space-between; align-items: center;">
                         <span><i class="fa-solid fa-list-ol" style="color: var(--accent);"></i> 대기 중인 리액션 큐</span>
@@ -1613,9 +1639,101 @@
             }
         }
 
+        function ensureSlotMachineState() {
+            if (!gd) return;
+            if (!gd.slot_machine || typeof gd.slot_machine !== 'object') gd.slot_machine = {};
+            const slot = gd.slot_machine;
+            if (typeof slot.active === 'undefined') slot.active = false;
+            if (!slot.started_at) slot.started_at = 0;
+            if (!slot.duration_ms) slot.duration_ms = 20 * 60 * 1000;
+            if (!slot.trigger_amount) slot.trigger_amount = 20000;
+            if (!Array.isArray(slot.selected_reaction_ids)) slot.selected_reaction_ids = [];
+            if (slot.active && slot.started_at && Date.now() - slot.started_at >= slot.duration_ms) {
+                slot.active = false;
+            }
+        }
+
+        function getSlotRemainingText() {
+            ensureSlotMachineState();
+            const slot = gd.slot_machine;
+            if (!slot.active || !slot.started_at) return '대기 중';
+            const remainMs = Math.max(0, slot.duration_ms - (Date.now() - slot.started_at));
+            const mins = Math.floor(remainMs / 60000);
+            const secs = Math.floor((remainMs % 60000) / 1000);
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function renderSlotMachinePanel() {
+            if (!gd) return;
+            ensureSlotMachineState();
+            const slot = gd.slot_machine;
+            const statusEl = document.getElementById('slot-machine-status');
+            const remainEl = document.getElementById('slot-machine-remaining');
+            const selectedEl = document.getElementById('slot-machine-selected-count');
+            const triggerEl = document.getElementById('slot-trigger-amount');
+            const durationEl = document.getElementById('slot-duration-minutes');
+
+            if (statusEl) {
+                statusEl.innerText = slot.active ? '진행 중' : '꺼짐';
+                statusEl.style.color = slot.active ? '#00ffcc' : '#8e8e93';
+            }
+            if (remainEl) remainEl.innerText = getSlotRemainingText();
+            if (selectedEl) selectedEl.innerText = `${slot.selected_reaction_ids.length}개 선택`;
+            if (triggerEl && document.activeElement !== triggerEl) triggerEl.value = slot.trigger_amount || 20000;
+            if (durationEl && document.activeElement !== durationEl) durationEl.value = Math.round((slot.duration_ms || 1200000) / 60000);
+
+            document.querySelectorAll('.chk-slot-reaction').forEach(chk => {
+                const id = parseInt(chk.dataset.id, 10);
+                chk.checked = slot.selected_reaction_ids.map(Number).includes(id);
+            });
+        }
+
+        async function startSlotMachine() {
+            ensureSlotMachineState();
+            const triggerInput = document.getElementById('slot-trigger-amount');
+            const durationInput = document.getElementById('slot-duration-minutes');
+            gd.slot_machine.trigger_amount = Math.max(1000, parseInt(triggerInput?.value || 20000, 10));
+            const durationMinutes = Math.max(1, parseInt(durationInput?.value || 20, 10));
+            gd.slot_machine.duration_ms = durationMinutes * 60 * 1000;
+
+            if (!gd.slot_machine.selected_reaction_ids.length) {
+                premiumAlert('슬롯 후보 리액션을 1개 이상 선택해주세요.', '슬롯머신 설정 필요', 'warning');
+                return;
+            }
+
+            gd.slot_machine.active = true;
+            gd.slot_machine.started_at = Date.now();
+            await pushAPI();
+            premiumAlert('슬롯머신 이벤트를 시작했습니다. 2만원 후원부터 슬롯이 작동합니다.', '슬롯머신 ON', 'success');
+        }
+
+        async function stopSlotMachine() {
+            ensureSlotMachineState();
+            gd.slot_machine.active = false;
+            gd.slot_machine.started_at = 0;
+            await pushAPI();
+            premiumAlert('슬롯머신 이벤트를 종료했습니다.', '슬롯머신 OFF', 'success');
+        }
+
+        function toggleSlotReaction(itemId, checked) {
+            ensureSlotMachineState();
+            const ids = gd.slot_machine.selected_reaction_ids.map(Number).filter(id => Number.isFinite(id));
+            const parsedId = parseInt(itemId, 10);
+            if (checked) {
+                if (!ids.includes(parsedId)) ids.push(parsedId);
+            } else {
+                const idx = ids.indexOf(parsedId);
+                if (idx !== -1) ids.splice(idx, 1);
+            }
+            gd.slot_machine.selected_reaction_ids = ids;
+            renderSlotMachinePanel();
+            pushAPI();
+        }
+
         function renderUI() {
             if(document.activeElement.tagName === "INPUT" && !document.activeElement.id.startsWith("chk") && !document.activeElement.classList.contains("setup-player-input") || document.activeElement.tagName === "TEXTAREA") return;
             
+            ensureSlotMachineState();
             let isActive = gd.broadcast_active || false;
             document.getElementById('setup-broadcast-area').style.display = isActive ? 'none' : 'block';
             document.getElementById('active-broadcast-area').style.display = isActive ? 'block' : 'none';
@@ -1865,6 +1983,7 @@
                 document.getElementById('reaction-vol-text').innerText = Math.round((gd.reaction_volume !== undefined ? gd.reaction_volume : 0.5) * 100) + '%';
             }
             renderReactionQueue();
+            renderSlotMachinePanel();
 
             renderRouletteTab();
         }
@@ -2071,7 +2190,9 @@
             if(donIdx === -1) return;
             let don = gd.pending_donations[donIdx];
 
-            let addPoint = Math.round(don.amount / 10000);
+            let slotResult = don.slot_result || null;
+            let addPoint = slotResult ? (slotResult.score_delta || 2) : Math.round(don.amount / 10000);
+            let contributionPoint = slotResult ? (slotResult.contribution_delta || 0) : addPoint;
             
             let isExtra = gd.extra_game_active || false;
             let targetList = isExtra ? gd.extra_bjs : gd.bjs;
@@ -2079,14 +2200,14 @@
             if (targetList[bjIdx]) {
                 targetList[bjIdx].score += addPoint;
                 if(targetList[bjIdx].contribution === undefined) targetList[bjIdx].contribution = 0;
-                targetList[bjIdx].contribution += addPoint;
+                targetList[bjIdx].contribution += contributionPoint;
 
                 targetList.sort((a, b) => (b.contribution || 0) - (a.contribution || 0));
                 if (isExtra) gd.extra_bjs = targetList; else gd.bjs = targetList;
 
                 let timeStr = new Date().toLocaleTimeString('ko-KR', { hour12: false });
                 if (!gd.logs) gd.logs = [];
-                gd.logs.unshift({time: timeStr, name: targetList[bjIdx].name, val: addPoint});
+                gd.logs.unshift({time: timeStr, name: slotResult ? `슬롯머신 ${targetList[bjIdx].name}` : targetList[bjIdx].name, val: addPoint});
                 if(gd.logs.length > 200) gd.logs.pop();
             }
 
@@ -3295,6 +3416,9 @@
 
         initSSE();
         setInterval(updateControllerTimer, 100);
+        setInterval(() => {
+            if (gd && gd.slot_machine) renderSlotMachinePanel();
+        }, 1000);
 
         document.addEventListener('mousedown', function(event) {
             let popover = document.getElementById('contrib-popover');
@@ -3716,6 +3840,9 @@
                         <div class="reaction-card" style="position: relative; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.2); ${!item.is_enabled ? 'opacity: 0.65; filter: grayscale(40%);' : ''}">
                             <!-- Select Checkbox -->
                             <input type="checkbox" class="chk-select-reaction" data-id="${item.id}" onchange="updateSelectAllState()" style="position: absolute; top: 10px; left: 10px; z-index: 10; width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: var(--accent);">
+                            <label style="position:absolute; left:34px; top:8px; z-index:10; display:flex; align-items:center; gap:4px; background:rgba(0,0,0,0.72); border:1px solid rgba(255,215,0,0.35); color:#ffd700; border-radius:999px; padding:3px 7px; font-size:10px; font-weight:900; cursor:pointer;">
+                                <input type="checkbox" class="chk-slot-reaction" data-id="${item.id}" onchange="toggleSlotReaction(${item.id}, this.checked)" style="width:12px; height:12px; margin:0; accent-color:#ffd700;"> 슬롯
+                            </label>
                             
                             <!-- Toggle switch -->
                             <div style="position: absolute; top: 8px; right: 8px; z-index: 10; display: flex; align-items: center; gap: 4px; background: rgba(10,10,12,0.75); backdrop-filter: blur(4px); padding: 3px 6px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
@@ -3747,6 +3874,7 @@
                         </div>
                     `;
                 }).join('');
+                renderSlotMachinePanel();
             } catch (e) {
                 container.innerHTML = `<div style="color: var(--danger); text-align: center; grid-column: 1 / -1; padding: 50px 0;">통신 실패: ${e.message}</div>`;
             }
