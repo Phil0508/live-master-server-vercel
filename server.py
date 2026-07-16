@@ -1248,7 +1248,7 @@ def receive_donation():
 
             slot_result = None
             slot = normalize_slot_machine_state(state)
-            if amount >= int(slot.get('trigger_amount') or 20000) and slot.get('active'):
+            if amount == int(slot.get('trigger_amount') or 20000) and slot.get('active'):
                 try:
                     candidate = get_slot_reaction_candidate(slot.get('selected_reaction_ids') or [])
                     if candidate:
