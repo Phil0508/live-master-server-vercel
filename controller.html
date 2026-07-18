@@ -3888,11 +3888,10 @@
                             <div style="display: flex; gap: 6px; margin-top: 5px; z-index: 2;">
                                 <button class="primary" onclick="playReaction(${item.id})" style="flex: 1; height: 30px; font-size: 11px; font-weight: bold; border-radius: 8px; justify-content: center; padding: 0;">
                                     <i class="fa-solid fa-play"></i> 방송 송출
-                                </button>
-                                <button class="secondary" onclick='openEditReactionModal(${item.id}, ${escapeHTML(JSON.stringify(item.title))}, ${item.amount})' style="width: 30px; height: 30px; border-radius: 8px; justify-content: center; padding: 0; flex-shrink: 0; background: rgba(0, 255, 204, 0.05); border-color: rgba(0, 255, 204, 0.15); color: var(--accent);">
+                                <button class="secondary" onclick="openEditReactionModalById(${item.id})" style="width: 30px; height: 30px; border-radius: 8px; justify-content: center; padding: 0; flex-shrink: 0; background: rgba(0, 255, 204, 0.05); border-color: rgba(0, 255, 204, 0.15); color: var(--accent);">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
-                                <button class="danger" onclick='deleteReaction(${item.id}, ${escapeHTML(JSON.stringify(item.title))})' style="width: 30px; height: 30px; border-radius: 8px; justify-content: center; padding: 0; flex-shrink: 0;">
+                                <button class="danger" onclick="deleteReactionById(${item.id})" style="width: 30px; height: 30px; border-radius: 8px; justify-content: center; padding: 0; flex-shrink: 0;">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </div>
@@ -3917,6 +3916,24 @@
             } catch (e) {
                 premiumAlert("송출 실패: " + e.message, "통신 오류", "warning");
             }
+        }
+
+        function openEditReactionModalById(itemId) {
+            fetch('/api/reaction/list').then(r => r.json()).then(list => {
+                let item = list.find(x => x.id === itemId);
+                if (item) {
+                    openEditReactionModal(item.id, item.title, item.amount);
+                }
+            });
+        }
+
+        function deleteReactionById(itemId) {
+            fetch('/api/reaction/list').then(r => r.json()).then(list => {
+                let item = list.find(x => x.id === itemId);
+                if (item) {
+                    deleteReaction(item.id, item.title);
+                }
+            });
         }
 
         async function deleteReaction(itemId, title) {
