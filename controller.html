@@ -1282,67 +1282,101 @@
     </div>
 
     <div id="tab-system" class="tab-content">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-            <div class="group-box" style="margin-bottom: 0;">
-                <div class="group-title"><i class="fa-solid fa-shield-halved"></i> OTP 보안 설정</div>
-                    <div style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">
-                        현재 모바일 구글 OTP 연동 보안 설정입니다. 신규 기기를 등록하거나 보안 설정을 확인하시려면 아래 페어링 페이지로 이동하세요.
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+            
+            <!-- 🏦 1. 은행 통장 DB 원장 실시간 카드 (신규) -->
+            <div class="group-box" style="margin-bottom: 0; background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(0,0,0,0.3)); border: 1px solid rgba(255,215,0,0.25);">
+                <div class="group-title" style="color: #ffd700;"><i class="fa-solid fa-piggy-bank"></i> 은행 계좌 거래 내역서 (Bank Ledger)</div>
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                        모든 후원, 점수 변동, 슬롯 잭팟이 <strong>은행 입출금 통장 거래 내역</strong>처럼 1줄씩 영구 기록됩니다.
                     </div>
-                    <div style="background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: var(--radius-md); border: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 10px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                    <div style="background: rgba(0, 0, 0, 0.4); padding: 14px; border-radius: var(--radius-md); border: 1px solid rgba(255,215,0,0.15); display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                            <span style="color: var(--text-muted);">통장 DB 저장 방식</span>
+                            <span style="color: #00ffcc; font-weight: bold;"><i class="fa-solid fa-lock"></i> 누적 장부 (Append-Only)</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                            <span style="color: var(--text-muted);">수학적 잔액 검증</span>
+                            <span style="color: #ffd700; font-weight: bold;">100% 무결점 동기화</span>
+                        </div>
+                    </div>
+                    <button onclick="openBankLedgerModal()" class="primary" style="width: 100%; height: 38px; font-weight: bold; border-radius: 10px; justify-content: center; background: linear-gradient(135deg, #ffd700, #ff9100); color: #000; font-size: 13px; cursor: pointer;">
+                        <i class="fa-solid fa-receipt"></i> 플레이어 통장 거래 내역서 열람
+                    </button>
+                </div>
+            </div>
+
+            <!-- ⚡ 2. 서버 & 핑 상태 모니터링 카드 -->
+            <div class="group-box" style="margin-bottom: 0;">
+                <div class="group-title"><i class="fa-solid fa-server"></i> 서버 및 핑(Ping) 모니터링</div>
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                        실시간 네트워크 응답 지연 시간 및 데이터베이스 구동 모드 정보입니다.
+                    </div>
+                    <div style="background: rgba(255, 255, 255, 0.03); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                            <span style="color: var(--text-muted);">실시간 핑 (Ping RTT)</span>
+                            <span style="color: #00ffcc; font-weight: bold;" id="latency-val">측정 중...</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                            <span style="color: var(--text-muted);">데이터베이스 모드</span>
+                            <span style="color: var(--accent); font-weight: bold;" id="sys-db-mode">로컬 (SQLite)</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                            <span style="color: var(--text-muted);">등록된 플레이어</span>
+                            <span style="color: #fff; font-weight: bold;" id="sys-player-count">0명</span>
+                        </div>
+                    </div>
+                    <button onclick="checkLatency()" class="secondary" style="width: 100%; height: 34px; font-weight: bold; border-radius: 8px; justify-content: center; font-size: 12px; cursor: pointer;">
+                        <i class="fa-solid fa-rotate"></i> 핑 재측정
+                    </button>
+                </div>
+            </div>
+
+            <!-- 🔒 3. OTP 보안 & 게이트 카드 -->
+            <div class="group-box" style="margin-bottom: 0;">
+                <div class="group-title"><i class="fa-solid fa-shield-halved"></i> 보안 및 게이트웨이</div>
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                        모바일 구글 OTP 연동 보안 및 조종실 접근 게이트 주소입니다.
+                    </div>
+                    <div style="background: rgba(255, 255, 255, 0.03); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 13px;">
                             <span style="color: var(--text-muted);">보안 OTP 주소</span>
                             <a href="/setup" target="_blank" style="color: var(--accent); font-weight: bold; text-decoration: none;">/setup 바로가기 <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                         </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 13px;">
                             <span style="color: var(--text-muted);">로그인 게이트</span>
                             <a href="/login" target="_blank" style="color: var(--gold); font-weight: bold; text-decoration: none;">/login 바로가기 <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                         </div>
                     </div>
-                    <div style="font-size: 12px; color: var(--text-muted);">
-                        * 주의: 외부 망에서 접속 시 반드시 서버 비밀번호(0508)를 알고 있어야 등록 가능합니다.
-                    </div>
-                </div>
-
-            <div class="group-box" style="margin-bottom: 0;">
-                <div class="group-title"><i class="fa-solid fa-database"></i> 클라우드 영구 저장소 정보</div>
-                <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <div style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">
-                        서버의 데이터 저장소 작동 유형과 실시간 통계 정보입니다.
-                    </div>
-                    <div style="background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: var(--radius-md); border: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 10px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                            <span style="color: var(--text-muted);">데이터베이스 모드</span>
-                            <span style="color: var(--accent); font-weight: bold;" id="sys-db-mode">로컬 (SQLite)</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                            <span style="color: var(--text-muted);">플레이어 수</span>
-                            <span style="color: #fff; font-weight: bold;" id="sys-player-count">0명</span>
-                        </div>
-                    </div>
-                    <button id="btn-end-broadcast" onclick="endBroadcast()" style="display: none; width: 100%; justify-content: center; background: var(--danger); border-color: var(--danger); color: #fff; height: 42px; font-weight: bold; margin-bottom: 10px;"><i class="fa-solid fa-power-off"></i> 방송 종료</button>
-                    <button style="width: 100%; justify-content: center; background: rgba(255, 69, 58, 0.1); border-color: rgba(255, 69, 58, 0.3); color: var(--danger);" onclick="triggerServerLogout()"><i class="fa-solid fa-right-from-bracket"></i> 제어 센터 로그아웃</button>
+                    <button style="width: 100%; height: 34px; justify-content: center; background: rgba(255, 69, 58, 0.1); border: 1px solid rgba(255, 69, 58, 0.3); color: var(--danger); font-weight: bold; border-radius: 8px; font-size: 12px; cursor: pointer;" onclick="triggerServerLogout()">
+                        <i class="fa-solid fa-right-from-bracket"></i> 제어 센터 로그아웃
+                    </button>
                 </div>
             </div>
 
+            <!-- 💾 4. 데이터 오프라인 백업 및 방송 제어 카드 -->
             <div class="group-box" style="margin-bottom: 0;">
-                <div class="group-title"><i class="fa-solid fa-file-export"></i> 오프라인 비상 백업</div>
-                <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <div style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">
-                        인터넷 장애나 클라우드 서버 중단에 대비해 현재 방송의 상태 전체를 파일로 소장하세요.
+                <div class="group-title"><i class="fa-solid fa-file-export"></i> 백업 다운로드 & 방송 관리</div>
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                        현재 방송 상태 전체를 파일로 소장하거나 백업을 복원합니다.
                     </div>
-                    <div style="display: flex; gap: 8px; margin-top: auto;">
-                        <button onclick="downloadLocalBackupFile()" style="flex: 1; justify-content: center; height: 38px; display: inline-flex; align-items: center; gap: 6px; font-weight: bold; background: rgba(0, 191, 255, 0.15); border: 1px solid #00bfff; color: #00bfff; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,191,255,0.25)';" onmouseout="this.style.background='rgba(0,191,255,0.15)';">
-                            <i class="fa-solid fa-download"></i> 백업 다운로드
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="downloadLocalBackupFile()" style="flex: 1; height: 36px; justify-content: center; display: inline-flex; align-items: center; gap: 6px; font-weight: bold; background: rgba(0, 191, 255, 0.15); border: 1px solid #00bfff; color: #00bfff; border-radius: 8px; cursor: pointer; font-size: 12px;">
+                            <i class="fa-solid fa-download"></i> 백업 파일 생성
                         </button>
-                        <button onclick="document.getElementById('sys-upload-file').click()" style="flex: 1; justify-content: center; height: 38px; display: inline-flex; align-items: center; gap: 6px; font-weight: bold; background: rgba(0, 255, 204, 0.15); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,255,204,0.25)';" onmouseout="this.style.background='rgba(0,255,204,0.15)';">
-                            <i class="fa-solid fa-upload"></i> 백업 복원
+                        <button onclick="document.getElementById('sys-upload-file').click()" style="flex: 1; height: 36px; justify-content: center; display: inline-flex; align-items: center; gap: 6px; font-weight: bold; background: rgba(0, 255, 204, 0.15); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; cursor: pointer; font-size: 12px;">
+                            <i class="fa-solid fa-upload"></i> 백업 파일 복원
                         </button>
                     </div>
                     <input type="file" id="sys-upload-file" style="display: none;" accept=".json" onchange="uploadLocalBackupFile(event)">
-                    <div style="font-size: 12px; color: var(--text-muted);">
-                        * 파일형식: .json (다운로드한 원본 파일을 그대로 업로드하세요)
-                    </div>
+                    <button id="btn-end-broadcast" onclick="endBroadcast()" style="display: none; width: 100%; height: 36px; justify-content: center; background: var(--danger); border-color: var(--danger); color: #fff; font-weight: bold; border-radius: 8px; font-size: 12px; cursor: pointer;"><i class="fa-solid fa-power-off"></i> 방송 종료 및 초기화</button>
                 </div>
+            </div>
+
         </div>
     </div>
 
@@ -2968,6 +3002,68 @@
             }
         }
 
+        // 🏦 은행 통장 거래 내역서 모달 오픈
+        async function openBankLedgerModal() {
+            const modal = document.getElementById('bank-ledger-modal');
+            if (modal) modal.style.display = 'flex';
+            
+            // 플레이어 목록 채우기
+            const select = document.getElementById('bank-player-select');
+            if (select && gd && gd.bjs) {
+                select.innerHTML = gd.bjs.map(b => `<option value="${b.name}">${b.name} (현재: ${b.score}점)</option>`).join('');
+                if (gd.bjs.length > 0) {
+                    fetchBankStatement(gd.bjs[0].name);
+                }
+            }
+        }
+
+        function closeBankLedgerModal() {
+            const modal = document.getElementById('bank-ledger-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function fetchBankStatement(playerName) {
+            if (!playerName) return;
+            const tbody = document.getElementById('bank-statement-tbody');
+            if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="padding: 30px; text-align: center; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> 통장 내역 로딩 중...</td></tr>`;
+            
+            try {
+                const res = await fetch(`/api/bank/statement/${encodeURIComponent(playerName)}`);
+                const data = await res.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('bank-modal-score').innerText = `${data.current_score_balance.toLocaleString()}점`;
+                    document.getElementById('bank-modal-contrib').innerText = `${data.current_contrib_balance.toLocaleString()}점`;
+                    
+                    const history = data.statement_history || [];
+                    if (history.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="5" style="padding: 30px; text-align: center; color: var(--text-muted);">통장 거래 내역이 없습니다.</td></tr>`;
+                    } else {
+                        tbody.innerHTML = history.map(h => {
+                            const isPlus = h.score_change >= 0;
+                            const badgeColor = isPlus ? '#00ffcc' : '#ff453a';
+                            const changeStr = isPlus ? `+${h.score_change.toLocaleString()}` : h.score_change.toLocaleString();
+                            
+                            return `
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <td style="padding: 10px; color: var(--text-muted); font-size: 12px;">${h.timestamp}</td>
+                                    <td style="padding: 10px; text-align: center;">
+                                        <span style="font-size: 11px; padding: 2px 8px; border-radius: 6px; background: rgba(255,255,255,0.08); color: #fff; font-weight: bold;">${h.tx_type}</span>
+                                    </td>
+                                    <td style="padding: 10px; text-align: right; font-weight: bold; color: ${badgeColor};">${changeStr}점</td>
+                                    <td style="padding: 10px; text-align: right; font-weight: bold; color: #ffd700;">${h.score_balance.toLocaleString()}점</td>
+                                    <td style="padding: 10px; color: #ddd;">${h.description || '-'}</td>
+                                </tr>
+                            `;
+                        }).join('');
+                    }
+                }
+            } catch(e) {
+                console.error("Failed to fetch bank statement:", e);
+                if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="padding: 30px; text-align: center; color: var(--danger);">통장 내역 불러오기 실패</td></tr>`;
+            }
+        }
+
         // 📥 오프라인 로컬 백업 다운로드
         function downloadLocalBackupFile() {
             if (!gd) {
@@ -4553,5 +4649,55 @@
         </div>
     </div>
 
+    <!-- 🏦 은행 통장 거래 내역서 모달 (신규) -->
+    <div id="bank-ledger-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.75); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="width: 90%; max-width: 850px; max-height: 85vh; background: #0e1217; border: 1px solid rgba(255,215,0,0.3); border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.7); display: flex; flex-direction: column; overflow: hidden; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+            
+            <!-- 모달 헤더 -->
+            <div style="padding: 18px 24px; background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(0,0,0,0.4)); border-bottom: 1px solid rgba(255,215,0,0.25); display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 16px; font-weight: 900; color: #ffd700; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-piggy-bank"></i> 플레이어 은행 통장 거래 내역서 (Bank Ledger)
+                </div>
+                <button onclick="closeBankLedgerModal()" style="background: transparent; border: none; color: #8e8e93; font-size: 20px; cursor: pointer; padding: 4px;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- 필터 & 잔액 서머리 바 -->
+            <div style="padding: 14px 24px; background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--border-light); display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">조회 플레이어:</span>
+                <select id="bank-player-select" onchange="fetchBankStatement(this.value)" style="height: 36px; padding: 0 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; font-size: 13px; font-weight: bold; cursor: pointer; outline: none;">
+                    <!-- JS dynamic options -->
+                </select>
+
+                <div style="margin-left: auto; display: flex; gap: 20px; font-size: 13px; align-items: center;">
+                    <span style="color: var(--text-muted);">통장 총 잔액: <b id="bank-modal-score" style="color: #ffd700; font-size: 16px;">0점</b></span>
+                    <span style="color: var(--text-muted);">총 기여도: <b id="bank-modal-contrib" style="color: #00ffcc; font-size: 16px;">0점</b></span>
+                </div>
+            </div>
+
+            <!-- 거래 내역 테이블 -->
+            <div style="flex: 1; overflow-y: auto; padding: 16px 24px; background: rgba(0,0,0,0.2);">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.12); color: var(--text-muted); font-weight: 600; text-align: left;">
+                            <th style="padding: 12px;">일시 (Timestamp)</th>
+                            <th style="padding: 12px; text-align: center;">거래 유형</th>
+                            <th style="padding: 12px; text-align: right;">변동 금액</th>
+                            <th style="padding: 12px; text-align: right; color: #ffd700;">거래 후 잔액</th>
+                            <th style="padding: 12px;">적요 / 비고</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bank-statement-tbody">
+                        <tr><td colspan="5" style="padding: 40px; text-align: center; color: var(--text-muted);">플레이어를 선택하면 통장 거래 내역이 출력됩니다.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 모달 푸터 -->
+            <div style="padding: 14px 24px; background: rgba(0,0,0,0.5); border-top: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-muted);">
+                <span><i class="fa-solid fa-lock" style="color: #00ffcc;"></i> 본 통장 내역은 데이터베이스(Bank Ledger)에 무한 보존되며 덮어쓰기 위험이 없습니다.</span>
+                <button onclick="closeBankLedgerModal()" class="secondary" style="height: 34px; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">닫기</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
