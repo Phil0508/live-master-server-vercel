@@ -21,6 +21,8 @@
         .widget { position: absolute; display: flex; align-items: flex-start; justify-content: flex-start; outline: 2px solid transparent; outline-offset: 2px; border-radius: 6px; cursor: grab; user-select: none; width: max-content; height: max-content; transform-origin: top left; transition: outline-color 0.1s; } 
         .widget:active { cursor: grabbing; } .widget:hover { outline-color: rgba(255, 255, 255, 0.3); } .widget.selected { outline-color: var(--accent); z-index: 1000 !important; }
         .widget > div { pointer-events: none; }
+        /* 위젯 컨테이너 자체에도 클릭 영역 확보용 투명 배경 */
+        .widget::before { content: ""; position: absolute; inset: 0; background: rgba(255,255,255,0.001); pointer-events: auto; z-index: -1; }
         .resize-handle { position: absolute; bottom: -8px; right: -8px; width: 24px; height: 24px; background: #fff; border: 4px solid var(--accent); border-radius: 50%; cursor: nwse-resize; display: none; z-index: 100; pointer-events: auto !important; box-shadow: 0 2px 5px rgba(0,0,0,0.5); } 
         .widget.selected .resize-handle { display: block; }
 
