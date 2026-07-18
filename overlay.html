@@ -831,7 +831,7 @@
                 </div>
 
                 <!-- 🏃‍♀️ 퇴근전쟁(퇴근빵) 목표 달성 레이스 위젯 -->
-                <div id="home-race-container" class="widget-container" style="opacity: 0; visibility: hidden;">
+                <div id="home-race-container" class="widget-container" style="left: 21px; top: 900px; opacity: 0; visibility: hidden;">
                     <div class="home-race-box" id="home-race-box">
                         <div class="home-race-title">🏃‍♀️ 퇴근빵</div>
                         <div id="home-race-rows"></div>
@@ -1428,7 +1428,12 @@
                 } else { flashed = false; }
 
                 // 🏃‍♀️ [퇴근전쟁(퇴근빵)] 목표 달성 레이스 렌더링
+                const homeRaceEl = document.getElementById('home-race-container');
                 if (d.home_race_enabled && bjs.length > 0) {
+                    if (homeRaceEl) {
+                        homeRaceEl.style.opacity = 1;
+                        homeRaceEl.style.visibility = 'visible';
+                    }
                     const homeGoals = d.home_goals || {};
                     const rowsEl = document.getElementById('home-race-rows');
                     const goalLineEl = document.getElementById('home-race-goal-line');
