@@ -1119,8 +1119,8 @@
                     if (audio) audio.volume = d.reaction_volume;
                 }
 
-                // 💡 [번외 게임 활성화 상태 동적 체킹 및 슬라이딩 트리거]
-                let extraActive = d.extra_game_active || false;
+                // 💡 [번외 게임 & 퇴근게임 활성화 상태 동적 체킹 및 메인 랭킹판 슬라이딩 치우기 트리거]
+                let extraActive = Boolean(d.extra_game_active || d.off_work_active || d.offwork_active || d.home_race_active);
                 if (currentExtraActiveState !== extraActive) {
                     currentExtraActiveState = extraActive;
                     if (lastLayoutData) applyLayout(lastLayoutData);
