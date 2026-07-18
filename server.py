@@ -669,13 +669,25 @@ def save_data_sync(new_data, is_initial=False):
                     if diff != 0:
                         cursor.execute(
                             db_query("INSERT INTO donation_history (timestamp, name, amount, current_total, message, source) VALUES (?, ?, ?, ?, ?, ?)"),
-                            (time.strftime('%Y-%m-%d %H:%M:%S'), p_name, diff, p_score, "수동 점수 조작", "mobile")
+                            (time.strftime('%Y-%m-%d %H:%M:%S'), p_name, diff, p_score, "수동 점수 변동", "system")
                         )
             
-            # 2. 플레이어 테이블 갱신
-            cursor.execute(db_query("DELETE FROM players"))
+            # 2. 플레이어 테이블 안전 개별 갱신 (DELETE 통째 삭제 폐지 -> UPSERT 개별 갱신)
             for bj in new_data.get("bjs", []):
-                cursor.execute(db_query("INSERT INTO players (name, score, contribution) VALUES (?, ?, ?)"), (bj["name"], bj["score"], bj.get("contribution", 0)))
+                p_name = bj["name"]
+                p_score = int(bj.get("score") or 0)
+                p_contrib = int(bj.get("contribution") or 0)
+                
+                if IS_POSTGRES:
+                    cursor.execute(
+                        "INSERT INTO players (name, score, contribution) VALUES (%s, %s, %s) ON CONFLICT (name) DO UPDATE SET score = EXCLUDED.score, contribution = EXCLUDED.contribution",
+                        (p_name, p_score, p_contrib)
+                    )
+                else:
+                    cursor.execute(
+                        "INSERT INTO players (name, score, contribution) VALUES (?, ?, ?) ON CONFLICT(name) DO UPDATE SET score = excluded.score, contribution = excluded.contribution",
+                        (p_name, p_score, p_contrib)
+                    )
             
             # 3. 설정 상태 키-값 저장 (변경된 값만 필터링하여 데이터베이스 트래픽 최소화)
             for key, value in new_data.items():
