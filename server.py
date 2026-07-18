@@ -386,7 +386,6 @@ def init_db():
                     description TEXT
                 )
             """)
-        else:
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS donation_history (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
