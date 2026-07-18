@@ -1840,33 +1840,32 @@ def get_reaction_file(file_id):
         cache_dir = os.path.join(app.root_path, 'media_cache')
         os.makedirs(cache_dir, exist_ok=True)
 
-        # 1순위: media_cache 폴더 내의 로컬 파일 존재 여부 0ms 탐색 (ID 패턴 또는 파일명)
-        if os.path.exists(cache_dir):
-            for fname in os.listdir(cache_dir):
-                if fname.startswith(f"{file_id}_") or fname == str(file_id):
-                    local_file_path = os.path.join(cache_dir, fname)
-                    if os.path.isfile(local_file_path) and os.path.getsize(local_file_path) > 0:
-                        import mimetypes
-                        mime, _ = mimetypes.guess_type(local_file_path)
-                        mime = mime or 'application/octet-stream'
-                        
-                        response = send_file(
-                            local_file_path,
-                            mimetype=mime,
-                            as_attachment=False,
-                            conditional=True
-                        )
-                        response.headers.set('Cache-Control', 'public, max-age=31536000')
-                        response.headers.set('Access-Control-Allow-Origin', '*')
-                        return response
+        # 1순위: media_cache 로컬 디렉토리 실물 파일 0ms 최우선 탐색
+        for fname in os.listdir(cache_dir):
+            if fname.startswith(f"{file_id}_") or fname == str(file_id):
+                local_file_path = os.path.join(cache_dir, fname)
+                if os.path.isfile(local_file_path) and os.path.getsize(local_file_path) > 0:
+                    import mimetypes
+                    mime, _ = mimetypes.guess_type(local_file_path)
+                    mime = mime or 'application/octet-stream'
+                    
+                    response = send_file(
+                        local_file_path,
+                        mimetype=mime,
+                        as_attachment=False,
+                        conditional=True
+                    )
+                    response.headers.set('Cache-Control', 'public, max-age=31536000')
+                    response.headers.set('Access-Control-Allow-Origin', '*')
+                    return response
 
-        # 2순위: DB 레코드 탐색 및 Supabase 백그라운드 자동 스트리밍
+        # 2순위: 로컬 SQLite DB 바이너리 데이터 탐색 및 즉시 로컬 캐시 생성
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(db_query("SELECT filename, content_type, file_data FROM reaction_files WHERE id = ?"), (file_id,))
             row = cursor.fetchone()
             if not row:
-                return jsonify({"status": "error", "message": "File not found"}), 404
+                return jsonify({"status": "error", "message": "Local reaction file not found"}), 404
             
             filename, content_type, file_data = row
             data_bytes = bytes(file_data) if file_data else b""
@@ -1886,21 +1885,7 @@ def get_reaction_file(file_id):
                 response.headers.set('Access-Control-Allow-Origin', '*')
                 return response
             else:
-                return jsonify({"status": "error", "message": "No file content"}), 404
-                
-            with open(meta_path, 'w', encoding='utf-8') as f:
-                json.dump({"filename": filename, "content_type": content_type}, f, ensure_ascii=False)
-            
-            response = send_file(
-                cache_path,
-                mimetype=content_type,
-                as_attachment=False,
-                download_name=filename,
-                conditional=True
-            )
-            response.headers.set('Cache-Control', 'public, max-age=31536000')
-            response.headers.set('Access-Control-Allow-Origin', '*')
-            return response
+                return jsonify({"status": "error", "message": "No local file content"}), 404
     except Exception as e:
         print(f"Error serving reaction file {file_id}: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
