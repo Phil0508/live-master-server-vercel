@@ -340,6 +340,19 @@ def init_db():
         
         if IS_POSTGRES:
             cursor.execute("""
+                CREATE TABLE IF NOT EXISTS bank_ledger (
+                    id SERIAL PRIMARY KEY,
+                    timestamp TEXT NOT NULL,
+                    player_name TEXT NOT NULL,
+                    tx_type TEXT NOT NULL,
+                    score_change INTEGER NOT NULL,
+                    score_balance INTEGER NOT NULL,
+                    contrib_change INTEGER NOT NULL,
+                    contrib_balance INTEGER NOT NULL,
+                    description TEXT
+                )
+            """)
+            cursor.execute("""
                 CREATE TABLE IF NOT EXISTS donation_history (
                     id SERIAL PRIMARY KEY,
                     timestamp TEXT,
@@ -357,6 +370,20 @@ def init_db():
                     timestamp TEXT,
                     state_json TEXT,
                     summary TEXT
+                )
+            """)
+        else:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS bank_ledger (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    player_name TEXT NOT NULL,
+                    tx_type TEXT NOT NULL,
+                    score_change INTEGER NOT NULL,
+                    score_balance INTEGER NOT NULL,
+                    contrib_change INTEGER NOT NULL,
+                    contrib_balance INTEGER NOT NULL,
+                    description TEXT
                 )
             """)
         else:
@@ -647,6 +674,63 @@ def db_worker():
 
 threading.Thread(target=db_worker, daemon=True).start()
 
+# 🏦 은행 입출금 통장 거래내역 기록 및 수학적 잔액 검증 엔진
+def record_bank_transaction(player_name, score_change, contrib_change=0, tx_type="CHANGE", description=""):
+    try:
+        now_str = time.strftime('%Y-%m-%d %H:%M:%S')
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # 1. 현재 잔액 조회
+            cursor.execute(db_query("SELECT score, contribution FROM players WHERE name = ?"), (player_name,))
+            row = cursor.fetchone()
+            current_score = row[0] if row else 0
+            current_contrib = row[1] if row else 0
+            
+            # 2. 거래 후 잔액 산출
+            new_score_balance = current_score + score_change
+            new_contrib_balance = current_contrib + contrib_change
+            
+            # 3. 은행 장부에 영구 통장 내역 작성 (INSERT)
+            if IS_POSTGRES:
+                cursor.execute(
+                    """INSERT INTO bank_ledger 
+                       (timestamp, player_name, tx_type, score_change, score_balance, contrib_change, contrib_balance, description)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (now_str, player_name, tx_type, score_change, new_score_balance, contrib_change, new_contrib_balance, description)
+                )
+            else:
+                cursor.execute(
+                    """INSERT INTO bank_ledger 
+                       (timestamp, player_name, tx_type, score_change, score_balance, contrib_change, contrib_balance, description)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (now_str, player_name, tx_type, score_change, new_score_balance, contrib_change, new_contrib_balance, description)
+                )
+                
+            # 4. 플레이어 실시간 잔액 테이블 갱신 (UPSERT)
+            if IS_POSTGRES:
+                cursor.execute(
+                    "INSERT INTO players (name, score, contribution) VALUES (%s, %s, %s) ON CONFLICT (name) DO UPDATE SET score = EXCLUDED.score, contribution = EXCLUDED.contribution",
+                    (player_name, new_score_balance, new_contrib_balance)
+                )
+            else:
+                cursor.execute(
+                    "INSERT INTO players (name, score, contribution) VALUES (?, ?, ?) ON CONFLICT(name) DO UPDATE SET score = excluded.score, contribution = excluded.contribution",
+                    (player_name, new_score_balance, new_contrib_balance)
+                )
+                
+            return {
+                "player_name": player_name,
+                "score_change": score_change,
+                "score_balance": new_score_balance,
+                "contrib_change": contrib_change,
+                "contrib_balance": new_contrib_balance,
+                "timestamp": now_str
+            }
+    except Exception as e:
+        print(f"❌ [은행 통장 거래 기록 실패] {e}")
+        return None
+
 def save_data_sync(new_data, is_initial=False):
     global MEMORY_STATE
     
@@ -658,19 +742,21 @@ def save_data_sync(new_data, is_initial=False):
                 cursor.execute(db_query("SELECT name, score FROM players"))
                 old_scores = {row[0]: row[1] for row in cursor.fetchall()}
             
-            # 1. 수동 조작 시 장부 누적 (영수증 발급)
+            # 1. 수동 조작 및 점수 변동 시 은행 통장 거래 내역 누적 (라인 아이템 발급)
             if not is_initial:
                 for new_p in new_data.get("bjs", []):
                     p_name = new_p["name"]
                     p_score = new_p["score"]
+                    p_contrib = new_p.get("contribution", 0)
                     o_score = old_scores.get(p_name, 0)
                     diff = p_score - o_score
                     
                     if diff != 0:
                         cursor.execute(
                             db_query("INSERT INTO donation_history (timestamp, name, amount, current_total, message, source) VALUES (?, ?, ?, ?, ?, ?)"),
-                            (time.strftime('%Y-%m-%d %H:%M:%S'), p_name, diff, p_score, "수동 점수 변동", "system")
+                            (time.strftime('%Y-%m-%d %H:%M:%S'), p_name, diff, p_score, "점수 변동 (은행 통장 기록)", "system")
                         )
+                        record_bank_transaction(p_name, diff, 0, "MANUAL_CHANGE", f"점수 변동 ({diff:+}점)")
             
             # 2. 플레이어 테이블 안전 개별 갱신 (DELETE 통째 삭제 폐지 -> UPSERT 개별 갱신)
             for bj in new_data.get("bjs", []):
@@ -1706,6 +1792,45 @@ def reset_server_database():
         broadcast_event('update', MEMORY_STATE)
         return jsonify({"status": "success", "message": "데이터베이스가 성공적으로 완전히 리셋되었습니다."})
     except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/bank/statement/<player_name>', methods=['GET'])
+def get_bank_statement(player_name):
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                db_query("""SELECT timestamp, tx_type, score_change, score_balance, contrib_change, contrib_balance, description 
+                            FROM bank_ledger WHERE player_name = ? ORDER BY id DESC LIMIT 50"""),
+                (player_name,)
+            )
+            rows = cursor.fetchall()
+            statement = []
+            for r in rows:
+                statement.append({
+                    "timestamp": r[0],
+                    "tx_type": r[1],
+                    "score_change": r[2],
+                    "score_balance": r[3],
+                    "contrib_change": r[4],
+                    "contrib_balance": r[5],
+                    "description": r[6]
+                })
+            
+            cursor.execute(db_query("SELECT score, contribution FROM players WHERE name = ?"), (player_name,))
+            p_row = cursor.fetchone()
+            current_score = p_row[0] if p_row else 0
+            current_contrib = p_row[1] if p_row else 0
+            
+            return jsonify({
+                "status": "success",
+                "player_name": player_name,
+                "current_score_balance": current_score,
+                "current_contrib_balance": current_contrib,
+                "statement_history": statement
+            })
+    except Exception as e:
+        print(f"Error fetching bank statement: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/api/server/end_broadcast', methods=['POST'])
