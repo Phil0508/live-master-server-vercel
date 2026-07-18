@@ -830,8 +830,8 @@
                     </div>
                 </div>
 
-                <!-- 🏃‍♀️ 퇴근전쟁(퇴근빵) 목표 달성 레이스 위젯 -->
-                <div id="home-race-container" class="widget-container" style="left: 21px; top: 900px; opacity: 0; visibility: hidden;">
+                <!-- 🏃‍♀️ 퇴근전쟁(퇴근빵) 목표 달성 레이스 위젯 (랭킹판 자리를 대신 차지함) -->
+                <div id="home-race-container" class="widget-container" style="left: 50px; top: 50px; opacity: 0; visibility: hidden;">
                     <div class="home-race-box" id="home-race-box">
                         <div class="home-race-title">🏃‍♀️ 퇴근빵</div>
                         <div id="home-race-rows"></div>
@@ -1084,6 +1084,19 @@
                 const el = document.getElementById(id + '-container');
                 if (el) el.style.display = isActive ? '' : 'none';
             });
+
+            // 🏃‍♀️ 퇴근전쟁 모드가 켜져 있으면 기존 랭킹판을 감추고 그 자리에 퇴근빵 위젯을 표시
+            if (isActive) {
+                const rankingEl = document.getElementById('ranking-container');
+                const homeRaceContainerEl = document.getElementById('home-race-container');
+                if (d.home_race_enabled) {
+                    if (rankingEl) rankingEl.style.display = 'none';
+                    if (homeRaceContainerEl) homeRaceContainerEl.style.display = '';
+                } else {
+                    if (rankingEl) rankingEl.style.display = '';
+                    if (homeRaceContainerEl) homeRaceContainerEl.style.display = 'none';
+                }
+            }
             
             if (!isActive) return;
             

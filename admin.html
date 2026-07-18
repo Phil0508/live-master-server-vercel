@@ -37,6 +37,14 @@
 
         .acc-box-v2 { background: var(--excel-dark); border: 2px solid var(--excel-yellow); border-radius: 15px; padding: 15px 20px; width: 280px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); } .acc-top { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; } .acc-bank-tag { background: var(--excel-yellow); color: #000; font-weight: 900; font-size: 18px; padding: 4px 10px; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); } .acc-name-tag { color: #fff; font-size: 18px; font-weight: 800; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); } .acc-num-v2 { font-size: 38px; font-weight: 900; color: #fff; letter-spacing: 1px; text-shadow: 3px 3px 6px rgba(0,0,0,0.9); word-break: break-all; line-height: 1.2; }
 
+        .home-race-box { background: linear-gradient(160deg, rgba(30, 15, 30, 0.95), rgba(15, 8, 18, 0.97)); border: 3px solid #ff6fa5; border-radius: 22px; padding: 14px 18px; width: 380px; box-shadow: 0 15px 40px rgba(255, 105, 180, 0.35); }
+        .home-race-title { text-align: center; font-size: 16px; font-weight: 900; color: #fff; background: linear-gradient(90deg, #ff5da2, #ff8fc0); border-radius: 20px; padding: 6px 0; margin-bottom: 12px; letter-spacing: 1px; }
+        .home-race-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .home-race-name { width: 68px; font-size: 14px; font-weight: 800; color: #ffe0ef; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .home-race-bar-bg { flex: 1; height: 16px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid rgba(255, 182, 213, 0.35); overflow: hidden; }
+        .home-race-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #ff5da2, #ffb6d5); width: 40%; }
+        .home-race-nums { width: 108px; text-align: right; font-size: 13px; font-weight: 800; color: #fff; white-space: nowrap; }
+
         .match-wrapper { display: flex; flex-direction: column; align-items: center; gap: 15px; } .m-timer-pill { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(8px); border: 2px solid rgba(255,255,255,0.4); border-radius: 40px; padding: 8px 35px; color: #fff; font-size: 40px; font-weight: 900; transition: all 0.2s linear; } .m-team-container { display: flex; gap: 20px; } .m-team-box { display: flex; flex-direction: column; align-items: center; } .m-score-box { background: rgba(30, 30, 35, 0.9); border: 2px solid #444; width: 180px; height: 90px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 50px; font-weight: 900; } .m-name-box { background: #111; color: #fff; font-size: 24px; font-weight: 900; padding: 6px 25px; border: 3px solid var(--team-color); border-radius: 8px; margin-top: -15px; }
         
         .timer-explode { transform: scale(0) !important; opacity: 0 !important; }
@@ -108,6 +116,13 @@
                     </div>
                 </div>
 
+                <div class="widget" id="home-race" data-id="home-race" style="left:50px; top:50px; display: none;">
+                    <div class="home-race-box">
+                        <div class="home-race-title">🏃‍♀️ 퇴근빵</div>
+                        <div id="home-race-rows-admin"></div>
+                    </div>
+                </div>
+
                 <div class="widget" id="match" data-id="match" style="left:50px; top:780px; display: none;">
                     <div class="match-wrapper">
                         <div class="m-timer-pill" id="m-timer">00:00</div>
@@ -135,7 +150,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const canvasWrapper = document.getElementById('canvas-wrapper'); const canvasBoard = document.getElementById('canvas-board'); const mainArea = document.getElementById('main-area'); let scaleRatio = 1;
-            const widgetNames = { 'ranking': '🏆 랭킹판', 'gauge': '🔥 목표 게이지', 'account': '🏦 계좌 정보', 'match': '⚔️ 대결 보드', 'popup': '🔔 점수 팝업', 'takeover': '👑 1등 탈환 팝업', 'ticker_top': '📢 상단 전광판', 'ticker_bottom': '📢 하단 전광판', 'roulette': '🎡 행운의 룰렛' };
+            const widgetNames = { 'ranking': '🏆 랭킹판', 'gauge': '🔥 목표 게이지', 'account': '🏦 계좌 정보', 'match': '⚔️ 대결 보드', 'popup': '🔔 점수 팝업', 'takeover': '👑 1등 탈환 팝업', 'ticker_top': '📢 상단 전광판', 'ticker_bottom': '📢 하단 전광판', 'roulette': '🎡 행운의 룰렛', 'home-race': '🏃‍♀️ 퇴근빵 위젯' };
             function formatNum(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
             function escapeHTML(str) {
                 if (!str) return '';
@@ -232,6 +247,24 @@
                         document.getElementById('roulette').style.display = 'flex';
                     } else {
                         document.getElementById('roulette').style.display = 'none';
+                    }
+
+                    // 🏃‍♀️ 퇴근전쟁 모드가 켜져 있으면 랭킹판 대신 퇴근빵 위젯 표시
+                    if (d.home_race_enabled) {
+                        document.getElementById('ranking').style.display = 'none';
+                        document.getElementById('home-race').style.display = 'flex';
+                        const homeGoals = d.home_goals || {};
+                        let rowsHtml = '';
+                        bjs.forEach(b => {
+                            let goalAmt = homeGoals[b.name] || 0;
+                            let curAmt = b.contribution || 0;
+                            let pct = goalAmt > 0 ? Math.min(100, (curAmt / goalAmt) * 100) : 0;
+                            rowsHtml += `<div class="home-race-row"><div class="home-race-name">${escapeHTML(b.name)}</div><div class="home-race-bar-bg"><div class="home-race-bar-fill" style="width:${pct}%;"></div></div><div class="home-race-nums">${formatNum(curAmt)} / ${formatNum(goalAmt)}</div></div>`;
+                        });
+                        document.getElementById('home-race-rows-admin').innerHTML = rowsHtml;
+                    } else {
+                        document.getElementById('ranking').style.display = 'flex';
+                        document.getElementById('home-race').style.display = 'none';
                     }
                 } catch(e) {}
             }

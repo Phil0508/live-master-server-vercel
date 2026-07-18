@@ -724,15 +724,17 @@
         </div>
 
         <div class="group-box" id="home-race-box">
-            <div class="group-title" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <span><i class="fa-solid fa-person-running"></i> 🏃‍♀️ 퇴근전쟁(퇴근빵) 제어</span>
-                <label class="apple-switch" style="margin:0;">
+            <div class="group-title" style="display: flex; justify-content: space-between; align-items: center; width: 100%; cursor: pointer; margin-bottom: 0; border-bottom: none; padding-bottom: 0;" onclick="toggleHomeRacePanel(event)">
+                <span><i class="fa-solid fa-chevron-down" id="home-race-collapse-icon" style="transition: transform 0.25s ease; margin-right: 6px; transform: rotate(-90deg);"></i><i class="fa-solid fa-person-running"></i> 🏃‍♀️ 퇴근전쟁(퇴근빵) 제어</span>
+                <label class="apple-switch" style="margin:0;" onclick="event.stopPropagation()">
                     <input type="checkbox" id="chk-home-race" onchange="toggleOption('home_race_enabled')">
                     <span class="apple-slider"></span>
                 </label>
             </div>
-            <p style="color: var(--text-muted); font-size: 13px; margin: 8px 0 12px 0;">각 플레이어별 퇴근 목표 기여도를 설정하면, 오버레이에 개인별 진행 바가 표시되고 목표 달성 시 "퇴근!" 문구가 뜹니다.</p>
-            <div id="home-race-goal-inputs" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            <div id="home-race-panel-body" style="display: none; overflow: hidden;">
+                <p style="color: var(--text-muted); font-size: 13px; margin: 16px 0 12px 0; padding-top: 16px; border-top: 1px solid var(--border-light);">각 플레이어별 퇴근 목표 기여도를 설정하면, 오버레이에 개인별 진행 바가 표시되고 목표 달성 시 "퇴근!" 문구가 뜹니다.</p>
+                <div id="home-race-goal-inputs" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
         </div>
 
         <div class="table-responsive">
@@ -2419,6 +2421,16 @@
         function toggleMatchFire() { gd.match_data.fire_effect = !gd.match_data.fire_effect; pushAPI(); }
         function updateTheme() { gd.theme = document.getElementById('sel-theme').value; pushAPI(); }
         function updateGoal() { gd.target_goal = parseInt(document.getElementById('in-goal').value)||0; pushAPI(); }
+
+        function toggleHomeRacePanel(event) {
+            if (event) event.stopPropagation();
+            const body = document.getElementById('home-race-panel-body');
+            const icon = document.getElementById('home-race-collapse-icon');
+            if (!body) return;
+            const isOpen = body.style.display !== 'none';
+            body.style.display = isOpen ? 'none' : 'block';
+            if (icon) icon.style.transform = isOpen ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
 
         function renderHomeRaceGoalInputs() {
             const container = document.getElementById('home-race-goal-inputs');
