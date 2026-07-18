@@ -9,7 +9,8 @@ interface ExtraRankingBoardProps {
 const gameTypeLabels: Record<string, { label: string; color: string; icon: string }> = {
   'pokemon-pack': { label: '포켓몬 카드깡', color: '#FFD700', icon: '🃏' },
   'go-stop': { label: '고앤스톱', color: '#FF6B35', icon: '🎴' },
-  'custom': { label: '커스텀 게임', color: '#00D4FF', icon: '🎮' },
+  'off-work': { label: '퇴근 전쟁', color: '#FF3366', icon: '🚪🏃' },
+  'custom': { label: '커스텀 번외게임', color: '#00D4FF', icon: '🎮' },
 }
 
 const playerRowStyle: React.CSSProperties = {

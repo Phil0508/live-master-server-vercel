@@ -48,7 +48,7 @@ export interface ExtraGamePlayer {
   id: string
   name: string
   score: number
-  gameType: 'pokemon' | 'pokemon-pack' | 'go-stop' | 'custom' | string
+  gameType: 'pokemon' | 'pokemon-pack' | 'go-stop' | 'off-work' | 'custom' | string
   isActive: boolean
   isWinner?: boolean
   scoreChange?: number
@@ -58,7 +58,7 @@ export interface ExtraGamePlayer {
 
 export interface ExtraGameState {
   isVisible: boolean
-  gameType: 'pokemon' | 'pokemon-pack' | 'go-stop' | 'custom' | string | null
+  gameType: 'pokemon' | 'pokemon-pack' | 'go-stop' | 'off-work' | 'custom' | string | null
   players: ExtraGamePlayer[]
   slidePosition: 'hidden' | 'sliding-in' | 'visible' | 'sliding-out'
   currentRound?: number
