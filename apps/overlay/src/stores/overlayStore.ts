@@ -95,17 +95,15 @@ export const useOverlayStore = create<OverlayState>()(
           viewMode: visible ? 'MAIN_RANKING' : state.viewMode
         })),
 
-        setExtraRankingVisible: (visible) => set((state) => ({ 
+        setExtraRankingVisible: (visible) => set({ 
           extraRankingVisible: visible,
-          viewMode: visible ? 'EXTRA_GAME' : (state.viewMode === 'EXTRA_GAME' ? 'MAIN_RANKING' : state.viewMode),
-          rankingVisible: !visible && state.viewMode === 'EXTRA_GAME',
-        })),
+          viewMode: visible ? 'EXTRA_GAME' : 'MAIN_RANKING',
+        }),
 
-        setMatchVisible: (visible) => set((state) => ({ 
+        setMatchVisible: (visible) => set({ 
           matchVisible: visible,
-          viewMode: visible ? 'MATCH_MODE' : (state.viewMode === 'MATCH_MODE' ? 'MAIN_RANKING' : state.viewMode),
-          rankingVisible: !visible && state.viewMode === 'MATCH_MODE',
-        })),
+          viewMode: visible ? 'MATCH_MODE' : 'MAIN_RANKING',
+        }),
 
         setRouletteVisible: (visible) => set({ rouletteVisible: visible }),
         setSlotMachineVisible: (visible) => set({ slotMachineVisible: visible }),
@@ -190,14 +188,11 @@ export const useOverlayStore = create<OverlayState>()(
               matchData: payload,
               matchVisible: true,
               viewMode: 'MATCH_MODE',
-              rankingVisible: false,
-              extraRankingVisible: false,
             })
           } else if (type === 'match:end' || type === 'match:cancel') {
             set({
               matchVisible: false,
               viewMode: 'MAIN_RANKING',
-              rankingVisible: true,
             })
           } else if (type === 'match:timer') {
             set((state) => ({
@@ -213,14 +208,11 @@ export const useOverlayStore = create<OverlayState>()(
               extraRankingData: payload,
               extraRankingVisible: true,
               viewMode: 'EXTRA_GAME',
-              rankingVisible: false,
-              matchVisible: false,
             })
           } else if (type === 'extra:end' || type === 'extra:cancel') {
             set({
               extraRankingVisible: false,
               viewMode: 'MAIN_RANKING',
-              rankingVisible: true,
             })
           }
         },

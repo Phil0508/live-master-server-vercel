@@ -11,7 +11,9 @@ import { subscribeToRankings, subscribeToDonations, subscribeToRoulette, subscri
 
 function App() {
   const { 
-    viewMode,
+    rankingVisible,
+    extraRankingVisible,
+    matchVisible,
     rouletteVisible, 
     slotMachineVisible,
     vipCardVisible 
@@ -44,14 +46,20 @@ function App() {
 
   return (
     <div className="overlay-root" style={{ width: '1080px', height: '1920px', position: 'relative', overflow: 'hidden' }}>
-      {/* 🚀 전면 독점 화면 전환 (Exclusive View Mode Switcher) */}
-      <AnimatePresence mode="wait">
-        {viewMode === 'MAIN_RANKING' && <RankingContainer key="main-ranking" />}
-        {viewMode === 'EXTRA_GAME' && <ExtraRankingContainer key="extra-ranking" />}
-        {viewMode === 'MATCH_MODE' && <MatchContainer key="match-mode" />}
+      {/* 1. 메인 랭킹판 (배경 레이어) */}
+      {rankingVisible && <RankingContainer />}
+
+      {/* 2. 번외게임 / 퇴근전쟁 (우측 슬라이딩 전면 패널) */}
+      <AnimatePresence>
+        {extraRankingVisible && <ExtraRankingContainer key="extra-ranking-slide" />}
       </AnimatePresence>
 
-      {/* 🎰 미니게임 오버레이 모달들 (상시 레이어) */}
+      {/* 3. 대결 매치판 (상단 패널) */}
+      <AnimatePresence>
+        {matchVisible && <MatchContainer key="match-container-slide" />}
+      </AnimatePresence>
+
+      {/* 4. 미니게임 모달 오버레이들 */}
       {rouletteVisible && <RouletteContainer />}
       {slotMachineVisible && <SlotMachineContainer />}
       {vipCardVisible && <VIPPremiumCardContainer />}
