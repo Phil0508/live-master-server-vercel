@@ -1,16 +1,16 @@
 {
   "version": 2,
-  "regions": ["icn1"],
   "builds": [
     {
-      "src": "api/index.py",
-      "use": "@vercel/python"
+      "src": "apps/overlay/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/index.py"
+      "dest": "apps/overlay/$1"
     }
   ]
 }
