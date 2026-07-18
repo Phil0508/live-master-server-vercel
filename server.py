@@ -295,6 +295,8 @@ DEFAULT_STATE = {
     "extra_game_active": False,
     "extra_bjs": [],
     "roulette_enabled": False,
+    "home_race_enabled": False,
+    "home_goals": {},
     "broadcast_active": False,
     "saved_colors": ['#ff0055', '#00e5ff', '#ff9100', '#d500f9', '#00ff00', '#ffff00', '#ff0000', '#0000ff', '#ffffff'],
     "version": 1,

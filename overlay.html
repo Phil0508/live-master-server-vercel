@@ -139,58 +139,262 @@
         .row-bottom .b-name { color: var(--text-secondary); font-weight: 900; font-size: 20px; text-shadow: 0 0 5px var(--text-secondary); }
         .row-bottom .b-score { color: var(--text-secondary); font-weight: 900; font-size: 24px; text-shadow: 0 0 10px var(--text-secondary); position: relative; }
 
-        .excel-gauge-box { background: var(--excel-dark); border: 2px solid var(--excel-border); border-radius: 15px; padding: 15px 20px; min-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .total-row { display: flex; justify-content: space-between; font-size: 22px; font-weight: 900; margin-bottom: 12px; }
-        .goal-bar-bg { background: rgba(0,0,0,0.8); border: 2px solid #555; border-radius: 12px; height: 22px; padding: 3px; position: relative; }
-        .goal-bar-fill { background: linear-gradient(90deg, #ff0055, #ff5500); height: 100%; border-radius: 8px; width: 0%; transition: width 0.8s ease; box-shadow: 0 0 15px #ff0055; }
-        .goal-text { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: #ccc; margin-top: 8px; }
+        .excel-gauge-box { 
+            background: linear-gradient(160deg, rgba(45, 18, 32, 0.92), rgba(30, 12, 22, 0.95)); 
+            border: 3px solid #ffb6d5; 
+            border-radius: 24px; 
+            padding: 16px 22px; 
+            min-width: 380px; 
+            box-shadow: 0 15px 40px rgba(255, 105, 180, 0.3); 
+        }
+        .total-row { display: flex; justify-content: space-between; font-size: 22px; font-weight: 900; margin-bottom: 12px; color: #fff0f6; }
+        .goal-bar-bg { background: rgba(0,0,0,0.5); border: 2px solid rgba(255, 182, 213, 0.4); border-radius: 14px; height: 22px; padding: 3px; position: relative; }
+        .goal-bar-fill { background: linear-gradient(90deg, #ff5da2, #ff9dc4); height: 100%; border-radius: 10px; width: 0%; transition: width 0.8s ease; box-shadow: 0 0 15px #ff5da2; }
+        .goal-text { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: #ffd6e8; margin-top: 8px; }
 
-        .acc-box-v2 { background: var(--excel-dark); border: 2px solid var(--excel-yellow); border-radius: 15px; padding: 15px 20px; width: 280px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .acc-box-v2 { 
+            background: linear-gradient(160deg, rgba(45, 18, 32, 0.92), rgba(30, 12, 22, 0.95)); 
+            border: 3px solid #ffd76b; 
+            border-radius: 24px; 
+            padding: 16px 22px; 
+            width: 280px; 
+            text-align: center; 
+            box-shadow: 0 15px 40px rgba(255, 215, 107, 0.25); 
+        }
+
+        /* --------------------------------------------------
+            🏃‍♀️ 퇴근전쟁(퇴근빵) 목표 달성 레이스 위젯
+        -------------------------------------------------- */
+        .home-race-box {
+            background: linear-gradient(160deg, rgba(30, 15, 30, 0.95), rgba(15, 8, 18, 0.97));
+            border: 3px solid #ff6fa5;
+            border-radius: 22px;
+            padding: 14px 18px;
+            width: 380px;
+            box-shadow: 0 15px 40px rgba(255, 105, 180, 0.35);
+        }
+        .home-race-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 900;
+            color: #fff;
+            background: linear-gradient(90deg, #ff5da2, #ff8fc0);
+            border-radius: 20px;
+            padding: 6px 0;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 12px rgba(255, 93, 162, 0.5);
+        }
+        .home-race-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .home-race-name {
+            width: 68px;
+            font-size: 14px;
+            font-weight: 800;
+            color: #ffe0ef;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .home-race-bar-bg {
+            flex: 1;
+            height: 16px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 182, 213, 0.35);
+            overflow: hidden;
+            position: relative;
+        }
+        .home-race-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #ff5da2, #ffb6d5);
+            box-shadow: 0 0 10px rgba(255, 93, 162, 0.6);
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 0%;
+        }
+        .home-race-bar-fill.goal-reached {
+            background: linear-gradient(90deg, #ffd700, #fff3b0);
+            box-shadow: 0 0 14px rgba(255, 215, 0, 0.8);
+        }
+        .home-race-nums {
+            width: 108px;
+            text-align: right;
+            font-size: 13px;
+            font-weight: 800;
+            color: #fff;
+            white-space: nowrap;
+        }
+        .home-race-nums .cur { color: #ffb6d5; }
+        .home-race-nums .goal { color: #8e8e93; font-size: 11px; }
+        .home-race-goal-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 105, 180, 0.12);
+            border: 1px solid rgba(255, 182, 213, 0.4);
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #fff;
+        }
+        .home-race-goal-badge {
+            background: #ffd700;
+            color: #3a2000;
+            font-weight: 900;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
         .acc-top { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; } 
-        .acc-bank-tag { background: var(--excel-yellow); color: #000; font-weight: 900; font-size: 18px; padding: 4px 10px; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); } 
-        .acc-name-tag { color: #fff; font-size: 18px; font-weight: 800; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); } 
+        .acc-bank-tag { background: linear-gradient(90deg, #ffd76b, #ffc23c); color: #3a2000; font-weight: 900; font-size: 18px; padding: 4px 12px; border-radius: 12px; box-shadow: 2px 2px 6px rgba(0,0,0,0.3); } 
+        .acc-name-tag { color: #fff0f6; font-size: 18px; font-weight: 800; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); } 
         .acc-num-v2 { font-size: 38px; font-weight: 900; color: #fff; letter-spacing: 1px; text-shadow: 3px 3px 6px rgba(0,0,0,0.9); word-break: break-all; line-height: 1.2; }
 
         /* --------------------------------------------------
-            ⚔️ 퓨처리스트 네온 아크릴 대결판 (리뉴얼)
+            💗 공주풍 핑크 VS 알약 대결판 (리뉴얼 v2)
         -------------------------------------------------- */
         .match-wrapper { 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            gap: 25px; 
+            gap: 18px; 
         } 
         
-        /* 메카닉 타이머 캡슐 */
+        /* 반짝이는 크리스탈 타이머 캡슐 */
         .m-timer-pill { 
-            background: rgba(255, 255, 255, 0.2); 
-            backdrop-filter: blur(8px); 
-            border: 2px solid rgba(255,255,255,0.4); 
+            background: linear-gradient(135deg, rgba(255,255,255,0.35), rgba(255,182,214,0.25));
+            backdrop-filter: blur(10px); 
+            border: 2px solid rgba(255,255,255,0.6); 
             border-radius: 40px; 
             padding: 8px 35px; 
             color: #fff; 
             font-size: 40px; 
             font-weight: 900; 
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.8); 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5); 
+            text-shadow: 0 0 12px rgba(255,105,180,0.9), 2px 2px 5px rgba(0,0,0,0.6); 
+            box-shadow: 0 10px 25px rgba(255,105,180,0.35), inset 0 0 15px rgba(255,255,255,0.3); 
             transition: all 0.2s linear; 
         }
 
+        /* 알약형 VS 스코어 바 컨테이너 */
         .m-team-container { 
             display: flex; 
-            gap: 25px; 
-            min-width: 290px; /* 450px는 너무 벌어지는 문제 해결: 290px로 콤팩트하면서 시간이랑 절대 안 겹치게 미세 조정 */
-            justify-content: center; /* 1명만 있거나 할 때도 정가운데 정렬 */
+            align-items: stretch;
+            justify-content: center;
+            min-width: 620px;
+            position: relative;
         } 
-        
+
+        /* 2인 대결(알약 바) 전용 스타일 */
+        .m-versus-bar {
+            display: flex;
+            align-items: stretch;
+            width: 100%;
+            min-width: 620px;
+            height: 92px;
+            border-radius: 46px;
+            overflow: visible;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(255, 20, 147, 0.35), 0 0 0 3px rgba(255,255,255,0.55) inset;
+        }
+        .m-versus-side {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 34px;
+            font-family: 'Pretendard', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+        .m-versus-side.m-versus-left {
+            background: linear-gradient(90deg, #ff6fa5, #ff9dc4);
+            border-radius: 46px 0 0 46px;
+            padding-right: 55px;
+        }
+        .m-versus-side.m-versus-right {
+            background: linear-gradient(90deg, #6fb3ff, #4d8dff);
+            border-radius: 0 46px 46px 0;
+            padding-left: 55px;
+            flex-direction: row-reverse;
+        }
+        .m-versus-side::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.35), transparent 55%);
+            pointer-events: none;
+        }
+        .m-versus-name {
+            font-size: 24px;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+            z-index: 1;
+        }
+        .m-versus-score {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 34px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 3px 10px rgba(0,0,0,0.4);
+            z-index: 1;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .m-versus-score.score-bump {
+            animation: scoreBumpAnimation 0.8s cubic-bezier(0.25, 1.5, 0.5, 1) forwards;
+        }
+        @keyframes scoreBumpAnimation {
+            0% { transform: scale(1); }
+            20% { transform: scale(1.22) translateY(-10px); }
+            40% { transform: scale(0.92) translateY(3px); }
+            65% { transform: scale(1.05) translateY(-2px); }
+            80% { transform: scale(0.98) translateY(0); }
+            100% { transform: scale(1); }
+        }
+
+        /* 중앙 VS 배지: 골드 테두리 + 글로우 */
+        .m-versus-badge {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 74px;
+            height: 74px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #2a2a2e, #0d0d10 75%);
+            border: 4px solid #ffd76b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 26px;
+            font-weight: 900;
+            color: #ffd76b;
+            box-shadow: 0 0 22px rgba(255, 215, 107, 0.85), 0 6px 18px rgba(0,0,0,0.5);
+            z-index: 3;
+            letter-spacing: 1px;
+        }
+
+        /* 레거시 다인전(3인 이상) 대결판 - 기존 스타일 유지 */
         .m-team-box { 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
             transition: transform 0.2s ease;
         } 
-        
-        /* 영롱한 네온 아크릴 쉴드 스코어 보드 */
         .m-score-box { 
             background: rgba(15, 15, 22, 0.65); 
             backdrop-filter: blur(16px) saturate(180%); 
@@ -211,21 +415,9 @@
             overflow: hidden;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         } 
-
-        /* 쫀득한 3D 바운스 및 네온 에너지 벌크업 충전 애니메이션 */
         .m-score-box.score-bump {
             animation: scoreBumpAnimation 0.8s cubic-bezier(0.25, 1.5, 0.5, 1) forwards;
         }
-        @keyframes scoreBumpAnimation {
-            0% { transform: scale(1); }
-            20% { transform: scale(1.22) translateY(-10px); }
-            40% { transform: scale(0.92) translateY(3px); }
-            65% { transform: scale(1.05) translateY(-2px); }
-            80% { transform: scale(0.98) translateY(0); }
-            100% { transform: scale(1); }
-        }
-
-        /* 쉴드 테두리 반짝임 네온 아우라 그라데이션 */
         .m-score-box::before {
             content: '';
             position: absolute;
@@ -240,8 +432,6 @@
             opacity: 0.85;
             box-shadow: 0 0 20px var(--team-color, transparent);
         }
-
-        /* 메카닉 이름표 배지 */
         .m-name-box { 
             background: #0d0d12; 
             color: #ffffff; 
@@ -259,7 +449,6 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
             transition: all 0.3s ease;
         }
-        
         .m-team-box:hover .m-score-box {
             transform: translateY(-5px);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 15px var(--team-color);
@@ -640,6 +829,18 @@
                         <div class="acc-num-v2" id="ui-num">464-068673-04-016</div>
                     </div>
                 </div>
+
+                <!-- 🏃‍♀️ 퇴근전쟁(퇴근빵) 목표 달성 레이스 위젯 -->
+                <div id="home-race-container" class="widget-container" style="opacity: 0; visibility: hidden;">
+                    <div class="home-race-box" id="home-race-box">
+                        <div class="home-race-title">🏃‍♀️ 퇴근빵</div>
+                        <div id="home-race-rows"></div>
+                        <div class="home-race-goal-line" id="home-race-goal-line" style="display:none;">
+                            <span class="home-race-goal-badge">GOAL</span>
+                            <span id="home-race-goal-text">-</span>
+                        </div>
+                    </div>
+                </div>
                 
             </div> <!-- 🟢 #ui-layer 를 여기서 닫아 대결판들이 리액션 모드 영향으로 사라지지 않게 보호 -->
             
@@ -879,7 +1080,7 @@
             globalData = d;
             
             let isActive = d.broadcast_active || false;
-            ['ranking', 'gauge', 'account', 'match', 'roulette', 'extra-ranking'].forEach(id => {
+            ['ranking', 'gauge', 'account', 'match', 'roulette', 'extra-ranking', 'home-race'].forEach(id => {
                 const el = document.getElementById(id + '-container');
                 if (el) el.style.display = isActive ? '' : 'none';
             });
@@ -1096,9 +1297,30 @@
                     let ma = document.getElementById('m-players-area'); 
                     let cols = ['#ff4d4d', '#00e676', '#3399ff', '#FFD700']; 
                     let colsRgb = ['255, 77, 77', '0, 230, 118', '51, 153, 255', '255, 215, 0'];
-                    if(ma.children.length !== md.players.length) { 
+                    let isVersusMode = md.players.length === 2;
+
+                    if(ma.children.length !== md.players.length || ma.dataset.mode !== (isVersusMode ? 'versus' : 'multi')) { 
                         ma.innerHTML = ''; 
-                        md.players.forEach((p, i) => ma.innerHTML += `<div class="m-team-box" style="--team-color:${cols[i%4]}; --team-color-rgb:${colsRgb[i%4]};"><div class="m-score-box" id="mp-${i}">0</div><div class="m-name-box" id="mp-name-${i}">${escapeHtml(p.name)}</div></div>`);
+                        ma.dataset.mode = isVersusMode ? 'versus' : 'multi';
+
+                        if (isVersusMode) {
+                            // 💗 2인 대결: 핑크 vs 블루 알약형 VS 바
+                            ma.innerHTML = `
+                                <div class="m-versus-bar">
+                                    <div class="m-versus-side m-versus-left">
+                                        <div class="m-versus-name" id="mp-name-0">${escapeHtml(md.players[0].name)}</div>
+                                        <div class="m-versus-score" id="mp-0">0</div>
+                                    </div>
+                                    <div class="m-versus-side m-versus-right">
+                                        <div class="m-versus-name" id="mp-name-1">${escapeHtml(md.players[1].name)}</div>
+                                        <div class="m-versus-score" id="mp-1">0</div>
+                                    </div>
+                                    <div class="m-versus-badge">VS</div>
+                                </div>`;
+                        } else {
+                            // 3인 이상 다인전: 기존 네온 아크릴 쉴드 박스 레이아웃 유지
+                            md.players.forEach((p, i) => ma.innerHTML += `<div class="m-team-box" style="--team-color:${cols[i%4]}; --team-color-rgb:${colsRgb[i%4]};"><div class="m-score-box" id="mp-${i}">0</div><div class="m-name-box" id="mp-name-${i}">${escapeHtml(p.name)}</div></div>`);
+                        }
                     } 
                     md.players.forEach((p, i) => { 
                         let nameEl = document.getElementById(`mp-name-${i}`); 
@@ -1204,6 +1426,37 @@
                 if(tot >= tgt && tgt > 0) { 
                     if(!flashed) { flashed = true; const gb = document.getElementById('goal-box-ui'); if(gb) { gb.classList.remove('goal-flash'); void gb.offsetWidth; gb.classList.add('goal-flash'); } } 
                 } else { flashed = false; }
+
+                // 🏃‍♀️ [퇴근전쟁(퇴근빵)] 목표 달성 레이스 렌더링
+                if (d.home_race_enabled && bjs.length > 0) {
+                    const homeGoals = d.home_goals || {};
+                    const rowsEl = document.getElementById('home-race-rows');
+                    const goalLineEl = document.getElementById('home-race-goal-line');
+                    const goalTextEl = document.getElementById('home-race-goal-text');
+                    if (rowsEl) {
+                        let rowsHtml = '';
+                        let firstReached = null;
+                        bjs.forEach(b => {
+                            let goalAmt = homeGoals[b.name] || 0;
+                            let curAmt = b.contribution || 0;
+                            let pct = goalAmt > 0 ? Math.min(100, (curAmt / goalAmt) * 100) : 0;
+                            let reached = goalAmt > 0 && curAmt >= goalAmt;
+                            if (reached && !firstReached) firstReached = b.name;
+                            rowsHtml += `<div class="home-race-row">
+                                <div class="home-race-name">${escapeHtml(b.name)}</div>
+                                <div class="home-race-bar-bg"><div class="home-race-bar-fill ${reached ? 'goal-reached' : ''}" style="width:${pct}%;"></div></div>
+                                <div class="home-race-nums"><span class="cur">${formatNum(curAmt)}</span> <span class="goal">/ ${formatNum(goalAmt)}</span></div>
+                            </div>`;
+                        });
+                        rowsEl.innerHTML = rowsHtml;
+                        if (firstReached && goalLineEl && goalTextEl) {
+                            goalLineEl.style.display = 'flex';
+                            goalTextEl.innerText = `${firstReached} 퇴근! 🎉`;
+                        } else if (goalLineEl) {
+                            goalLineEl.style.display = 'none';
+                        }
+                    }
+                }
 
                 let curTick = d.ticker_text + "_" + d.ticker_speed + "_" + d.ticker_enabled + "_" + d.reaction_mode;
                 if (lastTickerState !== curTick) { 

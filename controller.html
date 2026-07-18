@@ -723,6 +723,18 @@
 
         </div>
 
+        <div class="group-box" id="home-race-box">
+            <div class="group-title" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span><i class="fa-solid fa-person-running"></i> 🏃‍♀️ 퇴근전쟁(퇴근빵) 제어</span>
+                <label class="apple-switch" style="margin:0;">
+                    <input type="checkbox" id="chk-home-race" onchange="toggleOption('home_race_enabled')">
+                    <span class="apple-slider"></span>
+                </label>
+            </div>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 8px 0 12px 0;">각 플레이어별 퇴근 목표 기여도를 설정하면, 오버레이에 개인별 진행 바가 표시되고 목표 달성 시 "퇴근!" 문구가 뜹니다.</p>
+            <div id="home-race-goal-inputs" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
         <div class="table-responsive">
             <table>
                 <thead id="ranking-thead"></thead>
@@ -1771,6 +1783,8 @@
             setChk('chk-match-fire', gd.match_data.fire_effect || false);
             setChk('chk-ticker', gd.ticker_enabled);
             setChk('chk-roulette-enabled', gd.roulette_enabled || false);
+            setChk('chk-home-race', gd.home_race_enabled || false);
+            renderHomeRaceGoalInputs();
             // 조명 속도 슬라이더 갱신
             if (document.getElementById('in-neon-speed')) {
                 document.getElementById('in-neon-speed').value = gd.neon_speed || 1.5;
@@ -2405,6 +2419,31 @@
         function toggleMatchFire() { gd.match_data.fire_effect = !gd.match_data.fire_effect; pushAPI(); }
         function updateTheme() { gd.theme = document.getElementById('sel-theme').value; pushAPI(); }
         function updateGoal() { gd.target_goal = parseInt(document.getElementById('in-goal').value)||0; pushAPI(); }
+
+        function renderHomeRaceGoalInputs() {
+            const container = document.getElementById('home-race-goal-inputs');
+            if (!container || !gd || !gd.bjs) return;
+            if (!gd.home_goals) gd.home_goals = {};
+
+            if (document.activeElement && document.activeElement.classList.contains('home-race-goal-input')) return;
+
+            let html = '';
+            gd.bjs.forEach((bj) => {
+                let goalVal = gd.home_goals[bj.name] || 0;
+                html += `<div style="display:flex; align-items:center; gap:10px;">
+                    <span style="flex:1; font-size:13px; font-weight:700; color:#fff;">${escapeHTML(bj.name)}</span>
+                    <input type="number" class="home-race-goal-input" data-name="${escapeHTML(bj.name)}" value="${goalVal}" placeholder="목표 기여도" style="width:140px; height:34px; font-size:13px;" onchange="updateHomeRaceGoal(${escapeHTML(JSON.stringify(bj.name))}, this.value)">
+                </div>`;
+            });
+            container.innerHTML = html || '<div style="color:var(--text-muted); font-size:12px;">등록된 플레이어가 없습니다.</div>';
+        }
+
+        function updateHomeRaceGoal(name, val) {
+            if (!gd.home_goals) gd.home_goals = {};
+            gd.home_goals[name] = parseInt(val) || 0;
+            pushAPI();
+        }
+
         function addRankPlayer() {
             if (gd.bjs.length >= 10) {
                 premiumAlert("플레이어는 최대 10명까지만 추가할 수 있습니다.", "추가 불가", "warning");
