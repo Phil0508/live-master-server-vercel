@@ -1281,60 +1281,11 @@
         </div>
     </div>
 
+    <!-- ⚙️ [시스템 관리 탭] -->
     <div id="tab-system" class="tab-content">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
             
-            <!-- 🏦 1. 은행 통장 DB 원장 실시간 카드 (신규) -->
-            <div class="group-box" style="margin-bottom: 0; background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(0,0,0,0.3)); border: 1px solid rgba(255,215,0,0.25);">
-                <div class="group-title" style="color: #ffd700;"><i class="fa-solid fa-piggy-bank"></i> 은행 계좌 거래 내역서 (Bank Ledger)</div>
-                <div style="display: flex; flex-direction: column; gap: 14px;">
-                    <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
-                        모든 후원, 점수 변동, 슬롯 잭팟이 <strong>은행 입출금 통장 거래 내역</strong>처럼 1줄씩 영구 기록됩니다.
-                    </div>
-                    <div style="background: rgba(0, 0, 0, 0.4); padding: 14px; border-radius: var(--radius-md); border: 1px solid rgba(255,215,0,0.15); display: flex; flex-direction: column; gap: 8px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 13px;">
-                            <span style="color: var(--text-muted);">통장 DB 저장 방식</span>
-                            <span style="color: #00ffcc; font-weight: bold;"><i class="fa-solid fa-lock"></i> 누적 장부 (Append-Only)</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 13px;">
-                            <span style="color: var(--text-muted);">수학적 잔액 검증</span>
-                            <span style="color: #ffd700; font-weight: bold;">100% 무결점 동기화</span>
-                        </div>
-                    </div>
-                    <button onclick="openBankLedgerModal()" class="primary" style="width: 100%; height: 38px; font-weight: bold; border-radius: 10px; justify-content: center; background: linear-gradient(135deg, #ffd700, #ff9100); color: #000; font-size: 13px; cursor: pointer;">
-                        <i class="fa-solid fa-receipt"></i> 플레이어 통장 거래 내역서 열람
-                    </button>
-                </div>
-            </div>
-
-            <!-- ⚡ 2. 서버 & 핑 상태 모니터링 카드 -->
-            <div class="group-box" style="margin-bottom: 0;">
-                <div class="group-title"><i class="fa-solid fa-server"></i> 서버 및 핑(Ping) 모니터링</div>
-                <div style="display: flex; flex-direction: column; gap: 14px;">
-                    <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
-                        실시간 네트워크 응답 지연 시간 및 데이터베이스 구동 모드 정보입니다.
-                    </div>
-                    <div style="background: rgba(255, 255, 255, 0.03); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 8px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 13px;">
-                            <span style="color: var(--text-muted);">실시간 핑 (Ping RTT)</span>
-                            <span style="color: #00ffcc; font-weight: bold;" id="latency-val">측정 중...</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 13px;">
-                            <span style="color: var(--text-muted);">데이터베이스 모드</span>
-                            <span style="color: var(--accent); font-weight: bold;" id="sys-db-mode">로컬 (SQLite)</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 13px;">
-                            <span style="color: var(--text-muted);">등록된 플레이어</span>
-                            <span style="color: #fff; font-weight: bold;" id="sys-player-count">0명</span>
-                        </div>
-                    </div>
-                    <button onclick="checkLatency()" class="secondary" style="width: 100%; height: 34px; font-weight: bold; border-radius: 8px; justify-content: center; font-size: 12px; cursor: pointer;">
-                        <i class="fa-solid fa-rotate"></i> 핑 재측정
-                    </button>
-                </div>
-            </div>
-
-            <!-- 🔒 3. OTP 보안 & 게이트 카드 -->
+            <!-- 🔒 1. OTP 보안 & 게이트 카드 -->
             <div class="group-box" style="margin-bottom: 0;">
                 <div class="group-title"><i class="fa-solid fa-shield-halved"></i> 보안 및 게이트웨이</div>
                 <div style="display: flex; flex-direction: column; gap: 14px;">
@@ -1357,87 +1308,20 @@
                 </div>
             </div>
 
-            <!-- 💾 4. 데이터 오프라인 백업 및 방송 제어 카드 -->
+            <!-- 💾 2. 데이터 오프라인 백업 및 방송 제어 카드 -->
             <div class="group-box" style="margin-bottom: 0;">
                 <div class="group-title"><i class="fa-solid fa-file-export"></i> 백업 다운로드 & 방송 관리</div>
                 <div style="display: flex; flex-direction: column; gap: 14px;">
                     <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
                         현재 방송 상태 전체를 파일로 소장하거나 백업을 복원합니다.
                     </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button onclick="downloadLocalBackupFile()" style="flex: 1; height: 36px; justify-content: center; display: inline-flex; align-items: center; gap: 6px; font-weight: bold; background: rgba(0, 191, 255, 0.15); border: 1px solid #00bfff; color: #00bfff; border-radius: 8px; cursor: pointer; font-size: 12px;">
-                            <i class="fa-solid fa-download"></i> 백업 파일 생성
-                        </button>
-                        <button onclick="document.getElementById('sys-upload-file').click()" style="flex: 1; height: 36px; justify-content: center; display: inline-flex; align-items: center; gap: 6px; font-weight: bold; background: rgba(0, 255, 204, 0.15); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; cursor: pointer; font-size: 12px;">
-                            <i class="fa-solid fa-upload"></i> 백업 파일 복원
-                        </button>
-                    </div>
                     <input type="file" id="sys-upload-file" style="display: none;" accept=".json" onchange="uploadLocalBackupFile(event)">
                     <button id="btn-end-broadcast" onclick="endBroadcast()" style="display: none; width: 100%; height: 36px; justify-content: center; background: var(--danger); border-color: var(--danger); color: #fff; font-weight: bold; border-radius: 8px; font-size: 12px; cursor: pointer;"><i class="fa-solid fa-power-off"></i> 방송 종료 및 초기화</button>
                 </div>
             </div>
-
-            <!-- 서버 관리 센터 추가 (로그 뷰어 및 백업 상태판) -->
-            <div class="group-box" style="margin-top: 20px; margin-bottom: 0; grid-column: 1 / -1;">
-            <div class="group-title" style="display: flex; justify-content: space-between; align-items: center;">
-                <span><i class="fa-solid fa-gears"></i> 서버 백업 및 실시간 모니터링</span>
-                <button onclick="refreshSystemStatus()" style="padding: 6px 12px; font-size: 13px; font-weight: bold; background: rgba(0, 255, 204, 0.1); border: 1px solid var(--accent); border-radius: 6px; color: var(--accent); cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                    <i class="fa-solid fa-arrows-rotate"></i> 상태 갱신
-                </button>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px;">
-                <!-- DB Control & Stats -->
-                <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <div style="background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: var(--radius-md); border: 1px solid var(--border-light); font-size: 13px; line-height: 1.8;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                            <span style="color: var(--text-muted);">총 스냅샷 백업 수:</span>
-                            <span id="sys-snapshot-count" style="font-weight: bold; color: #e040fb;">0개</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color: var(--text-muted);">총 후원 이력 건수:</span>
-                            <span id="sys-history-count" style="font-weight: bold; color: var(--gold);">0건</span>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <button onclick="openTimeMachineModal()" style="width: 100%; justify-content: center; height: 38px; display: inline-flex; align-items: center; gap: 8px; font-weight: bold; background: rgba(156, 39, 176, 0.15); border: 1px solid #9c27b0; color: #e040fb; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(156,39,176,0.25)';" onmouseout="this.style.background='rgba(156,39,176,0.15)';">
-                            <i class="fa-solid fa-clock-rotate-left"></i> 타임머신 백업 관리타워
-                        </button>
-                        
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <input type="text" id="sys-manual-label" placeholder="백업 세이브포인트 설명 입력" style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-light); padding: 10px 14px; border-radius: 8px; color: #fff; font-size: 13px; outline: none; transition: border 0.2s;" onfocus="this.style.borderColor='var(--accent)';" onblur="this.style.borderColor='var(--border-light)';">
-                            <button onclick="createSystemBackup()" style="height: 38px; padding: 0 16px; font-weight: bold; background: rgba(0, 255, 204, 0.15); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,255,204,0.25)';" onmouseout="this.style.background='rgba(0,255,204,0.15)';">
-                                <i class="fa-solid fa-floppy-disk"></i> 세이브
-                            </button>
-                        </div>
-                        
-                        <button onclick="triggerDatabaseReset()" class="btn-danger-pulsate" style="width: 100%; justify-content: center; height: 38px; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 13px; margin-top: 15px;">
-                            <i class="fa-solid fa-triangle-exclamation"></i> 전체 데이터베이스 공장 초기화
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Live Log Console -->
-                <div style="display: flex; flex-direction: column; gap: 10px; height: 230px;">
-                    <div style="font-size: 13px; color: var(--text-muted); font-weight: bold; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-terminal"></i> 서버 트랜잭션 로그 콘솔 (최근 30건)</div>
-                    <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); overflow: hidden; background: #08080a; box-shadow: inset 0 2px 8px rgba(0,0,0,0.8), 0 10px 20px rgba(0,0,0,0.35);">
-                        <!-- Terminal Header -->
-                        <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding: 8px 15px; font-family: 'Consolas', monospace; font-size: 11px; color: var(--text-muted);">
-                            <div style="display: flex; gap: 6px; align-items: center;">
-                                <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff453a;"></span>
-                                <span style="width: 10px; height: 10px; border-radius: 50%; background: #ffcc00;"></span>
-                                <span style="width: 10px; height: 10px; border-radius: 50%; background: #34c759;"></span>
-                                <span style="margin-left: 10px; font-weight: bold; color: #aaa;">sh - transaction.log</span>
-                            </div>
-                            <div>UTF-8</div>
-                        </div>
-                        <!-- Console area -->
-                        <div id="sys-console-logs" style="flex: 1; padding: 15px; font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; overflow-y: auto; color: #00ffcc; white-space: pre-wrap; line-height: 1.5; outline: none; border: none; background: transparent;">[대기 중] 서버 데이터를 불러오고 있습니다...</div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
+
 
     <div id="setup-broadcast-area" style="display: none;">
         <div class="group-box" style="max-width: 600px; margin: 30px auto; padding: 35px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.08); background: var(--bg-card); border-radius: var(--radius-lg);">
