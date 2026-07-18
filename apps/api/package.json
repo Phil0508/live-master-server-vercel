@@ -1,0 +1,22 @@
+{
+  "name": "@live-master/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.0.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "zod": "^3.22.0",
+    "date-fns": "^3.3.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240200.0",
+    "typescript": "^5.4.0",
+    "wrangler": "^3.22.0"
+  }
+}

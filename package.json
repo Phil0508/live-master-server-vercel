@@ -1,0 +1,23 @@
+{
+  "name": "live-master-server",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "typecheck": "turbo run typecheck",
+    "db:types": "turbo run db:types",
+    "generate:types": "turbo run generate:types"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.4.0"
+  },
+  "packageManager": "npm@10.5.0"
+}

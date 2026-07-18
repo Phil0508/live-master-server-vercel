@@ -13,3 +13,7 @@ media_cache/
 
 .vercel
 .env*
+node_modules/
+.turbo/
+dist/
+build/
