@@ -2,8 +2,8 @@ import sys
 import os
 import io
 
-# Vercel 서버리스 환경 감지
-IS_VERCEL = bool(os.environ.get('VERCEL'))
+# 🖥️ 로컬 전용 모드 (서버리스/Postgres 관련 기능 완전 비활성화)
+IS_VERCEL = False
 
 # GUI 모드(console=False)에서 발생하는 모든 에러를 파일로 로깅하여 크래시 분석
 if getattr(sys, 'frozen', False):
@@ -27,8 +27,6 @@ else:
 import json
 import threading
 import logging
-import pyotp
-import secrets
 
 import time
 import csv
@@ -41,35 +39,21 @@ import ssl
 import urllib.request
 import urllib.parse
 
-# Try importing psycopg2 for PostgreSQL support
-try:
-    import psycopg2
-except ImportError:
-    psycopg2 = None
-
-DATABASE_URL = os.environ.get('DATABASE_URL')
-IS_POSTGRES = bool(DATABASE_URL)
+# 🖥️ 로컬 SQLite 전용 (Postgres/Vercel 관련 분기는 항상 False로 고정되어 비활성화됨)
+DATABASE_URL = None
+IS_POSTGRES = False
+psycopg2 = None
 
 def db_query(query):
-    if IS_POSTGRES:
-        return query.replace('?', '%s')
     return query
 
 def _pg_binary(data):
-    """PostgreSQL 바이너리 데이터 안전 변환 (psycopg2가 None이면 일반 bytes 반환)"""
-    if IS_POSTGRES and psycopg2 is not None:
-        return psycopg2.Binary(data)
+    """로컬 SQLite 전용: 바이너리 데이터 그대로 반환"""
     return data
 
 @contextmanager
 def get_db_connection():
-    if IS_POSTGRES:
-        if psycopg2 is None:
-            raise ImportError("psycopg2 is not installed but DATABASE_URL is set.")
-        # Supabase PostgreSQL 연결: SSL 강제 적용 (sslmode=require)
-        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-    else:
-        conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE)
     try:
         yield conn
         conn.commit()
@@ -80,16 +64,12 @@ def get_db_connection():
         conn.close()
 from flask import Flask, jsonify, request, send_from_directory, redirect, url_for, session
 from flask_cors import CORS
-if IS_VERCEL:
+try:
+    import tkinter as tk
+    from tkinter import messagebox
+except ImportError:
     tk = None
     messagebox = None
-else:
-    try:
-        import tkinter as tk
-        from tkinter import messagebox
-    except ImportError:
-        tk = None
-        messagebox = None
 import webbrowser
 
 if getattr(sys, 'frozen', False):
@@ -104,53 +84,6 @@ TMP_DIR = '/tmp' if IS_VERCEL else BASE_DIR
 
 DB_FILE = os.path.join(BASE_DIR, 'live_master.db')
 LAYOUT_FILE = os.path.join(BASE_DIR, 'layout.json')
-AUTH_CONFIG_FILE = os.path.join(BASE_DIR, 'auth_config.json')
-
-def load_auth_config():
-    config = {
-        'admin_password': '0508',
-        'session_secret': 'isacbin_master_key_0508',
-        'totp_secret': ''
-    }
-    if os.path.exists(AUTH_CONFIG_FILE):
-        try:
-            with open(AUTH_CONFIG_FILE, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                if 'admin_password' in data:
-                    config['admin_password'] = data['admin_password']
-                if 'session_secret' in data:
-                    config['session_secret'] = data['session_secret']
-                if 'totp_secret' in data:
-                    config['totp_secret'] = data['totp_secret']
-        except Exception as e:
-            print(f"Error reading auth config: {e}")
-            
-    env_password = os.environ.get('ADMIN_PASSWORD')
-    if env_password:
-        config['admin_password'] = env_password.strip()
-        
-    env_session_secret = os.environ.get('SESSION_SECRET')
-    if env_session_secret:
-        config['session_secret'] = env_session_secret.strip()
-        
-    env_totp_secret = os.environ.get('TOTP_SECRET')
-    if env_totp_secret:
-        config['totp_secret'] = env_totp_secret.strip()
-        
-    if not config['totp_secret']:
-        config['totp_secret'] = pyotp.random_base32()
-        save_auth_config(config)
-        
-    return config
-
-def save_auth_config(config):
-    if IS_VERCEL:
-        return  # Vercel 서버리스: 읽기전용 파일시스템, 환경변수로만 관리
-    try:
-        with open(AUTH_CONFIG_FILE, 'w', encoding='utf-8') as f:
-            json.dump(config, f, indent=4)
-    except Exception as e:
-        print(f"Error writing auth config: {e}")
 
 # ==========================================
 # 🤫 서버 로그 제어
@@ -160,7 +93,7 @@ log.setLevel(logging.ERROR)
 log.disabled = True 
 
 app = Flask(__name__)
-app.secret_key = load_auth_config()['session_secret']
+app.secret_key = 'isacbin_master_key_0508'
 CORS(app)
 file_lock = threading.Lock()
 
@@ -172,64 +105,7 @@ def add_header(r):
     r.headers["Expires"] = "0"
     return r
 
-# 🔒 [보안 통제] 웹 제어실 및 중요 API 접근 제한 미들웨어
-@app.before_request
-def require_login():
-    path = request.path
-    
-    # 정적 자원 파일 프리패스
-    if (path.endswith('.css') or path.endswith('.js') or path.endswith('.png') or 
-        path.endswith('.jpg') or path.endswith('.ico') or path.endswith('.woff') or 
-        path.endswith('.woff2') or path.endswith('.ttf') or path.endswith('.svg')):
-        return
-        
-    # 세션 검증 예외 경로 리스트
-    public_routes = [
-        '/login',
-        '/logout',
-        '/',
-        '/overlay',
-        '/overlay.html',
-        '/alertbox',
-        '/alertbox.html',
-        '/api/stream',
-        '/api/ping',
-        '/api/donation',
-        '/toonation_tampermonkey.user.js',
-        '/setup'
-    ]
-    
-    decoded_path = urllib.parse.unquote(path)
-    if (path in public_routes or
-        path.startswith('/uploads/') or 
-        path == '/upload' or 
-        decoded_path == '/노래등록' or 
-        path == '/api/reaction/add'):
-        return
-
-    # Public display surfaces need read-only state/VIP data, but writes must stay authenticated.
-    if path == '/api/data' and request.method == 'GET':
-        return
-    if path == '/api/vips' and request.method == 'GET':
-        return
-         
-    # HTTP Authorization Bearer 토큰 및 ?token= 파라미터 검증 지원
-    auth_header = request.headers.get('Authorization')
-    token = None
-    if auth_header and auth_header.startswith('Bearer '):
-        token = auth_header.split(' ')[1]
-    else:
-        token = request.args.get('token')
-        
-    is_token_valid = (token and token == load_auth_config()['session_secret'])
-        
-    # 비인증 사용자 제약
-    if not session.get('authenticated') and not is_token_valid:
-        if path.startswith('/api/'):
-            return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
-        if request.query_string:
-            return redirect(url_for('serve_login') + '?' + request.query_string.decode('utf-8'))
-        return redirect(url_for('serve_login'))
+# 🔓 로컬 전용 모드: 로그인/인증 없이 모든 페이지 및 API에 자유롭게 접근 가능
 
 # 📡 실시간 SSE 클라이언트 관리 시스템
 sse_clients = []
@@ -258,9 +134,6 @@ def create_snapshot_record(label, state=None):
             (timestamp, json.dumps(state, ensure_ascii=False), label)
         )
     return timestamp
-
-def get_or_create_totp_secret():
-    return load_auth_config()['totp_secret']
 
 def serve_html_file(filename):
     local_path = os.path.join(BASE_DIR, filename)
@@ -986,238 +859,6 @@ def import_bjs():
 # ==========================================
 # 🌐 페이지 라우팅
 # ==========================================
-@app.route('/setup', methods=['GET', 'POST'])
-def serve_setup():
-    if request.method == 'POST':
-        try:
-            data = request.get_json() or {}
-            p = data.get('password', '').strip()
-            if p == load_auth_config()['admin_password']:
-                session['setup_authorized'] = True
-                return jsonify({'status': 'success'})
-            else:
-                return jsonify({'status': 'error', 'message': '비밀번호가 잘못되었습니다.'}), 400
-        except Exception as e:
-            return jsonify({'status': 'error', 'message': str(e)}), 500
-
-    # GET request
-    if not session.get('setup_authorized'):
-        # Return a simple password protection UI for setup
-        html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔒 라이브 마스터 OTP 등록 게이트</title>
-    <style>
-        body {{
-            background: #0d0d0f;
-            color: #f5f5f7;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-        }}
-        .card {{
-            background: #16161a;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 20px;
-            padding: 40px 30px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            max-width: 400px;
-            width: 90%;
-            box-sizing: border-box;
-        }}
-        h2 {{ color: #00ffcc; margin-top: 0; font-size: 22px; }}
-        input {{
-            width: 100%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 12px;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 16px;
-            text-align: center;
-            box-sizing: border-box;
-            outline: none;
-            margin: 20px 0;
-        }}
-        input:focus {{ border-color: #00ffcc; }}
-        .btn {{
-            background: #00ffcc;
-            color: #000;
-            border: none;
-            padding: 14px 28px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            font-size: 15px;
-        }}
-        .err {{ color: #ff453a; font-size: 13px; margin-top: 10px; display: none; }}
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h2>🔒 OTP 등록 페이지 인증</h2>
-        <p style="font-size: 14px; color: #8e8e93;">보안을 위해 서버 비밀번호를 입력해 주세요.</p>
-        <input type="password" id="pw" placeholder="비밀번호 입력" autofocus onkeydown="if(event.key==='Enter') verifyPw()">
-        <button onclick="verifyPw()" class="btn">인증 및 등록 진행</button>
-        <div id="err" class="err">비밀번호가 올바르지 않습니다.</div>
-    </div>
-    <script>
-        async function verifyPw() {{
-            const p = document.getElementById('pw').value.trim();
-            const err = document.getElementById('err');
-            err.style.display = 'none';
-            try {{
-                const res = await fetch('/setup', {{
-                    method: 'POST',
-                    headers: {{'Content-Type': 'application/json'}},
-                    body: JSON.stringify({{password: p}})
-                }});
-                const data = await res.json();
-                if (data.status === 'success') {{
-                    window.location.reload();
-                }} else {{
-                    err.innerText = data.message;
-                    err.style.display = 'block';
-                }}
-            }} catch(e) {{
-                err.innerText = '인증 중 오류가 발생했습니다.';
-                err.style.display = 'block';
-            }}
-        }}
-    </script>
-</body>
-</html>
-"""
-        return html
-
-    secret = get_or_create_totp_secret()
-    # QR Code compatible URL (ASCII only for label/issuer)
-    otp_uri = f"otpauth://totp/LiveMaster:admin?secret={secret}&issuer=LiveMaster"
-    
-    html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔒 라이브 마스터 OTP 초기 페어링</title>
-    <style>
-        body {{
-            background: #0d0d0f;
-            color: #f5f5f7;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-        }}
-        .card {{
-            background: #16161a;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 20px;
-            padding: 40px 30px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            max-width: 420px;
-            width: 90%;
-            box-sizing: border-box;
-        }}
-        h2 {{ color: #00ffcc; margin-top: 0; font-size: 22px; }}
-        p {{ font-size: 14px; color: #8e8e93; line-height: 1.6; }}
-        canvas {{ background: #fff; padding: 10px; border-radius: 10px; margin: 20px 0; }}
-        .secret-label {{ font-size: 12px; color: #8e8e93; margin-top: 15px; margin-bottom: 5px; }}
-        .secret {{
-            background: rgba(255,255,255,0.05);
-            padding: 12px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 18px;
-            letter-spacing: 2px;
-            color: #ff9f0a;
-            user-select: all;
-            word-break: break-all;
-            font-weight: bold;
-        }}
-        .btn {{
-            background: #00ffcc;
-            color: #000;
-            border: none;
-            padding: 14px 28px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 25px;
-            text-decoration: none;
-            display: inline-block;
-            transition: opacity 0.2s;
-        }}
-        .btn:hover {{ opacity: 0.9; }}
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-</head>
-<body>
-    <div class="card">
-        <h2>🔒 모바일 OTP 페어링 타워</h2>
-        <p>스마트폰의 <b>구글 OTP (Google Authenticator)</b> 앱을 실행하고,<br>우측 하단의 '+' 버튼을 눌러 아래 QR 코드를 스캔해 주세요.</p>
-        <canvas id="qr"></canvas>
-        <div class="secret-label">수동 등록을 위한 보안 키 (앱에 직접 입력 가능)</div>
-        <div class="secret">{secret}</div>
-        <a href="/login" class="btn">인증 로그인 화면으로 이동</a>
-    </div>
-    <script>
-        new QRious({{
-            element: document.getElementById('qr'),
-            value: '{otp_uri}',
-            size: 200
-        }});
-    </script>
-</body>
-</html>
-"""
-    return html
-
-@app.route('/login', methods=['GET', 'POST'])
-def serve_login():
-    if request.method == 'GET' and session.get('authenticated'):
-        if request.query_string:
-            return redirect(url_for('serve_controller') + '?' + request.query_string.decode('utf-8'))
-        return redirect(url_for('serve_controller'))
-        
-    if request.method == 'POST':
-        try:
-            data = request.get_json()
-            p = data.get('password', '').strip()
-            otp_code = data.get('otp', '').strip()
-            
-            # PW 검증
-            if p == load_auth_config()['admin_password']:
-                # TOTP OTP 검증
-                totp_secret = get_or_create_totp_secret()
-                totp = pyotp.TOTP(totp_secret)
-                if totp.verify(otp_code, valid_window=1): # Allow 30 seconds clock drift
-                    session['authenticated'] = True
-                    return jsonify({'status': 'success'})
-                else:
-                    return jsonify({'status': 'error', 'message': '보안 OTP 번호가 일치하지 않습니다.'}), 400
-            else:
-                return jsonify({'status': 'error', 'message': '비밀번호가 잘못되었습니다.'}), 400
-        except Exception as e:
-            return jsonify({'status': 'error', 'message': str(e)}), 500
-            
-    return serve_html_file('login.html')
-
-@app.route('/logout')
-def serve_logout():
-    session.pop('authenticated', None)
-    return redirect(url_for('serve_login'))
-
 @app.route('/')
 def serve_root():
     return serve_html_file('overlay.html')
@@ -1540,9 +1181,6 @@ def api_data():
         if isinstance(state, dict):
             state = state.copy()
             state['server_time'] = int(time.time() * 1000)
-            # 조종실 웹에 로그인 세션이 있을 경우 보안 API 토큰을 제공
-            if session.get('authenticated'):
-                state['api_token'] = load_auth_config()['session_secret']
         return jsonify(state)
     except Exception as e:
         import traceback
@@ -2200,32 +1838,29 @@ def get_reaction_file(file_id):
                 return response
         
         cache_dir = os.path.join(app.root_path, 'media_cache')
-        cache_path = os.path.join(cache_dir, file_id)
-        meta_path = cache_path + ".meta"
-        
-        # Check cache first
-        if os.path.exists(cache_path) and os.path.exists(meta_path):
-            try:
-                with open(meta_path, 'r', encoding='utf-8') as f:
-                    meta = json.load(f)
-                content_type = meta.get('content_type')
-                filename = meta.get('filename')
-                
-                response = send_file(
-                    cache_path,
-                    mimetype=content_type,
-                    as_attachment=False,
-                    download_name=filename,
-                    conditional=True
-                )
-                response.headers.set('Cache-Control', 'public, max-age=31536000')
-                response.headers.set('Access-Control-Allow-Origin', '*')
-                return response
-            except Exception as e:
-                print(f"Error reading cache for {file_id}: {e}")
-                pass
+        os.makedirs(cache_dir, exist_ok=True)
 
-        # Database fallback
+        # 1순위: media_cache 폴더 내의 로컬 파일 존재 여부 0ms 탐색 (ID 패턴 또는 파일명)
+        if os.path.exists(cache_dir):
+            for fname in os.listdir(cache_dir):
+                if fname.startswith(f"{file_id}_") or fname == str(file_id):
+                    local_file_path = os.path.join(cache_dir, fname)
+                    if os.path.isfile(local_file_path) and os.path.getsize(local_file_path) > 0:
+                        import mimetypes
+                        mime, _ = mimetypes.guess_type(local_file_path)
+                        mime = mime or 'application/octet-stream'
+                        
+                        response = send_file(
+                            local_file_path,
+                            mimetype=mime,
+                            as_attachment=False,
+                            conditional=True
+                        )
+                        response.headers.set('Cache-Control', 'public, max-age=31536000')
+                        response.headers.set('Access-Control-Allow-Origin', '*')
+                        return response
+
+        # 2순위: DB 레코드 탐색 및 Supabase 백그라운드 자동 스트리밍
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(db_query("SELECT filename, content_type, file_data FROM reaction_files WHERE id = ?"), (file_id,))
@@ -2234,11 +1869,24 @@ def get_reaction_file(file_id):
                 return jsonify({"status": "error", "message": "File not found"}), 404
             
             filename, content_type, file_data = row
-            data_bytes = bytes(file_data)
+            data_bytes = bytes(file_data) if file_data else b""
             
-            os.makedirs(cache_dir, exist_ok=True)
-            with open(cache_path, 'wb') as f:
-                f.write(data_bytes)
+            if data_bytes:
+                cache_path = os.path.join(cache_dir, f"{file_id}_{filename}")
+                with open(cache_path, 'wb') as f:
+                    f.write(data_bytes)
+                
+                response = send_file(
+                    cache_path,
+                    mimetype=content_type or 'application/octet-stream',
+                    as_attachment=False,
+                    conditional=True
+                )
+                response.headers.set('Cache-Control', 'public, max-age=31536000')
+                response.headers.set('Access-Control-Allow-Origin', '*')
+                return response
+            else:
+                return jsonify({"status": "error", "message": "No file content"}), 404
                 
             with open(meta_path, 'w', encoding='utf-8') as f:
                 json.dump({"filename": filename, "content_type": content_type}, f, ensure_ascii=False)
@@ -2701,7 +2349,7 @@ def remove_from_queue(rq_id):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 # ==========================================
-# 🖥️ GUI 관리자 및 로그인 창
+# 🖥️ GUI 관리자 창 (로그인 없이 바로 표시)
 # ==========================================
 def start_self_ping():
     import urllib.request
@@ -2741,7 +2389,7 @@ def run_flask():
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 def has_gui_support():
-    if os.environ.get('HEADLESS') or os.environ.get('DATABASE_URL'):
+    if os.environ.get('HEADLESS'):
         return False
     if tk is None:
         return False
@@ -2752,67 +2400,10 @@ def has_gui_support():
     except Exception:
         return False
 
-def run_login_gui():
-    login_success = [False]
-    
-    def check_login():
-        p = entry_pass.get().strip()
-        if p == '0508':
-            login_success[0] = True
-            login_win.destroy()
-        else:
-            messagebox.showerror('보안 인증 실패', '비밀번호가 올바르지 않습니다!')
-            entry_pass.delete(0, tk.END)
-            entry_pass.focus()
-            
-    def on_login_closing():
-        login_win.destroy()
-        sys.exit(0)
-        
-    login_win = tk.Tk()
-    login_win.title('🔒 라이브 마스터 서버 기동 인증')
-    login_win.geometry('380x220')
-    login_win.configure(bg='#111113')
-    login_win.resizable(False, False)
-    
-    ws = login_win.winfo_screenwidth()
-    hs = login_win.winfo_screenheight()
-    x = (ws / 2) - 190.0
-    y = (hs / 2) - 110.0
-    login_win.geometry(f'380x220+{int(x)}+{int(y)}')
-    
-    try:
-        login_win.attributes('-alpha', 0.96)
-    except:
-        pass
-        
-    title = tk.Label(login_win, text='🔒 SERVER BOOT AUTH', fg='#00ffcc', bg='#111113', font=('Consolas', 15, 'bold'))
-    title.pack(pady=20)
-    
-    frame_pass = tk.Frame(login_win, bg='#111113')
-    frame_pass.pack(pady=10)
-    
-    lbl_pass = tk.Label(frame_pass, text='인증 PW : ', fg='#ffffff', bg='#111113', font=('Malgun Gothic', 10, 'bold'), width=8, anchor='e')
-    lbl_pass.pack(side=tk.LEFT)
-    
-    entry_pass = tk.Entry(frame_pass, show='*', fg='white', bg='#222225', insertbackground='white', font=('Malgun Gothic', 10), width=18, relief='flat')
-    entry_pass.pack(side=tk.LEFT)
-    entry_pass.focus()
-    
-    entry_pass.bind('<Return>', lambda e: check_login())
-    
-    btn_login = tk.Button(login_win, text='🔓 서버 엔진 기동', command=check_login, fg='#000000', bg='#00ffcc', activebackground='#00cca3', font=('Malgun Gothic', 10, 'bold'), width=20, height=2, relief='flat')
-    btn_login.pack(pady=15)
-    
-    login_win.protocol('WM_DELETE_WINDOW', on_closing_exit if 'on_closing_exit' in globals() else on_login_closing)
-    login_win.mainloop()
-    
-    return login_success[0]
-
 def open_link(url):
     webbrowser.open(url)
 
-def on_closing():
+def on_closing(root):
     if messagebox.askokcancel('서버 종료', '방송 서버를 완전히 종료하시겠습니까?\n(정산 기능 및 오버레이 송출이 중단됩니다)'):
         root.destroy()
         sys.exit(0)
@@ -2820,57 +2411,45 @@ def on_closing():
 if __name__ == '__main__':
     init_db()
     if not has_gui_support():
-        print("🖥️ [헤드리스 모드] GUI 모드를 사용할 수 없는 환경이거나 클라우드 배포 상태입니다. 백엔드 Flask 서버만 무중단 구동합니다.")
+        print("🖥️ [헤드리스 모드] GUI 모드를 사용할 수 없는 환경입니다. 백엔드 Flask 서버만 무중단 구동합니다.")
         run_flask()
     else:
-        if run_login_gui():
-            flask_thread = threading.Thread(target=run_flask, daemon=True)
-            flask_thread.start()
-            
-            root = tk.Tk()
-            root.title('💎 라이브 마스터 순정 방송서버')
-            root.geometry('460x340')
-            root.configure(bg='#111113')
-            root.resizable(False, False)
-            
-            try:
-                root.attributes('-alpha', 0.96)
-            except:
-                pass
-                
-            ws = root.winfo_screenwidth()
-            hs = root.winfo_screenheight()
-            x = (ws / 2) - 230.0
-            y = (hs / 2) - 170.0
-            root.geometry(f'460x420+{int(x)}+{int(y)}')
-            
-            # UI 구성
-            lbl_logo = tk.Label(root, text='💎 LIVE MASTER SERVER', fg='#00ffcc', bg='#111113', font=('Consolas', 18, 'bold'))
-            lbl_logo.pack(pady=15)
-            
-            port = int(os.environ.get('PORT', 5000))
-            lbl_status = tk.Label(root, text=f'🟢 실시간 방송 정산 엔진 구동 중 (Port: {port})', fg='#ffffff', bg='#111113', font=('Malgun Gothic', 11, 'bold'))
-            lbl_status.pack(pady=5)
-            
-            lbl_info = tk.Label(root, text='투네이션의 모든 수동 후원이 대기함으로 입하되며,\n조종실 및 방송 오버레이가 한치의 오차 없이 구동됩니다.', fg='#8e8e93', bg='#111113', font=('Malgun Gothic', 9), justify='center')
-            lbl_info.pack(pady=5)
-            
-            # 🔑 OTP 보안 등록 정보 추가
-            otp_sec = get_or_create_totp_secret()
-            lbl_otp = tk.Label(root, text='🔑 모바일 OTP 보안키: ' + otp_sec, fg='#ff9f0a', bg='#111113', font=('Consolas', 11, 'bold'))
-            lbl_otp.pack(pady=5)
-            
-            lbl_otp_info = tk.Label(root, text=f'* 최초 등록 방법: 스마트폰 구글 OTP 앱에서 위 키를 입력하거나,\n서버 PC 브라우저로 http://localhost:{port}/setup 에 접속해 QR 코드를 스캔하세요.', fg='#8e8e93', bg='#111113', font=('Malgun Gothic', 8), justify='center')
-            lbl_otp_info.pack(pady=5)
-            
-            frame_btns = tk.Frame(root, bg='#111113')
-            frame_btns.pack(pady=20)
-            
-            btn_ctrl = tk.Button(frame_btns, text='💻 제어 센터 (조종실)', command=lambda: open_link(f'http://localhost:{port}/controller'), fg='#000000', bg='#00ffcc', activebackground='#00cca3', font=('Malgun Gothic', 10, 'bold'), width=18, height=2, relief='flat')
-            btn_ctrl.pack(side=tk.LEFT, padx=10)
-            
-            btn_ovr = tk.Button(frame_btns, text='🎬 송출용 오버레이', command=lambda: open_link(f'http://localhost:{port}/overlay'), fg='#ffffff', bg='#333336', activebackground='#444448', font=('Malgun Gothic', 10, 'bold'), width=18, height=2, relief='flat')
-            btn_ovr.pack(side=tk.LEFT, padx=10)
-            
-            root.protocol('WM_DELETE_WINDOW', on_closing)
-            root.mainloop()
+        flask_thread = threading.Thread(target=run_flask, daemon=True)
+        flask_thread.start()
+
+        root = tk.Tk()
+        root.title('💎 라이브 마스터 방송서버')
+        root.configure(bg='#111113')
+        root.resizable(False, False)
+
+        try:
+            root.attributes('-alpha', 0.96)
+        except:
+            pass
+
+        ws = root.winfo_screenwidth()
+        hs = root.winfo_screenheight()
+        win_w, win_h = 400, 260
+        x = (ws / 2) - (win_w / 2)
+        y = (hs / 2) - (win_h / 2)
+        root.geometry(f'{win_w}x{win_h}+{int(x)}+{int(y)}')
+
+        port = int(os.environ.get('PORT', 5000))
+
+        lbl_logo = tk.Label(root, text='💎 LIVE MASTER SERVER', fg='#00ffcc', bg='#111113', font=('Consolas', 18, 'bold'))
+        lbl_logo.pack(pady=(25, 10))
+
+        lbl_status = tk.Label(root, text=f'🟢 서버 구동 중 (Port: {port})', fg='#ffffff', bg='#111113', font=('Malgun Gothic', 12, 'bold'))
+        lbl_status.pack(pady=5)
+
+        frame_btns = tk.Frame(root, bg='#111113')
+        frame_btns.pack(pady=25)
+
+        btn_ctrl = tk.Button(frame_btns, text='💻 조종실 열기', command=lambda: open_link(f'http://localhost:{port}/controller'), fg='#000000', bg='#00ffcc', activebackground='#00cca3', font=('Malgun Gothic', 11, 'bold'), width=16, height=2, relief='flat')
+        btn_ctrl.pack(side=tk.LEFT, padx=10)
+
+        btn_ovr = tk.Button(frame_btns, text='🎬 오버레이 열기', command=lambda: open_link(f'http://localhost:{port}/overlay'), fg='#ffffff', bg='#333336', activebackground='#444448', font=('Malgun Gothic', 11, 'bold'), width=16, height=2, relief='flat')
+        btn_ovr.pack(side=tk.LEFT, padx=10)
+
+        root.protocol('WM_DELETE_WINDOW', lambda: on_closing(root))
+        root.mainloop()
