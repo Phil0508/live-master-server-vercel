@@ -1899,12 +1899,16 @@ def get_reactions_list():
             rows = cursor.fetchall()
             reactions = []
             for r in rows:
+                audio_id = r[3]
+                image_id = r[4]
                 reactions.append({
                     "id": r[0],
-                    "title": r[1],
-                    "amount": r[2],
-                    "audio_url": f"/uploads/{r[3]}" if r[3] else "",
-                    "image_url": f"/uploads/{r[4]}" if r[4] else "",
+                    "title": r[1] or f"리액션 ({r[2]:,}원)",
+                    "amount": r[2] or 0,
+                    "audio_url": f"/api/reaction/file/{audio_id}" if audio_id else "",
+                    "image_url": f"/api/reaction/file/{image_id}" if image_id else "",
+                    "audio_file_id": audio_id,
+                    "image_file_id": image_id,
                     "is_enabled": bool(r[5]) if r[5] is not None else True
                 })
             return jsonify(reactions)
