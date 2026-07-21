@@ -1550,12 +1550,9 @@
                 return;
             }
 
-            // 🏆 finalized 모드면 final_card_ids에 해당하는 카드만 표시
+            // 🏆 finalized 모드면 final_card_ids에 해당하는 카드만 표시 (값이 비어있을 때는 아무것도 안 보여줌으로써 20장 압착 현상 방지)
             let cards = allCards;
-            if (cg.finalized && (
-                (Array.isArray(cg.final_reaction_ids) && cg.final_reaction_ids.length > 0) ||
-                (Array.isArray(cg.final_card_ids) && cg.final_card_ids.length > 0)
-            )) {
+            if (cg.finalized) {
                 const reactionIdSet = new Set(Array.isArray(cg.final_reaction_ids) ? cg.final_reaction_ids.map(String) : []);
                 const idSet = new Set(Array.isArray(cg.final_card_ids) ? cg.final_card_ids.map(String) : []);
                 cards = allCards.filter(c => {

@@ -2909,12 +2909,15 @@ def shuffle_card_game():
         with file_lock:
             state = load_data()
             if 'card_game' not in state:
-                state['card_game'] = {"active": True, "is_running": False, "time_left_ms": 300000, "selected_reaction_ids": [], "cards": []}
+                state['card_game'] = {"active": True, "is_running": False, "time_left_ms": 300000, "selected_reaction_ids": [], "cards": [], "finalized": False, "final_card_ids": [], "final_reaction_ids": []}
             
             if selected_ids is not None:
                 state['card_game']['selected_reaction_ids'] = selected_ids
                 
             state['card_game']['cards'] = build_card_deck_from_db(state['card_game'].get('selected_reaction_ids'))
+            state['card_game']['finalized'] = False
+            state['card_game']['final_card_ids'] = []
+            state['card_game']['final_reaction_ids'] = []
             state['version'] = state.get('version', 0) + 1
             save_data(state)
             broadcast_event('update', state)
