@@ -56,6 +56,32 @@
         .center-popup-content { background: rgba(0, 0, 0, 0.9); border: 4px solid #00E5B5; border-radius: 50px; padding: 15px 60px; font-size: 36px; font-weight: 900; color: white; white-space: nowrap; } .takeover-popup-content { background: rgba(0, 0, 0, 0.95); border: 4px solid var(--theme-neon); border-radius: 50px; padding: 15px 60px; font-size: 40px; font-weight: 900; color: white; white-space: nowrap; }
         .ticker-bar { width: 1080px; height: 70px; background: rgba(0, 0, 0, 0.7); border-top: 2px solid var(--theme-neon); border-bottom: 2px solid var(--theme-neon); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 900; color: #fff; }
         .guide-text { position: absolute; top: 15px; left: 30px; color: #888; font-size: 14px; font-weight: bold; pointer-events: none; }
+
+        /* 🏆 [Finalized 모드] 최종 5장만 작게 표시되는 모드 - 레이아웃 에디터용 */
+        #card-game.cg-finalized .cg-wrapper {
+            padding: 8px 12px !important;
+        }
+        #card-game.cg-finalized .cg-grid {
+            grid-template-columns: repeat(5, 1fr) !important;
+            gap: 6px !important;
+        }
+        #card-game.cg-finalized .cg-card-slot {
+            height: 54px !important;
+            font-size: 16px !important;
+            border-radius: 12px !important;
+        }
+        #card-game.cg-finalized .cg-header {
+            padding: 4px 12px !important;
+            margin-bottom: 6px !important;
+        }
+        #card-game.cg-finalized .cg-title {
+            font-size: 11px !important;
+        }
+        #card-game.cg-finalized .cg-timer-box,
+        #card-game.cg-finalized .cg-pass-box {
+            font-size: 11px !important;
+            padding: 2px 8px !important;
+        }
     </style>
 </head>
 <body>
@@ -146,18 +172,18 @@
                     </div>
                 </div>
                 <div class="widget" id="card-game" data-id="card-game" style="left:40px; top:180px; display: none;">
-                    <div style="width: 694px; background: linear-gradient(135deg, rgba(18,18,26,0.95), rgba(30,25,15,0.96)); border: 3px solid rgba(255,215,0,0.6); border-radius: 22px; padding: 14px 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.8);">
-                        <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(0,0,0,0.4); border-radius:14px; padding:7px 16px; margin-bottom:10px;">
-                            <span style="font-size:15px; font-weight:900; color:#ffd700;">🎴 CARD FLIP MISSION GAME</span>
-                            <span style="font-size:16px; font-weight:900; color:#fff;">05:00</span>
-                            <span style="font-size:13px; font-weight:900; color:#00ffcc;">0 / 5 PASS</span>
+                    <div class="cg-wrapper" style="width: 694px; background: linear-gradient(135deg, rgba(18,18,26,0.95), rgba(30,25,15,0.96)); border: 3px solid rgba(255,215,0,0.6); border-radius: 22px; padding: 14px 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.8);">
+                        <div class="cg-header" style="display:flex; align-items:center; justify-content:space-between; background:rgba(0,0,0,0.4); border-radius:14px; padding:7px 16px; margin-bottom:10px;">
+                            <span class="cg-title" style="font-size:15px; font-weight:900; color:#ffd700;">🎴 CARD FLIP MISSION GAME</span>
+                            <span class="cg-timer-box" style="font-size:16px; font-weight:900; color:#fff;">05:00</span>
+                            <span class="cg-pass-box" style="font-size:13px; font-weight:900; color:#00ffcc;">0 / 5 PASS</span>
                         </div>
-                        <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px;">
-                            <div style="height:90px; background:linear-gradient(135deg, rgba(25,25,38,0.98), rgba(45,38,20,0.98)); border:2px solid rgba(255,215,0,0.5); border-radius:18px; display:flex; align-items:center; justify-content:center; color:#ffd700; font-size:24px; font-weight:900;">1</div>
-                            <div style="height:90px; background:linear-gradient(135deg, rgba(25,25,38,0.98), rgba(45,38,20,0.98)); border:2px solid rgba(255,215,0,0.5); border-radius:18px; display:flex; align-items:center; justify-content:center; color:#ffd700; font-size:24px; font-weight:900;">2</div>
-                            <div style="height:90px; background:linear-gradient(135deg, rgba(25,25,38,0.98), rgba(45,38,20,0.98)); border:2px solid rgba(255,215,0,0.5); border-radius:18px; display:flex; align-items:center; justify-content:center; color:#ffd700; font-size:24px; font-weight:900;">3</div>
-                            <div style="height:90px; background:linear-gradient(135deg, rgba(25,25,38,0.98), rgba(45,38,20,0.98)); border:2px solid rgba(255,215,0,0.5); border-radius:18px; display:flex; align-items:center; justify-content:center; color:#ffd700; font-size:24px; font-weight:900;">4</div>
-                            <div style="height:90px; background:linear-gradient(135deg, rgba(25,25,38,0.98), rgba(45,38,20,0.98)); border:2px solid rgba(255,215,0,0.5); border-radius:18px; display:flex; align-items:center; justify-content:center; color:#ffd700; font-size:24px; font-weight:900;">5</div>
+                        <div class="cg-grid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px;">
+                            <div class="cg-card-slot" style="height:90px; background:linear-gradient(135deg, rgba(25,25,38,0.98), rgba(45,38,20,0.98)); border:2px solid rgba(255,215,0,0.5); border-radius:18px; display:flex; align-items:center; justify-content:center; color:#ffd700; font-size:24px; font-weight:900;">1</div>
+                            <div class="cg-card-slot" style="height:90px; background:linear-gradient(135deg, rgba(25,25,38,0.98), rgba(45,38,20,0.98)); border:2px solid rgba(255,215,0,0.5); border-radius:18px; display:flex; align-items:center; justify-content:center; color:#ffd700; font-size:24px; font-weight:900;">2</div>
+                            <div class="cg-card-slot" style="height:90px; background:linear-gradient(135deg, rgba(25,25,38,0.98), rgba(45,38,20,0.98)); border:2px solid rgba(255,215,0,0.5); border-radius:18px; display:flex; align-items:center; justify-content:center; color:#ffd700; font-size:24px; font-weight:900;">3</div>
+                            <div class="cg-card-slot" style="height:90px; background:linear-gradient(135deg, rgba(25,25,38,0.98), rgba(45,38,20,0.98)); border:2px solid rgba(255,215,0,0.5); border-radius:18px; display:flex; align-items:center; justify-content:center; color:#ffd700; font-size:24px; font-weight:900;">4</div>
+                            <div class="cg-card-slot" style="height:90px; background:linear-gradient(135deg, rgba(25,25,38,0.98), rgba(45,38,20,0.98)); border:2px solid rgba(255,215,0,0.5); border-radius:18px; display:flex; align-items:center; justify-content:center; color:#ffd700; font-size:24px; font-weight:900;">5</div>
                         </div>
                     </div>
                 </div>
@@ -267,11 +293,19 @@
                         document.getElementById('roulette').style.display = 'none';
                     }
 
-                    // 🎴 카드 뒤집기 위젯 표시 여부
-                    if (d.card_game && d.card_game.active) {
-                        document.getElementById('card-game').style.display = 'flex';
-                    } else {
-                        document.getElementById('card-game').style.display = 'none';
+                    // 🎴 카드 뒤집기 위젯 표시 여부 및 완료카드 고정(finalized) 클래스 토글
+                    const cgWidget = document.getElementById('card-game');
+                    if (cgWidget) {
+                        if (d.card_game && d.card_game.active) {
+                            cgWidget.style.display = 'flex';
+                            if (d.card_game.finalized) {
+                                cgWidget.classList.add('cg-finalized');
+                            } else {
+                                cgWidget.classList.remove('cg-finalized');
+                            }
+                        } else {
+                            cgWidget.style.display = 'none';
+                        }
                     }
 
                     // 🏃‍♀️ 퇴근전쟁 모드가 켜져 있으면 랭킹판 대신 퇴근빵 위젯 표시
