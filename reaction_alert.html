@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Streamer Reaction Alert Layer</title>
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background: transparent;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            user-select: none;
+        }
+
+        /* 📡 [오디오 클릭 유도 배너] */
+        #autoplay-warning-banner {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 69, 58, 0.95);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 800;
+            box-shadow: 0 10px 30px rgba(255, 69, 58, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            z-index: 100020;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            animation: bannerPulse 1.5s infinite alternate;
+        }
+        @keyframes bannerPulse {
+            0% { transform: translateX(-50%) scale(1); box-shadow: 0 10px 30px rgba(255, 69, 58, 0.4); }
+            100% { transform: translateX(-50%) scale(1.03); box-shadow: 0 10px 40px rgba(255, 69, 58, 0.7); }
+        }
+
+        /* 🎵 리액션 팝업 오버레이 */
+        .reaction-screen-overlay {
+            width: 900px;
+            max-width: 90%;
+            background: rgba(10, 10, 15, 0.85);
+            border: 3px solid rgba(255, 215, 0, 0.4);
+            backdrop-filter: blur(15px);
+            border-radius: 36px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.7);
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85), 0 0 50px rgba(255, 215, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.05);
+            z-index: 100010;
+        }
+        .reaction-screen-overlay.show {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+        }
+        .reaction-screen-overlay img {
+            max-width: 100%;
+            max-height: 550px;
+            object-fit: contain;
+            border-radius: 24px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        .reaction-text-donator {
+            margin-top: 30px;
+            font-size: 56px;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 3px 3px 0 #000, -3px 3px 0 #000, 3px -3px 0 #000, -3px -3px 0 #000, 0 5px 25px rgba(255, 215, 0, 0.6);
+            text-align: center;
+            letter-spacing: -0.5px;
+        }
+        .reaction-text-message {
+            margin-top: 24px;
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2.5px solid rgba(255, 255, 255, 0.25);
+            padding: 16px 45px;
+            border-radius: 24px;
+            text-shadow: 1.5px 1.5px 3px rgba(0, 0, 0, 0.85);
+            text-align: center;
+            max-width: 780px;
+            word-break: break-all;
+            line-height: 1.5;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75);
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 오디오 클릭 활성화 유도 배너 -->
+    <div id="autoplay-warning-banner" onclick="unlockAudioContext()">
+        <i class="fa-solid fa-volume-high"></i>
+        <span>소리 재생을 위해 화면 아무 곳이나 한 번 클릭해주세요!</span>
+    </div>
+
+    <!-- 🎵 리액션 음원/사진 송출 전광판 및 오디오 객체 -->
+    <div id="reaction-screen-overlay" class="reaction-screen-overlay">
+        <img id="reaction-screen-image" crossorigin="anonymous" src="" alt="Reaction Image">
+        <div id="reaction-donator-info" class="reaction-text-donator"></div>
+        <div id="reaction-message-info" class="reaction-text-message"></div>
+    </div>
+    <audio id="reaction-audio" style="display:none;"></audio>
+
+    <script>
+        // API Token
+        window.apiToken = "";
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('token')) {
+                window.apiToken = urlParams.get('token');
+                console.log("Token detected from URL parameter.");
+            }
+        } catch(tokenErr) {
+            console.error("Token parse error:", tokenErr);
+        }
+
+        // Fetch wrapper to handle API token
+        const originalFetch = window.fetch;
+        window.fetch = function(resource, init) {
+            if (typeof resource === 'string' && resource.startsWith('/api/')) {
+                if (!window.location.protocol.startsWith('http')) {
+                    resource = 'http://localhost:5000' + resource;
+                }
+                if (window.apiToken) {
+                    init = init || {};
+                    init.headers = init.headers || {};
+                    if (init.headers instanceof Headers) {
+                        init.headers.set('Authorization', 'Bearer ' + window.apiToken);
+                    } else {
+                        init.headers['Authorization'] = 'Bearer ' + window.apiToken;
+                    }
+                }
+            }
+            return originalFetch(resource, init);
+        };
+
+        // State variables
+        let globalData = null;
+        let currentPlayingId = null;
+        let isEndingReaction = false;
+        let reactionTimeout = null;
+        let reactionImgClearTimeout = null;
+        let audioSafetyTimeout = null;
+        
+        let audioCtx = null;
+        function initAudio() {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            } catch(e) {
+                console.warn("AudioContext initialization warning:", e);
+            }
+        }
+        document.addEventListener('click', initAudio, { once: true });
+
+        // XSS defense helper
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatNum(n) {
+            return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function checkReactionQueue() {
+            if (window.isReactionCurrentlyActive) return;
+            
+            if (!globalData || !globalData.reaction_mode || !globalData.reaction_queue || globalData.reaction_queue.length === 0) {
+                if (currentPlayingId !== null) {
+                    currentPlayingId = null;
+                    stopReactionVisuals();
+                }
+                return;
+            }
+            
+            const firstItem = globalData.reaction_queue[0];
+            if (currentPlayingId !== firstItem.id) {
+                currentPlayingId = firstItem.id;
+                playReaction(firstItem);
+            }
+        }
+
+        function stopReactionVisuals() {
+            const overlay = document.getElementById('reaction-screen-overlay');
+            const img = document.getElementById('reaction-screen-image');
+            const audio = document.getElementById('reaction-audio');
+
+            if (overlay) {
+                overlay.classList.remove('show');
+            }
+            if (audio) {
+                audio.onended = null;
+                audio.onerror = null;
+                audio.onloadedmetadata = null;
+                audio.pause();
+                audio.src = '';
+            }
+            if (reactionTimeout) {
+                clearTimeout(reactionTimeout);
+                reactionTimeout = null;
+            }
+            if (audioSafetyTimeout) {
+                clearTimeout(audioSafetyTimeout);
+                audioSafetyTimeout = null;
+            }
+            
+            if (reactionImgClearTimeout) clearTimeout(reactionImgClearTimeout);
+            reactionImgClearTimeout = setTimeout(() => { if (img) img.src = ""; }, 500);
+            
+            window.isReactionCurrentlyActive = false;
+        }
+
+        function playReaction(data) {
+            console.log('Playing reaction:', data);
+            window.isReactionCurrentlyActive = true;
+            
+            const overlay = document.getElementById('reaction-screen-overlay');
+            const img = document.getElementById('reaction-screen-image');
+            const donatorEl = document.getElementById('reaction-donator-info');
+            const messageEl = document.getElementById('reaction-message-info');
+            const audio = document.getElementById('reaction-audio');
+            
+            if (!overlay || !img || !audio) return;
+            
+            // 1. Reset any playing timers
+            isEndingReaction = false;
+            img.onload = null;
+            if (reactionTimeout) clearTimeout(reactionTimeout);
+            if (reactionImgClearTimeout) { clearTimeout(reactionImgClearTimeout); reactionImgClearTimeout = null; }
+            if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+            audio.onended = null;
+            audio.onerror = null;
+            audio.onloadedmetadata = null;
+            audio.pause();
+            audio.src = '';
+            
+            // 2. Set donator and amount information
+            let donatorName = data.donator;
+            if (!donatorName || donatorName === '익명' || data.slot_machine) {
+                donatorName = data.slot_machine ? '🎰 슬롯머신' : (data.donator || '슬롯머신');
+            }
+            let donationAmount = data.amount ? formatNum(data.amount) + '원' : '';
+            
+            if (donatorEl) {
+                donatorEl.innerText = donatorName + (donationAmount ? ' · ' + donationAmount : '');
+            }
+            
+            let msgText = data.message || '';
+            if (messageEl) {
+                if (msgText && msgText !== '수동 후원 송출') {
+                    messageEl.innerText = msgText;
+                    messageEl.style.display = 'block';
+                } else {
+                    messageEl.innerText = '';
+                    messageEl.style.display = 'none';
+                }
+            }
+            
+            // 3. Set image URL
+            if (data.image_url) {
+                let imgUrl = data.image_url;
+                if (!imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
+                    imgUrl = '/' + imgUrl;
+                }
+                img.src = imgUrl;
+                img.style.display = 'block';
+            } else {
+                img.src = '';
+                img.style.display = 'none';
+            }
+            
+            // 4. Reveal widget (always centered, no minimize timeout!)
+            overlay.classList.add('show');
+            
+            // 5. Play audio and handle completion callbacks
+            if (data.audio_url) {
+                let audioUrl = data.audio_url;
+                if (!audioUrl.startsWith('http') && !audioUrl.startsWith('/')) {
+                    audioUrl = '/' + audioUrl;
+                }
+                audio.src = audioUrl + '?t=' + (data.id || Date.now());
+                
+                audio.onended = function() {
+                    console.log('Audio playback ended.');
+                    if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                    onReactionEnded();
+                };
+                
+                audio.onerror = function(err) {
+                    console.error('Audio error:', err);
+                    if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                    onReactionEnded();
+                };
+                
+                const setupSafetyTimer = () => {
+                    if (audioSafetyTimeout) clearTimeout(audioSafetyTimeout);
+                    const duration = audio.duration;
+                    const safetyDuration = (isFinite(duration) && duration > 0) ? (duration * 1000 + 2000) : 30000;
+                    audioSafetyTimeout = setTimeout(() => {
+                        console.warn('Audio safety timeout. Skipping.');
+                        onReactionEnded();
+                    }, safetyDuration);
+                };
+
+                if (audio.readyState >= 1) {
+                    setupSafetyTimer();
+                } else {
+                    audio.onloadedmetadata = setupSafetyTimer;
+                }
+                
+                audio.play().then(() => {
+                    console.log('Audio play started.');
+                }).catch(err => {
+                    console.error('Autoplay block cleanup fallback in 5 seconds:', err);
+                    audio.onended = null;
+                    audio.onerror = null;
+                    audio.onloadedmetadata = null;
+                    if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                    reactionTimeout = setTimeout(() => {
+                        stopReactionVisuals();
+                    }, 5000);
+                });
+            } else {
+                // If there's no audio, hide after 5 seconds
+                reactionTimeout = setTimeout(() => {
+                    onReactionEnded();
+                }, 5000);
+            }
+        }
+
+        function onReactionEnded() {
+            if (isEndingReaction) return;
+            isEndingReaction = true;
+            
+            stopReactionVisuals();
+            
+            const popId = currentPlayingId;
+            currentPlayingId = null;
+            
+            fetch('/api/reaction/next', { 
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: popId})
+            }).then(res => res.json()).then(() => {
+                return fetch('/api/data');
+            }).then(res => res.json()).then(data => {
+                globalData = data;
+                isEndingReaction = false;
+                checkReactionQueue();
+            }).catch(err => {
+                console.error("Queue advance error:", err);
+                isEndingReaction = false;
+            });
+        }
+
+        function unlockAudioContext() {
+            const banner = document.getElementById('autoplay-warning-banner');
+            if (banner) banner.style.display = 'none';
+            const audio = document.getElementById('reaction-audio');
+            if (audio) {
+                audio.play().then(() => audio.pause()).catch(() => {});
+            }
+            initAudio();
+        }
+        window.addEventListener('click', unlockAudioContext, { once: true });
+        window.addEventListener('keydown', unlockAudioContext, { once: true });
+        window.addEventListener('touchstart', unlockAudioContext, { once: true });
+
+        // SSE Real-time connection
+        let sseSource = null;
+        function initSSE() {
+            if (sseSource) sseSource.close();
+            sseSource = new EventSource('/api/stream');
+            
+            sseSource.addEventListener('init', function(e) {
+                const newData = JSON.parse(e.data);
+                globalData = newData;
+                checkReactionQueue();
+            });
+            
+            sseSource.addEventListener('update', function(e) {
+                const newData = JSON.parse(e.data);
+                globalData = newData;
+                checkReactionQueue();
+            });
+
+            sseSource.addEventListener('reaction_stop', function(e) {
+                try {
+                    const data = e.data ? JSON.parse(e.data) : {};
+                    if (data.id && data.id !== currentPlayingId) return;
+                    currentPlayingId = null;
+                    isEndingReaction = false;
+                    stopReactionVisuals();
+                } catch(err) {
+                    console.error("Reaction stop error:", err);
+                    currentPlayingId = null;
+                    isEndingReaction = false;
+                    stopReactionVisuals();
+                }
+            });
+
+            sseSource.addEventListener('reaction_skip', function(e) {
+                currentPlayingId = null;
+                isEndingReaction = false;
+                if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                const audio = document.getElementById('reaction-audio');
+                if (audio) { 
+                    audio.pause(); 
+                    audio.src = ''; 
+                    audio.onended = null;
+                    audio.onerror = null;
+                }
+                onReactionEnded();
+            });
+            
+            sseSource.onerror = function(err) {
+                console.error("SSE connection error. Reconnecting in 3s...", err);
+                sseSource.close();
+                setTimeout(initSSE, 3000);
+            };
+        }
+        initSSE();
+
+        // 2-way backup polling fallback
+        let fallbackInterval = setInterval(async () => {
+            try {
+                let res = await fetch('/api/data');
+                if (res.ok) {
+                    let d = await res.json();
+                    globalData = d;
+                    checkReactionQueue();
+                }
+            } catch(e) {
+                console.warn("Polling fallback issue:", e);
+            }
+        }, 1500);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>리액션 미션 관리자</title>
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    
+    <style>
+        :root {
+            --bg-dark: #090a0f;
+            --bg-card: rgba(22, 23, 31, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent: #ffd700;
+            --accent-glow: rgba(255, 215, 0, 0.35);
+            --neon-blue: #00e5ff;
+            --neon-red: #ff3b30;
+            --neon-green: #34c759;
+            --text-main: #f5f5f7;
+            --text-muted: #8e8e93;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* 👑 헤더 섹션 */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-title i {
+            color: var(--accent);
+            font-size: 28px;
+            filter: drop-shadow(0 0 10px var(--accent-glow));
+        }
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .btn-add {
+            background: linear-gradient(135deg, var(--accent), #ff9500);
+            color: #000;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        /* 🔍 검색 및 통계 필터 */
+        .filter-bar {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .search-input-wrap {
+            position: relative;
+            flex: 1;
+            max-width: 450px;
+        }
+        .search-input-wrap i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+        .search-input {
+            width: 100%;
+            height: 42px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0 15px 0 42px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
+        }
+        .stats-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .stats-text span {
+            color: var(--accent);
+            font-size: 16px;
+        }
+
+        /* 📋 리액션 리스트 테이블 */
+        .reaction-table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        th, td {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        th {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        /* 테이블 내용물 스타일 */
+        .col-image img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: rgba(0,0,0,0.3);
+        }
+        .col-image-empty {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 20px;
+            border: 1px dashed var(--border-color);
+        }
+        .col-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: white;
+        }
+        .col-amount {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .audio-player-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+        .audio-player-btn:hover {
+            background: var(--accent);
+            color: black;
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+        .audio-player-btn.playing {
+            background: var(--neon-blue);
+            color: black;
+            border-color: var(--neon-blue);
+            animation: audioPulse 1.2s infinite alternate;
+        }
+        @keyframes audioPulse {
+            0% { transform: scale(1); box-shadow: 0 0 5px rgba(0, 229, 255, 0.3); }
+            100% { transform: scale(1.15); box-shadow: 0 0 15px rgba(0, 229, 255, 0.6); }
+        }
+
+        /* 토글 스위치 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: rgba(255,255,255,0.12);
+            transition: .3s;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #fff;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--neon-green);
+        }
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        /* 액션 버튼 그룹 */
+        .actions-wrap {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-action {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-action.edit:hover {
+            background: rgba(0, 229, 255, 0.15);
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+        }
+        .btn-action.delete:hover {
+            background: rgba(255, 59, 48, 0.15);
+            border-color: var(--neon-red);
+            color: var(--neon-red);
+        }
+
+        /* 📋 모달 스타일 */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal-content {
+            background: #15161d;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            width: 500px;
+            max-width: 100%;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modalSlideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-header h3 i {
+            color: var(--accent);
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+        .modal-close:hover {
+            color: white;
+        }
+        .modal-body {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .form-group label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+        .form-group input[type="text"],
+        .form-group input[type="number"] {
+            height: 42px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: white;
+            padding: 0 14px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input[type="text"]:focus,
+        .form-group input[type="number"]:focus {
+            border-color: var(--accent);
+        }
+        .form-group input[type="file"] {
+            display: none;
+        }
+        .file-upload-trigger {
+            border: 1px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.2s ease;
+        }
+        .file-upload-trigger:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .file-upload-trigger.selected {
+            border-color: var(--neon-green);
+            background: rgba(52, 199, 89, 0.08);
+            color: var(--neon-green);
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-submit {
+            background: var(--accent);
+            color: black;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 헤더 -->
+        <header>
+            <div class="header-title">
+                <i class="fa-solid fa-guitar"></i>
+                <h1>리액션 미션 관리자</h1>
+            </div>
+            <button class="btn-add" onclick="openAddModal()">
+                <i class="fa-solid fa-plus"></i> 새 리액션 등록
+            </button>
+        </header>
+
+        <!-- 필터바 -->
+        <div class="filter-bar">
+            <div class="search-input-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" class="search-input" id="search-box" placeholder="리액션 제목 또는 금액 검색..." oninput="filterReactions()">
+            </div>
+            <div class="stats-text">
+                총 등록 항목: <span id="total-count">0</span>개 / 활성화: <span id="active-count" style="color:var(--neon-green);">0</span>개
+            </div>
+        </div>
+
+        <!-- 리스트 테이블 -->
+        <div class="reaction-table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 80px; text-align: center;">사진</th>
+                        <th>리액션 명칭</th>
+                        <th style="width: 150px;">후원 금액</th>
+                        <th style="width: 100px; text-align: center;">미리듣기</th>
+                        <th style="width: 120px; text-align: center;">활성화 여부</th>
+                        <th style="width: 180px; text-align: center;">작업</th>
+                    </tr>
+                </thead>
+                <tbody id="reaction-tbody">
+                    <!-- JS 동적 렌더링 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 📋 리액션 추가/수정 모달 -->
+    <div class="modal-overlay" id="reaction-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title"><i class="fa-solid fa-plus"></i> 새 리액션 등록</h3>
+                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="form-item-id">
+                
+                <div class="form-group">
+                    <label for="form-title">리액션 명칭 *</label>
+                    <input type="text" id="form-title" placeholder="예: 시그니처 댄스, 사쿠란보 등">
+                </div>
+
+                <div class="form-group">
+                    <label for="form-amount">리액션 기준 금액 (원) *</label>
+                    <input type="number" id="form-amount" placeholder="예: 50000">
+                </div>
+
+                <div class="form-group">
+                    <label>이미지 파일 (GIF, WebP, PNG 등)</label>
+                    <label class="file-upload-trigger" id="image-upload-trigger" for="form-image">
+                        <i class="fa-solid fa-image"></i> <span id="image-upload-text">이미지 파일 선택</span>
+                    </label>
+                    <input type="file" id="form-image" accept="image/*" onchange="onFileSelected(this, 'image')">
+                </div>
+
+                <div class="form-group">
+                    <label>오디오 파일 (MP3, WAV, OGG 등)</label>
+                    <label class="file-upload-trigger" id="audio-upload-trigger" for="form-audio">
+                        <i class="fa-solid fa-file-audio"></i> <span id="audio-upload-text">음원 파일 선택</span>
+                    </label>
+                    <input type="file" id="form-audio" accept="audio/*" onchange="onFileSelected(this, 'audio')">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">취소</button>
+                <button class="btn-submit" id="btn-submit" onclick="submitForm()">
+                    <i class="fa-solid fa-check"></i> 저장하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 숨겨진 테스트 오디오 재생기 -->
+    <audio id="global-preview-audio" style="display:none;"></audio>
+
+    <script>
+        let allReactions = [];
+        let currentlyPlayingBtn = null;
+
+        // 리액션 전체 조회
+        async function fetchReactions() {
+            try {
+                const res = await fetch('/api/reaction/list');
+                const data = await res.json();
+                allReactions = data;
+                renderReactions();
+            } catch(e) {
+                console.error("Failed to load reactions:", e);
+                alert("리액션 목록을 불러오지 못했습니다.");
+            }
+        }
+
+        // 리액션 테이블 렌더링
+        function renderReactions() {
+            const tbody = document.getElementById('reaction-tbody');
+            const searchVal = document.getElementById('search-box').value.toLowerCase().trim();
+            
+            // 검색 필터링
+            const filtered = allReactions.filter(r => {
+                if (!searchVal) return true;
+                return r.title.toLowerCase().includes(searchVal) || r.amount.toString().includes(searchVal);
+            });
+
+            // 통계 업데이트
+            document.getElementById('total-count').innerText = allReactions.length;
+            document.getElementById('active-count').innerText = allReactions.filter(r => r.is_enabled).length;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding: 50px 0; color: var(--text-muted);">
+                            <i class="fa-solid fa-box-open" style="font-size:32px; display:block; margin-bottom:12px;"></i>
+                            검색된 리액션이 없습니다.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(r => {
+                const imageEl = r.image_url 
+                    ? `<div class="col-image"><img src="${r.image_url}"></div>`
+                    : `<div class="col-image-empty"><i class="fa-solid fa-image"></i></div>`;
+
+                const audioBtn = r.audio_url
+                    ? `<button class="audio-player-btn" onclick="previewAudio(this, '${r.audio_url}')"><i class="fa-solid fa-play"></i></button>`
+                    : `<span style="color:var(--text-muted); font-size:12px;">음원 없음</span>`;
+
+                return `
+                    <tr id="row-${r.id}">
+                        <td style="text-align:center;">${imageEl}</td>
+                        <td><span class="col-title">${escapeHtml(r.title)}</span></td>
+                        <td><span class="col-amount">${r.amount.toLocaleString()}원</span></td>
+                        <td style="text-align:center; display:flex; justify-content:center;">${audioBtn}</td>
+                        <td style="text-align:center;">
+                            <label class="switch">
+                                <input type="checkbox" ${r.is_enabled ? 'checked' : ''} onchange="toggleReaction(${r.id}, this)">
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+                        <td>
+                            <div class="actions-wrap" style="justify-content:center;">
+                                <button class="btn-action edit" onclick="openEditModal(${JSON.stringify(r).replace(/"/g, '&quot;')})">
+                                    <i class="fa-solid fa-pen-to-square"></i> 수정
+                                </button>
+                                <button class="btn-action delete" onclick="deleteReaction(${r.id})">
+                                    <i class="fa-solid fa-trash-can"></i> 삭제
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterReactions() {
+            renderReactions();
+        }
+
+        // HTML 이스케이프
+        function escapeHtml(str) {
+            if(!str) return "";
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // 음원 미리듣기/일시정지
+        function previewAudio(btn, url) {
+            const player = document.getElementById('global-preview-audio');
+            if (currentlyPlayingBtn === btn) {
+                // 토글 일시정지
+                player.pause();
+                currentlyPlayingBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+                currentlyPlayingBtn.classList.remove('playing');
+                currentlyPlayingBtn = null;
+            } else {
+                if (currentlyPlayingBtn) {
+                    currentlyPlayingBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+                    currentlyPlayingBtn.classList.remove('playing');
+                }
+                currentlyPlayingBtn = btn;
+                currentlyPlayingBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                currentlyPlayingBtn.classList.add('playing');
+                
+                player.src = url;
+                player.play();
+                
+                player.onended = () => {
+                    btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+                    btn.classList.remove('playing');
+                    if (currentlyPlayingBtn === btn) currentlyPlayingBtn = null;
+                };
+            }
+        }
+
+        // 활성화 토글 API 연동
+        async function toggleReaction(itemId, checkbox) {
+            try {
+                let res = await fetch(`/api/reaction/toggle/${itemId}`, { method: 'POST' });
+                let data = await res.json();
+                if (data.status !== 'success') {
+                    alert("상태 변경에 실패했습니다: " + data.message);
+                    checkbox.checked = !checkbox.checked;
+                } else {
+                    const r = allReactions.find(item => item.id === itemId);
+                    if (r) r.is_enabled = checkbox.checked;
+                    document.getElementById('active-count').innerText = allReactions.filter(item => item.is_enabled).length;
+                }
+            } catch(e) {
+                alert("네트워크 오류가 발생했습니다.");
+                checkbox.checked = !checkbox.checked;
+            }
+        }
+
+        // 모달 열기/닫기
+        function openAddModal() {
+            document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-plus"></i> 새 리액션 등록';
+            document.getElementById('form-item-id').value = '';
+            document.getElementById('form-title').value = '';
+            document.getElementById('form-amount').value = '';
+            
+            // 파일 리셋
+            document.getElementById('form-image').value = '';
+            document.getElementById('form-audio').value = '';
+            
+            resetTriggerStyles('image');
+            resetTriggerStyles('audio');
+
+            document.getElementById('reaction-modal').classList.add('show');
+        }
+
+        function openEditModal(r) {
+            document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> 리액션 수정';
+            document.getElementById('form-item-id').value = r.id;
+            document.getElementById('form-title').value = r.title;
+            document.getElementById('form-amount').value = r.amount;
+            
+            // 파일 리셋
+            document.getElementById('form-image').value = '';
+            document.getElementById('form-audio').value = '';
+            
+            resetTriggerStyles('image', r.image_url ? '기존 사진 등록됨 (수정 시 파일 선택)' : null);
+            resetTriggerStyles('audio', r.audio_url ? '기존 음원 등록됨 (수정 시 파일 선택)' : null);
+
+            document.getElementById('reaction-modal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('reaction-modal').classList.remove('show');
+        }
+
+        function onFileSelected(input, type) {
+            const trigger = document.getElementById(`${type}-upload-trigger`);
+            const text = document.getElementById(`${type}-upload-text`);
+            
+            if (input.files && input.files.length > 0) {
+                trigger.classList.add('selected');
+                text.innerText = input.files[0].name;
+            } else {
+                resetTriggerStyles(type);
+            }
+        }
+
+        function resetTriggerStyles(type, defaultText = null) {
+            const trigger = document.getElementById(`${type}-upload-trigger`);
+            const text = document.getElementById(`${type}-upload-text`);
+            trigger.classList.remove('selected');
+            if (defaultText) {
+                text.innerText = defaultText;
+            } else {
+                text.innerText = type === 'image' ? '이미지 파일 선택' : '음원 파일 선택';
+            }
+        }
+
+        // 등록 및 수정 완료 제출
+        async function submitForm() {
+            const title = document.getElementById('form-title').value.trim();
+            const amountVal = document.getElementById('form-amount').value;
+            const itemId = document.getElementById('form-item-id').value;
+
+            if (!title) {
+                alert("리액션 명칭을 입력해주세요.");
+                return;
+            }
+            if (!amountVal || parseInt(amountVal) <= 0) {
+                alert("정확한 기준 금액을 입력해주세요.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('amount', parseInt(amountVal));
+            
+            const imageInput = document.getElementById('form-image');
+            if (imageInput.files && imageInput.files[0]) {
+                formData.append('image', imageInput.files[0]);
+            }
+            
+            const audioInput = document.getElementById('form-audio');
+            if (audioInput.files && audioInput.files[0]) {
+                formData.append('audio', audioInput.files[0]);
+            }
+
+            const url = itemId ? `/api/reaction/edit/${itemId}` : '/api/reaction/add';
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장 중...';
+
+            try {
+                let res = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+                let data = await res.json();
+                
+                if (data.status === 'success') {
+                    alert(itemId ? "리액션이 성공적으로 수정되었습니다." : "새 리액션이 정상 등록되었습니다.");
+                    closeModal();
+                    fetchReactions();
+                } else {
+                    alert("처리 오류: " + data.message);
+                }
+            } catch(e) {
+                alert("네트워크 통신 오류가 발생했습니다.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> 저장하기';
+            }
+        }
+
+        // 리액션 삭제
+        async function deleteReaction(itemId) {
+            if (!confirm("정말로 이 리액션을 영구 삭제하시겠습니까?\n삭제된 리액션에 연동된 이미지 및 음원 데이터는 복구할 수 없습니다.")) return;
+
+            try {
+                let res = await fetch(`/api/reaction/delete/${itemId}`, { method: 'POST' });
+                let data = await res.json();
+                if (data.status === 'success') {
+                    alert("리액션이 완전히 삭제되었습니다.");
+                    fetchReactions();
+                } else {
+                    alert("삭제 실패: " + data.message);
+                }
+            } catch(e) {
+                alert("삭제 처리 중 통신 오류가 발생했습니다.");
+            }
+        }
+
+        // 페이지 진입 시 로드
+        window.addEventListener('DOMContentLoaded', fetchReactions);
+    </script>
+</body>
+</html>

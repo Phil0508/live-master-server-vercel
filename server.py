@@ -971,6 +971,16 @@ def serve_mobile():
 def serve_admin():
     return serve_html_file('admin.html')
 
+@app.route('/reactions')
+@app.route('/reactions.html')
+def serve_reactions():
+    return serve_html_file('reactions.html')
+
+@app.route('/reaction_alert')
+@app.route('/reaction_alert.html')
+def serve_reaction_alert():
+    return serve_html_file('reaction_alert.html')
+
 @app.route('/upload')
 @app.route('/노래등록')
 def serve_upload():
