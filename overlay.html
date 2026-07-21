@@ -674,15 +674,25 @@
             height: 95px;
         }
         #card-game-container.cg-finalized .cg-header {
-            padding: 4px 12px;
+            padding: 5px 12px;
         }
         #card-game-container.cg-finalized .cg-title {
-            font-size: 11px;
+            font-size: 15px; /* 타이틀 폰트 크기 업 */
         }
-        #card-game-container.cg-finalized .cg-timer-box,
+        #card-game-container.cg-finalized .cg-timer-box {
+            font-size: 13.5px; /* 타이머 폰트 업 */
+            padding: 3px 10px;
+        }
         #card-game-container.cg-finalized .cg-pass-box {
-            font-size: 11px;
-            padding: 2px 8px;
+            font-size: 12.5px; /* PASS 현황 폰트 업 */
+            padding: 3px 10px;
+        }
+        #card-game-container.cg-finalized .cg-item-title {
+            font-size: 12.5px !important; /* 5장 고정 모드 카드 제목 크기 크게 */
+        }
+        #card-game-container.cg-finalized .cg-item-amount {
+            font-size: 11px !important; /* 5장 고정 모드 카드 금액 크기 크게 */
+            padding: 2px 8px !important;
         }
         /* finalized 모드에서는 점수판(ranking)이 다시 자연스럽게 보여야 함 */
         body.card-game-active.card-game-finalized #ranking-container {
