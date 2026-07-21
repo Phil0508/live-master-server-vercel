@@ -3048,9 +3048,12 @@
             }
 
             try {
-                let res = await fetch('/api/reactions/list');
+                let res = await fetch('/api/reaction/list');
                 let data = await res.json();
-                if (data.status === 'success') {
+                if (Array.isArray(data)) {
+                    allReactionItemsForPicker = data;
+                    renderCardPickerItems();
+                } else if (data && (data.status === 'success' || data.items)) {
                     allReactionItemsForPicker = data.items || [];
                     renderCardPickerItems();
                 }
