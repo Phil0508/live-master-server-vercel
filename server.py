@@ -3217,10 +3217,10 @@ if __name__ == '__main__':
         frame_btns = tk.Frame(root, bg='#111113')
         frame_btns.pack(pady=25)
 
-        btn_ctrl = tk.Button(frame_btns, text='💻 조종실 열기', command=lambda: open_link(f'http://localhost:{port}/controller'), fg='#000000', bg='#00ffcc', activebackground='#00cca3', font=('Malgun Gothic', 11, 'bold'), width=16, height=2, relief='flat')
+        btn_ctrl = tk.Button(frame_btns, text='💻 조종실 열기', command=lambda: open_link(f'http://127.0.0.1:{port}/controller'), fg='#000000', bg='#00ffcc', activebackground='#00cca3', font=('Malgun Gothic', 11, 'bold'), width=16, height=2, relief='flat')
         btn_ctrl.pack(side=tk.LEFT, padx=10)
 
-        btn_ovr = tk.Button(frame_btns, text='🎬 오버레이 열기', command=lambda: open_link(f'http://localhost:{port}/overlay'), fg='#ffffff', bg='#333336', activebackground='#444448', font=('Malgun Gothic', 11, 'bold'), width=16, height=2, relief='flat')
+        btn_ovr = tk.Button(frame_btns, text='🎬 오버레이 열기', command=lambda: open_link(f'http://127.0.0.1:{port}/overlay'), fg='#ffffff', bg='#333336', activebackground='#444448', font=('Malgun Gothic', 11, 'bold'), width=16, height=2, relief='flat')
         btn_ovr.pack(side=tk.LEFT, padx=10)
 
         root.protocol('WM_DELETE_WINDOW', lambda: on_closing(root))
