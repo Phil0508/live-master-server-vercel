@@ -261,25 +261,29 @@
         /* --------------------------------------------------
             💗 공주풍 핑크 VS 알약 대결판 (리뉴얼 v2)
         -------------------------------------------------- */
+        /* 🍎 애플 산세리프 폰트 및 알약 대결판 (리뉴얼 v3) */
         .match-wrapper { 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            gap: 18px; 
+            gap: 16px; 
         } 
         
-        /* 반짝이는 크리스탈 타이머 캡슐 */
+        /* 반짝이는 애플 크리스탈 타이머 캡슐 */
         .m-timer-pill { 
-            background: linear-gradient(135deg, rgba(255,255,255,0.35), rgba(255,182,214,0.25));
-            backdrop-filter: blur(10px); 
-            border: 2px solid rgba(255,255,255,0.6); 
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(20px) saturate(180%); 
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1.5px solid rgba(255, 255, 255, 0.4); 
             border-radius: 40px; 
-            padding: 8px 35px; 
-            color: #fff; 
-            font-size: 40px; 
-            font-weight: 900; 
-            text-shadow: 0 0 12px rgba(255,105,180,0.9), 2px 2px 5px rgba(0,0,0,0.6); 
-            box-shadow: 0 10px 25px rgba(255,105,180,0.35), inset 0 0 15px rgba(255,255,255,0.3); 
+            padding: 6px 32px; 
+            color: #ffffff; 
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif;
+            font-size: 38px; 
+            font-weight: 800; 
+            letter-spacing: -0.5px;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.4); 
             transition: all 0.2s linear; 
         }
 
@@ -288,7 +292,7 @@
             display: flex; 
             align-items: stretch;
             justify-content: center;
-            min-width: 620px;
+            min-width: 660px;
             position: relative;
         } 
 
@@ -297,60 +301,50 @@
             display: flex;
             align-items: stretch;
             width: 100%;
-            min-width: 620px;
-            height: 92px;
-            border-radius: 46px;
-            overflow: visible;
+            min-width: 660px;
+            height: 84px;
+            border-radius: 42px;
+            overflow: hidden;
             position: relative;
-            box-shadow: 0 15px 40px rgba(255, 20, 147, 0.35), 0 0 0 3px rgba(255,255,255,0.55) inset;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4), 0 0 0 2.5px rgba(255, 255, 255, 0.4) inset;
+            background: rgba(20, 20, 26, 0.6);
+            backdrop-filter: blur(12px);
         }
         .m-versus-side {
-            flex: 1;
+            flex: 50;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 34px;
-            font-family: 'Pretendard', sans-serif;
+            justify-content: center;
+            padding: 0 30px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif;
             position: relative;
             overflow: hidden;
+            transition: flex 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.6s ease;
         }
         .m-versus-side.m-versus-left {
-            background: linear-gradient(90deg, #ff6fa5, #ff9dc4);
-            border-radius: 46px 0 0 46px;
-            padding-right: 55px;
+            background: linear-gradient(135deg, #ff4d94, #ff85b3);
+            border-radius: 42px 0 0 42px;
         }
         .m-versus-side.m-versus-right {
-            background: linear-gradient(90deg, #6fb3ff, #4d8dff);
-            border-radius: 0 46px 46px 0;
-            padding-left: 55px;
-            flex-direction: row-reverse;
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            border-radius: 0 42px 42px 0;
         }
         .m-versus-side::after {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(180deg, rgba(255,255,255,0.35), transparent 55%);
+            background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent 60%);
             pointer-events: none;
         }
-        .m-versus-name {
-            font-size: 24px;
-            font-weight: 800;
-            color: #fff;
-            text-shadow: 0 2px 6px rgba(0,0,0,0.35);
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 180px;
-            z-index: 1;
-        }
         .m-versus-score {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 34px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif;
+            font-size: 38px;
             font-weight: 900;
-            color: #fff;
-            text-shadow: 0 3px 10px rgba(0,0,0,0.4);
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            text-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
             z-index: 1;
+            white-space: nowrap;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .m-versus-score.score-bump {
@@ -365,27 +359,75 @@
             100% { transform: scale(1); }
         }
 
-        /* 중앙 VS 배지: 골드 테두리 + 글로우 */
+        /* 🍎 애플 스타일 하단 독립 네임 박스 행 */
+        .m-versus-names-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+        .m-apple-name-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(18, 18, 24, 0.75);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-radius: 18px;
+            padding: 8px 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        .m-apple-name-card.m-name-left {
+            border: 1.5px solid rgba(255, 77, 148, 0.5);
+            box-shadow: 0 6px 20px rgba(255, 77, 148, 0.25);
+        }
+        .m-apple-name-card.m-name-right {
+            border: 1.5px solid rgba(59, 130, 246, 0.5);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25);
+        }
+        .m-name-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .left-dot { background: #ff4d94; box-shadow: 0 0 8px #ff4d94; }
+        .right-dot { background: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
+
+        .m-versus-name {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.3px;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            white-space: nowrap;
+        }
+
+        /* 중앙 VS 배지: 애플 무광 엠블럼 */
         .m-versus-badge {
             position: absolute;
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
-            width: 74px;
-            height: 74px;
+            width: 66px;
+            height: 66px;
             border-radius: 50%;
-            background: radial-gradient(circle at 35% 30%, #2a2a2e, #0d0d10 75%);
-            border: 4px solid #ffd76b;
+            background: linear-gradient(135deg, #2a2a32, #121217);
+            border: 3.5px solid #fbbf24;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 26px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif;
+            font-size: 22px;
             font-weight: 900;
-            color: #ffd76b;
-            box-shadow: 0 0 22px rgba(255, 215, 107, 0.85), 0 6px 18px rgba(0,0,0,0.5);
+            color: #fbbf24;
+            letter-spacing: -0.5px;
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.6), 0 8px 20px rgba(0,0,0,0.6);
             z-index: 3;
-            letter-spacing: 1px;
         }
 
         /* 레거시 다인전(3인 이상) 대결판 - 기존 스타일 유지 */
@@ -506,23 +548,40 @@
         }
         .slot-reel {
             height: 118px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: relative;
             border-radius: 18px;
             border: 2px solid rgba(255, 255, 255, 0.18);
             background: rgba(255, 255, 255, 0.08);
-            color: #ffd700;
-            font-size: 44px;
-            font-weight: 1000;
             overflow: hidden;
         }
-        .slot-reel.spinning {
-            animation: slotPulse 0.18s linear infinite;
+        /* 세로 스트립: 여러 이미지를 위아래로 나열하고 translateY로 스크롤 */
+        .slot-strip {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
         }
-        @keyframes slotPulse {
-            0% { transform: translateY(-5px); filter: blur(1px); }
-            100% { transform: translateY(5px); filter: blur(0); }
+        .slot-strip-item {
+            height: 118px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .slot-strip-item img {
+            width: 88%;
+            height: 88%;
+            object-fit: contain;
+        }
+        .slot-reel.spinning .slot-strip {
+            animation: slotScrollUp 0.35s linear infinite;
+        }
+        @keyframes slotScrollUp {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-118px); }
         }
         .slot-result {
             font-size: 28px;
@@ -545,6 +604,316 @@
         /* 리액션 모드: 모든 위젯 강제 숨김 */
         body.reaction-mode #ui-layer,
         body.reaction-mode #match-container { opacity: 0 !important; visibility: hidden !important; }
+
+        /* 🎬 위젯 시네마틱 바깥 퍼짐 (Spread Out) 이펙트 */
+        .widget-container {
+            transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.65s ease-in-out !important;
+        }
+
+        /* 퇴근 성공 알림 발동 시 (.widgets-spread-out) 좌/우/하단 바깥으로 촥 퍼지는 효과 */
+        body.widgets-spread-out #ranking-container,
+        body.widgets-spread-out #home-race-container {
+            transform: translate3d(-380px, 0, 0) scale(0.92) !important;
+            opacity: 0.15 !important;
+        }
+        body.widgets-spread-out #extra-ranking-container,
+        body.widgets-spread-out #account-container {
+            transform: translate3d(380px, 0, 0) scale(0.92) !important;
+            opacity: 0.15 !important;
+        }
+        body.widgets-spread-out #gauge-container,
+        body.widgets-spread-out #match-container {
+            transform: translate3d(0, 280px, 0) scale(0.92) !important;
+            opacity: 0.15 !important;
+        }
+
+        /* 🎴 [신규 게임] 카드 뒤집기 오버레이 위젯 스타일 - 점수판(.excel-board) 실제 가로폭(694px)에 맞춤 */
+        #card-game-container {
+            position: absolute;
+            left: 40px;
+            top: 180px;
+            width: 694px;
+            z-index: 90000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto;
+            box-sizing: border-box;
+        }
+        body.card-game-active #card-game-container {
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+        /* 카드 뒤집기 게임이 켜지면 밑의 랭킹판을 스르륵 가려줌 */
+        body.card-game-active #ranking-container {
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+        body.widgets-spread-out #card-game-container {
+            transform: translateY(-250px) scale(0.9) !important;
+            opacity: 0.15 !important;
+        }
+        /* 🚫 [리액션 모드] 수동 리액션 재생 중에는 카드위젯(20장/5장 모드 모두) 완전히 숨김 */
+        body.reaction-mode #card-game-container {
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+        /* 🏆 [Finalized 모드] 최종 5장만 점수판 바로 아래 작게 표시되는 모드 */
+        #card-game-container.cg-finalized {
+            width: 694px;
+            top: auto !important;
+        }
+        #card-game-container.cg-finalized .cg-wrapper {
+            padding: 8px 12px;
+        }
+        #card-game-container.cg-finalized .cg-grid {
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+        #card-game-container.cg-finalized .cg-card-slot {
+            height: 54px;
+        }
+        #card-game-container.cg-finalized .cg-header {
+            padding: 4px 12px;
+        }
+        #card-game-container.cg-finalized .cg-title {
+            font-size: 11px;
+        }
+        #card-game-container.cg-finalized .cg-timer-box,
+        #card-game-container.cg-finalized .cg-pass-box {
+            font-size: 11px;
+            padding: 2px 8px;
+        }
+        /* finalized 모드에서는 점수판(ranking)이 다시 자연스럽게 보여야 함 */
+        body.card-game-active.card-game-finalized #ranking-container {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        .cg-wrapper {
+            background: linear-gradient(135deg, rgba(18, 18, 26, 0.95), rgba(30, 25, 15, 0.96));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 3px solid rgba(255, 215, 0, 0.6);
+            border-radius: 22px;
+            padding: 14px 18px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.25), inset 0 0 20px rgba(255, 255, 255, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .cg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 14px;
+            padding: 7px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .cg-title {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif;
+            font-size: 15px;
+            font-weight: 900;
+            color: #ffd700;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cg-timer-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif;
+            font-size: 16px;
+            font-weight: 900;
+            color: #ffffff;
+            background: rgba(255, 215, 0, 0.15);
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            padding: 4px 12px;
+            border-radius: 14px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+        .cg-pass-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif;
+            font-size: 13px;
+            font-weight: 900;
+            color: #00ffcc;
+            background: rgba(0, 255, 204, 0.15);
+            border: 1px solid rgba(0, 255, 204, 0.4);
+            padding: 4px 12px;
+            border-radius: 14px;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+        }
+
+        .cg-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            perspective: 1000px;
+        }
+        .cg-card-slot {
+            position: relative;
+            width: 100%;
+            height: 90px;
+            perspective: 1000px;
+        }
+        .cg-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 18px;
+        }
+        .cg-card-inner.flipped {
+            transform: rotateY(180deg);
+        }
+        .cg-card-face {
+            position: absolute;
+            inset: 0;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+            transition: all 0.4s ease;
+        }
+        .cg-card-back {
+            transform: rotateY(0deg);
+            background: linear-gradient(135deg, rgba(25, 25, 38, 0.98), rgba(45, 38, 20, 0.98));
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            z-index: 2;
+        }
+        .cg-card-inner.flipped .cg-card-back {
+            visibility: hidden;
+        }
+        .cg-card-back-bignum {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif;
+            font-size: 36px;
+            font-weight: 900;
+            color: #ffd700;
+            text-shadow: 0 0 25px rgba(255, 215, 0, 0.85), 0 4px 10px rgba(0,0,0,0.6);
+            letter-spacing: -1px;
+        }
+
+        .cg-card-front {
+            transform: rotateY(180deg);
+            background: linear-gradient(135deg, rgba(28, 28, 40, 0.98), rgba(18, 18, 26, 0.98));
+            border: 2px solid #ffd700;
+            padding: 0;
+            text-align: center;
+            z-index: 1;
+            overflow: hidden;
+        }
+        .cg-card-inner.flipped .cg-card-front {
+            z-index: 3;
+        }
+        .cg-card-front-img-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .cg-card-front-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .cg-card-front-noimg {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a22;
+            color: #555;
+            font-size: 44px;
+        }
+        .cg-card-front-overlay {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            padding: 4px 5px 6px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 20%, rgba(0,0,0,0.55) 65%, transparent);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            box-sizing: border-box;
+        }
+        .cg-card-front .cg-item-title {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif;
+            font-size: 10px;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1.2;
+            word-break: keep-all;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+        }
+        .cg-card-front .cg-item-amount {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif;
+            font-size: 9px;
+            font-weight: 900;
+            color: #ffd700;
+            background: rgba(255, 215, 0, 0.18);
+            padding: 1px 7px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            letter-spacing: -0.5px;
+        }
+
+        /* 🚨 대각선 Red Neon CLEAR! 도장 촥 찍히는 연출 (앞면 사진 위에 표시) */
+        .cg-card-inner.passed .cg-card-front {
+            border-color: #ff2a4b;
+            box-shadow: 0 0 35px rgba(255, 42, 75, 0.85), inset 0 0 20px rgba(255, 42, 75, 0.45);
+        }
+        .cg-card-inner.passed .cg-card-front-img-wrap img {
+            filter: brightness(0.55) saturate(1.1);
+        }
+        .cg-stamp-clear-diagonal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-25deg) scale(0.7);
+            z-index: 25;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif;
+            font-size: 20px;
+            font-weight: 900;
+            color: #ff2a4b;
+            text-shadow: 0 0 15px rgba(255, 42, 75, 0.9), 0 0 30px rgba(255, 42, 75, 0.6), 2px 2px 0px #000;
+            border: 3px solid #ff2a4b;
+            border-radius: 10px;
+            padding: 2px 12px;
+            background: rgba(12, 0, 6, 0.78);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            box-shadow: 0 0 25px rgba(255, 42, 75, 0.85), inset 0 0 15px rgba(255, 42, 75, 0.45);
+            pointer-events: none;
+            white-space: nowrap;
+            letter-spacing: 2px;
+            animation: diagonalStampIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes diagonalStampIn {
+            0% { transform: translate(-50%, -50%) rotate(-25deg) scale(2.5); opacity: 0; }
+            100% { transform: translate(-50%, -50%) rotate(-25deg) scale(1.1); opacity: 1; }
+        }
 
         .fire-vignette { position: fixed; inset: 0; pointer-events: none; z-index: 5; opacity: 0; visibility: hidden; transition: opacity 0.6s ease-in-out; box-shadow: inset 0 0 150px rgba(255, 30, 0, 0.6), inset 0 0 50px rgba(255, 0, 0, 0.4); animation: firePulse 2s infinite alternate ease-in-out; } body.match-fire-on .fire-vignette { opacity: 1; visibility: visible; } @keyframes firePulse { 0% { box-shadow: inset 0 0 80px rgba(255, 30, 0, 0.4), inset 0 0 20px rgba(255, 0, 0, 0.2); } 100% { box-shadow: inset 0 0 180px rgba(255, 50, 0, 0.8), inset 0 0 70px rgba(255, 20, 0, 0.6); } }
         .up-message { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.3); opacity: 0; font-size: 110px; font-weight: 900; color: #FFD700; text-shadow: 0 0 20px #ff0055, 0 0 50px #ff0055, 5px 5px 0px #000; z-index: 100000; pointer-events: none; white-space: nowrap; transition: 0.4s; } .up-message.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
@@ -590,6 +959,50 @@
             top: 600px;
             transform: translate(-50%, -50%) scale(0.6);
         }
+        /* 🎯 목표치 달성 1.5초 기여도 위젯 (하단 ↔ 화면 정중앙 이동 60fps 대칭 연출 스타일) */
+        #gauge-container {
+            transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), filter 0.55s ease !important;
+            position: relative;
+            display: inline-block;
+            width: max-content;
+            transform-origin: 50% 50% !important;
+            will-change: transform;
+            backface-visibility: hidden;
+        }
+        #gauge-container.celebration-active {
+            filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.95)) !important;
+            z-index: 999999 !important;
+        }
+        .goal-100-badge {
+            display: none;
+            position: absolute;
+            top: -42px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.5);
+            background: linear-gradient(135deg, #ffd700, #ff9800);
+            color: #000;
+            font-weight: 900;
+            font-size: 20px;
+            padding: 4px 18px;
+            border-radius: 30px;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.9), 0 4px 10px rgba(0,0,0,0.5);
+            border: 2px solid #fff;
+            white-space: nowrap;
+            z-index: 1000000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #gauge-container.celebration-active .goal-100-badge {
+            display: block;
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+            animation: goalBadgePulse 0.8s infinite alternate;
+        }
+        @keyframes goalBadgePulse {
+            0% { transform: translateX(-50%) scale(1); filter: drop-shadow(0 0 10px #ffd700); }
+            100% { transform: translateX(-50%) scale(1.1); filter: drop-shadow(0 0 25px #ff9800); }
+        }
+
         .reaction-screen-overlay img {
             max-width: 100%;
             max-height: 500px;
@@ -716,11 +1129,7 @@
     <div id="fire-vignette" class="fire-vignette"></div>
     <div id="neon-overlay" class="neon-layer"></div>
     
-    <!-- ⚠️ 자동재생 차단 경고 배너 -->
-    <div id="autoplay-warning-banner" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(255,59,48,0.95); color:white; padding:12px 24px; font-weight:bold; font-size:16px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.3); z-index:9999999; border:2px solid #ff453a; text-align:center; animation: pulse 1.5s infinite; font-family: sans-serif;">
-        ⚠️ 브라우저 소리 자동재생이 차단되었습니다!<br>
-        <span style="font-size:13px; font-weight:normal; opacity:0.9;">소리를 켜려면 화면 아무 곳이나 클릭(크롬 창 클릭 또는 OBS 소스 우클릭 -> 상호작용)해 주세요.</span>
-    </div>
+
     
     <!-- 🎵 리액션 음원/사진 송출 전광판 및 오디오 객체 -->
     <div id="reaction-screen-overlay" class="reaction-screen-overlay">
@@ -770,6 +1179,14 @@
                 </div>
             </div>
 
+            <!-- 🏆 퇴근 성공 초대형 팝업 전용 최상위 레이어 (상단 1/4 지점 위치) -->
+            <div id="offwork-popup-layer" style="position: fixed; inset: 0; top: 20vh; z-index: 999999; display: flex; align-items: flex-start; justify-content: center; pointer-events: none; opacity: 0; visibility: hidden; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                <div id="offwork-popup-box" style="background: linear-gradient(135deg, rgba(20, 20, 28, 0.96), rgba(35, 30, 15, 0.98)); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 4px solid #ffd76b; border-radius: 30px; padding: 28px 55px; box-shadow: 0 20px 60px rgba(255, 215, 107, 0.6), inset 0 0 25px rgba(255, 255, 255, 0.25); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-width: 440px; text-align: center; transform: scale(0.6); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                    <div style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif; font-size: 24px; font-weight: 800; color: #ffd76b; letter-spacing: -0.5px; text-shadow: 0 0 12px rgba(255, 215, 107, 0.9);">🎉 퇴근을 축하합니다! 🥳</div>
+                    <div id="offwork-player-name" style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Pretendard', sans-serif; font-size: 48px; font-weight: 900; color: #ffffff; text-shadow: 0 4px 22px rgba(0, 0, 0, 0.9), 0 0 28px rgba(255, 215, 107, 0.95); word-break: keep-all;">🎉 플레이어 퇴근! 🏆</div>
+                </div>
+            </div>
+
             <div id="popup-container" class="widget-container">
                 <div id="center-popup" class="center-popup-content">
                     <span id="popup-text"></span><span style="color:var(--text-secondary); margin-left:15px;" id="popup-score"></span>
@@ -816,6 +1233,7 @@
                 </div>
 
                 <div id="gauge-container" class="widget-container">
+                    <div class="goal-100-badge">🎉 100% 달성! 🎉</div>
                     <div class="excel-gauge-box" id="goal-box-ui">
                         <div class="total-row"><div style="color:#fff;">💰 방송 총 후원</div><div style="color:var(--excel-yellow);" id="ui-total-score">0</div></div>
                         <div class="goal-bar-bg"><div class="goal-bar-fill" id="goal-chunk"></div></div>
@@ -841,10 +1259,23 @@
                         </div>
                     </div>
                 </div>
-                
-            </div> <!-- 🟢 #ui-layer 를 여기서 닫아 대결판들이 리액션 모드 영향으로 사라지지 않게 보호 -->
+
+            </div> <!-- 🟢 #ui-layer 를 여기서 닫아 대결판/카드판들이 리액션 모드 영향으로 사라지지 않게 보호 -->
             
-            <div id="match-container" class="widget-container" style="opacity: 0; visibility: hidden;">
+            <!-- 🎴 [신규 게임] 카드 뒤집기 방송 위젯 (ui-layer 외부에 위치하여 리액션 모드 영향 방지) -->
+            <div id="card-game-container" class="widget-container">
+                <div class="cg-wrapper">
+                    <div class="cg-header">
+                        <div class="cg-title">🎴 CARD FLIP MISSION GAME</div>
+                        <div class="cg-timer-box"><i class="fa-solid fa-stopwatch" style="color:#ffd700;"></i> <span id="cg-timer-val">05:00</span></div>
+                        <div class="cg-pass-box"><i class="fa-solid fa-trophy" style="color:#00ffcc;"></i> <span id="cg-pass-val">0 / 5 PASS</span></div>
+                    </div>
+                    <div class="cg-grid" id="cg-grid-overlay">
+                        <!-- 20개 3D 카드가 동적으로 렌더링됩니다 -->
+                    </div>
+                </div>
+            </div>
+                <div id="match-container" class="widget-container" style="opacity: 0; visibility: hidden;">
                 <div class="match-wrapper">
                     <div class="m-timer-pill" id="m-timer">00:00</div>
                     <div class="match-main-row" style="display: flex; align-items: center; justify-content: center; gap: 30px; position: relative;">
@@ -875,16 +1306,21 @@
             window.apiToken = urlToken;
         }
 
-        // 전역 fetch 인터셉터 (인증 토큰 자동 주입)
+        // 전역 fetch 인터셉터 (file:// 로컬 파일 오픈 시에도 localhost:5000 서버와 100% 자동 연동 + 인증 토큰 주입)
         const originalFetch = window.fetch;
         window.fetch = function(resource, init) {
-            if (window.apiToken && typeof resource === 'string' && resource.startsWith('/api/')) {
-                init = init || {};
-                init.headers = init.headers || {};
-                if (init.headers instanceof Headers) {
-                    init.headers.set('Authorization', 'Bearer ' + window.apiToken);
-                } else {
-                    init.headers['Authorization'] = 'Bearer ' + window.apiToken;
+            if (typeof resource === 'string' && resource.startsWith('/api/')) {
+                if (!window.location.protocol.startsWith('http')) {
+                    resource = 'http://localhost:5000' + resource;
+                }
+                if (window.apiToken) {
+                    init = init || {};
+                    init.headers = init.headers || {};
+                    if (init.headers instanceof Headers) {
+                        init.headers.set('Authorization', 'Bearer ' + window.apiToken);
+                    } else {
+                        init.headers['Authorization'] = 'Bearer ' + window.apiToken;
+                    }
                 }
             }
             return originalFetch(resource, init);
@@ -898,6 +1334,7 @@
         let lastReactionEnterAlertTime = 0;
         let lastPopupTime = 0;    
         let lastDonationTime = 0; 
+        const shownDonationPopupIds = new Set(); // 💡 [버그 수정] 동일 후원 ID로 팝업이 중복 표시되는 것을 방지
         
         let lastEffectTime = 0; 
         let globalNeon = 'OFF';
@@ -915,6 +1352,7 @@
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
         }
+        function escapeHTML(str) { return escapeHtml(str); }
 
         // 👑 [특별 후원자 캐싱 및 동기화 장치]
         window.vipCache = {};
@@ -1032,14 +1470,16 @@
             if (ly) lastLayoutData = ly;
             let isExtra = (currentExtraActiveState === true);
             
-            ['ranking', 'gauge', 'account', 'match', 'popup', 'takeover', 'ticker_top', 'ticker_bottom', 'roulette'].forEach(id => { 
+            ['ranking', 'gauge', 'account', 'match', 'popup', 'takeover', 'ticker_top', 'ticker_bottom', 'roulette', 'home-race', 'card-game'].forEach(id => { 
                 const el = document.getElementById(id + '-container'); 
                 if(ly && el) { 
-                    let coord = ly[id];
+                    let coord = ly[id] || (id === 'card-game' ? ly['ranking'] : null);
                     if (coord) {
-                        el.style.top = (coord.y_px || 0) + 'px'; 
+                        el.style.top = (coord.y_px !== undefined ? coord.y_px : (id === 'card-game' ? 180 : 0)) + 'px'; 
                         if (id === 'ranking') {
                             el.style.left = isExtra ? '-650px' : ((coord.x_px || 0) + 'px');
+                        } else if (id === 'card-game') {
+                            el.style.left = (coord.x_px !== undefined ? coord.x_px : 40) + 'px';
                         } else {
                             el.style.left = (coord.x_px || 0) + 'px'; 
                         }
@@ -1073,6 +1513,170 @@
         let serverTimeOffset = 0;
         
         let currentExtraActiveState = false;
+
+        // 🎴 카드 뒤집기 오버레이 렌더링 함수 (최상위 스코프로 이동: handleData가 폴링마다 참조 가능해야 함)
+        let lastCgGridHtml = "";
+        let cgClearCelebrated = false;
+        let lastCgShuffleReqAt = 0; // 💡 빈 덱일 때 자동 셔플 요청 스팸 방지 (10초에 1회로 제한)
+        let cardGameData = null; // 💡 실시간 타이머 카운트다운을 위한 카드게임 상태 캐시 (match_data와 동일한 방식)
+
+        function renderCardGameOverlayWidget(cg) {
+            const timerEl = document.getElementById('cg-timer-val');
+            const passEl = document.getElementById('cg-pass-val');
+            const gridEl = document.getElementById('cg-grid-overlay');
+            const cgContainerEl = document.getElementById('card-game-container');
+            if (!gridEl) return;
+
+            // 🏆 finalized 모드 여부에 따라 클래스 토글 (5장만 표시 + 점수판 복귀)
+            if (cgContainerEl) {
+                if (cg.finalized) {
+                    cgContainerEl.classList.add('cg-finalized');
+                    document.body.classList.add('card-game-finalized');
+                } else {
+                    cgContainerEl.classList.remove('cg-finalized');
+                    document.body.classList.remove('card-game-finalized');
+                }
+            }
+
+            // 타이머
+            let sec = Math.ceil((cg.time_left_ms || 0) / 1000);
+            let m = Math.floor(sec / 60);
+            let s = sec % 60;
+            if (timerEl) timerEl.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+            let allCards = cg.cards || [];
+            if (allCards.length === 0) {
+                gridEl.innerHTML = '<div style="color:#ffd700; font-size:16px; font-weight:bold; grid-column:1/-1; text-align:center; padding:50px 0;">🎴 카드를 채워주세요 (컨트롤러에서 선택/무작위 채우기)</div>';
+                lastCgGridHtml = '';
+                return;
+            }
+
+            // 🏆 finalized 모드면 final_card_ids에 해당하는 카드만 표시
+            let cards = allCards;
+            if (cg.finalized && (
+                (Array.isArray(cg.final_reaction_ids) && cg.final_reaction_ids.length > 0) ||
+                (Array.isArray(cg.final_card_ids) && cg.final_card_ids.length > 0)
+            )) {
+                const reactionIdSet = new Set(Array.isArray(cg.final_reaction_ids) ? cg.final_reaction_ids.map(String) : []);
+                const idSet = new Set(Array.isArray(cg.final_card_ids) ? cg.final_card_ids.map(String) : []);
+                cards = allCards.filter(c => {
+                    const reactionKey = c.reaction_id !== undefined && c.reaction_id !== null ? String(c.reaction_id) : null;
+                    return (reactionKey && reactionIdSet.has(reactionKey)) || idSet.has(String(c.id));
+                });
+            }
+
+            const passedCount = allCards.filter(c => c.is_flipped && c.is_passed).length;
+            if (passEl) passEl.innerText = `${passedCount} / 5 PASS`;
+
+            // 5개 카드가 모두 PASS 되었을 때 GAME CLEAR 이펙트 1회 발동
+            if (passedCount >= 5 && !cgClearCelebrated) {
+                cgClearCelebrated = true;
+                if (typeof triggerGoalCelebrationEffect === 'function') {
+                    triggerGoalCelebrationEffect();
+                }
+            } else if (passedCount < 5) {
+                cgClearCelebrated = false;
+            }
+
+            // 💡 [이미지 재로딩 버그 수정 + 위치 이동 애니메이션] reaction_id 기준으로 기존 DOM을 재사용하고,
+            // 카드 순서가 바뀌면 FLIP 기법으로 부드럽게 자리 이동시킵니다. (이미지는 절대 재생성하지 않음)
+            const existingNodes = {};
+            Array.from(gridEl.children).forEach(node => {
+                const rid = node.dataset.reactionId;
+                if (rid !== undefined) existingNodes[rid] = node;
+            });
+
+            // FLIP 애니메이션을 위해 기존 위치 기록
+            const firstRects = {};
+            Object.keys(existingNodes).forEach(rid => {
+                firstRects[rid] = existingNodes[rid].getBoundingClientRect();
+            });
+
+            cards.forEach((c, idx) => {
+                let isFlipped = c.is_flipped || (c.step > 0);
+                let isPassed = c.is_passed || (c.step === 2);
+                const ridKey = String(c.reaction_id !== undefined ? c.reaction_id : c.id);
+
+                let slotNode = existingNodes[ridKey];
+                if (!slotNode) {
+                    slotNode = document.createElement('div');
+                    slotNode.className = 'cg-card-slot';
+                    slotNode.dataset.reactionId = ridKey;
+                    slotNode.innerHTML = `
+                        <div class="cg-card-inner">
+                            <div class="cg-card-face cg-card-back">
+                                <div class="cg-card-back-bignum"></div>
+                            </div>
+                            <div class="cg-card-face cg-card-front">
+                                <div class="cg-card-front-img-wrap">
+                                    ${c.image_url ? `<img src="${c.image_url}">` : `<div class="cg-card-front-noimg">🎴</div>`}
+                                    <div class="cg-card-front-overlay">
+                                        <div class="cg-item-title">${escapeHtml(c.title || '리액션')}</div>
+                                        <div class="cg-item-amount">${(c.amount || 0).toLocaleString()}원</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    gridEl.appendChild(slotNode);
+                } else {
+                    if (gridEl.children[idx] !== slotNode) {
+                        gridEl.insertBefore(slotNode, gridEl.children[idx] || null);
+                    }
+                }
+
+                // 상태 텍스트/클래스만 업데이트 (이미지는 그대로 유지)
+                const inner = slotNode.querySelector('.cg-card-inner');
+                if (inner) {
+                    inner.classList.toggle('flipped', isFlipped);
+                    inner.classList.toggle('passed', isPassed);
+                }
+                const bignumEl = slotNode.querySelector('.cg-card-back-bignum');
+                if (bignumEl) bignumEl.innerText = idx + 1;
+
+                let stampEl = slotNode.querySelector('.cg-stamp-clear-diagonal');
+                const imgWrap = slotNode.querySelector('.cg-card-front-img-wrap');
+                if (isPassed && !stampEl && imgWrap) {
+                    stampEl = document.createElement('div');
+                    stampEl.className = 'cg-stamp-clear-diagonal';
+                    stampEl.innerText = 'CLEAR!';
+                    imgWrap.appendChild(stampEl);
+                } else if (!isPassed && stampEl) {
+                    stampEl.remove();
+                }
+            });
+
+            // 더 이상 존재하지 않는 카드 DOM 제거 (finalized 모드에서 숨겨진 카드 등)
+            const currentRids = new Set(cards.map(c => String(c.reaction_id !== undefined ? c.reaction_id : c.id)));
+            Object.keys(existingNodes).forEach(rid => {
+                if (!currentRids.has(rid)) {
+                    existingNodes[rid].remove();
+                }
+            });
+
+            // FLIP 애니메이션 실행: 새 위치와 이전 위치 차이만큼 역이동한 뒤 transition으로 되돌림
+            requestAnimationFrame(() => {
+                cards.forEach((c) => {
+                    const ridKey = String(c.reaction_id !== undefined ? c.reaction_id : c.id);
+                    const node = gridEl.querySelector(`[data-reaction-id="${ridKey}"]`);
+                    if (!node) return;
+                    const first = firstRects[ridKey];
+                    if (!first) return; // 새로 생성된 카드는 애니메이션 불필요
+                    const last = node.getBoundingClientRect();
+                    const dx = first.left - last.left;
+                    const dy = first.top - last.top;
+                    if (dx || dy) {
+                        node.style.transition = 'none';
+                        node.style.transform = `translate(${dx}px, ${dy}px)`;
+                        requestAnimationFrame(() => {
+                            node.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                            node.style.transform = '';
+                        });
+                    }
+                });
+            });
+        }
+
         function handleData(d) {
             if (d && d.server_time) {
                 serverTimeOffset = d.server_time - Date.now();
@@ -1085,16 +1689,54 @@
                 if (el) el.style.display = isActive ? '' : 'none';
             });
 
-            // 🏃‍♀️ 퇴근전쟁 모드가 켜져 있으면 기존 랭킹판을 감추고 그 자리에 퇴근빵 위젯을 표시
-            if (isActive) {
-                const rankingEl = document.getElementById('ranking-container');
+            // 🎴 카드 뒤집기 게임 위젯 토글 & 렌더링 (d.card_game.active가 True이면 방송 ON/OFF와 무관하게 100% 노출)
+            const cg = d.card_game || { active: false, is_running: false, time_left_ms: 300000, cards: [] };
+            const cgContainer = document.getElementById('card-game-container');
+            const rankingEl = document.getElementById('ranking-container');
+
+            if (cg.active) {
+                document.body.classList.add('card-game-active');
+                if (cgContainer) {
+                    cgContainer.style.display = 'block';
+                    cgContainer.style.opacity = '1';
+                    cgContainer.style.visibility = 'visible';
+                    cgContainer.style.zIndex = '99999';
+                }
+                if (rankingEl) {
+                    // 🏆 finalized 모드(5장 최종 고정)에서는 점수판이 자연스럽게 다시 보여야 함
+                    if (cg.finalized) {
+                        rankingEl.style.opacity = '1';
+                        rankingEl.style.visibility = 'visible';
+                    } else {
+                        rankingEl.style.opacity = '0';
+                        rankingEl.style.visibility = 'hidden';
+                    }
+                }
+                cardGameData = cg;
+                renderCardGameOverlayWidget(cg);
+            } else {
+                cardGameData = null;
+                document.body.classList.remove('card-game-active');
+                if (cgContainer) {
+                    cgContainer.style.display = 'none';
+                    cgContainer.style.opacity = '0';
+                    cgContainer.style.visibility = 'hidden';
+                }
+                if (isActive && rankingEl && !d.home_race_enabled) {
+                    rankingEl.style.opacity = '1';
+                    rankingEl.style.visibility = 'visible';
+                }
+            }
+
+            // 🏃‍♀️ 퇴근전쟁 모드가 켜져 있으면 기존 랭킹판을 감추고 그 자리에 퇴근빵 위젯을 표시 (스르륵 크로스페이드)
+            if (isActive && !cg.active) {
                 const homeRaceContainerEl = document.getElementById('home-race-container');
                 if (d.home_race_enabled) {
-                    if (rankingEl) rankingEl.style.display = 'none';
-                    if (homeRaceContainerEl) homeRaceContainerEl.style.display = '';
+                    if (rankingEl) { rankingEl.style.opacity = '0'; rankingEl.style.visibility = 'hidden'; }
+                    if (homeRaceContainerEl) { homeRaceContainerEl.style.opacity = '1'; homeRaceContainerEl.style.visibility = 'visible'; }
                 } else {
-                    if (rankingEl) rankingEl.style.display = '';
-                    if (homeRaceContainerEl) homeRaceContainerEl.style.display = 'none';
+                    if (rankingEl) { rankingEl.style.opacity = '1'; rankingEl.style.visibility = 'visible'; }
+                    if (homeRaceContainerEl) { homeRaceContainerEl.style.opacity = '0'; homeRaceContainerEl.style.visibility = 'hidden'; }
                 }
             }
             
@@ -1286,16 +1928,19 @@
                 if (d.latest_donation && d.latest_donation.time !== lastDonationTime && d.popup_enabled) { 
                     lastDonationTime = d.latest_donation.time;
                     
-                    // 리액션 대기열에 포함된 후원인지 검사
-                    const hasReaction = d.reaction_queue && d.reaction_queue.some(item => 
-                        item.donator === d.latest_donation.name && 
-                        item.amount === d.latest_donation.amount
-                    );
+                    // 리액션 대기열에 포함된 후원인지 검사 (고유 id 우선 매칭, 없으면 이름+금액 폴백)
+                    const donId = d.latest_donation.id;
+                    const hasReaction = d.reaction_queue && d.reaction_queue.some(item => {
+                        if (donId && item.donation_id) return item.donation_id === donId;
+                        return item.donator === d.latest_donation.name && 
+                               item.amount === d.latest_donation.amount;
+                    });
                     
                     if (hasReaction) {
                         console.log("Donation has matching reaction. Delaying popup to playReaction.");
-                    } else {
-                        // 일반 후원(리액션 없는 후원)인 경우 즉시 노출
+                    } else if (!donId || !shownDonationPopupIds.has(donId)) {
+                        // 일반 후원(리액션 없는 후원)인 경우 즉시 노출 (동일 id로 중복 노출 방지)
+                        if (donId) shownDonationPopupIds.add(donId);
                         showToonPopup(d.latest_donation, () => {
                             checkReactionQueue();
                         });
@@ -1312,23 +1957,36 @@
                     let colsRgb = ['255, 77, 77', '0, 230, 118', '51, 153, 255', '255, 215, 0'];
                     let isVersusMode = md.players.length === 2;
 
-                    if(ma.children.length !== md.players.length || ma.dataset.mode !== (isVersusMode ? 'versus' : 'multi')) { 
+                    let isModeChanged = ma.dataset.mode !== (isVersusMode ? 'versus' : 'multi');
+                    let needRebuild = isModeChanged || (!isVersusMode && ma.children.length !== md.players.length) || (isVersusMode && !document.querySelector('.m-versus-wrapper'));
+
+                    if (needRebuild) { 
                         ma.innerHTML = ''; 
                         ma.dataset.mode = isVersusMode ? 'versus' : 'multi';
 
                         if (isVersusMode) {
-                            // 💗 2인 대결: 핑크 vs 블루 알약형 VS 바
+                            // 🍎 애플 프리미엄 대결: 알약 바(점수) + 하단 독립 애플 네임 박스(이름)
                             ma.innerHTML = `
-                                <div class="m-versus-bar">
-                                    <div class="m-versus-side m-versus-left">
-                                        <div class="m-versus-name" id="mp-name-0">${escapeHtml(md.players[0].name)}</div>
-                                        <div class="m-versus-score" id="mp-0">0</div>
+                                <div class="m-versus-wrapper" style="display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; min-width: 660px;">
+                                    <div class="m-versus-bar">
+                                        <div class="m-versus-side m-versus-left">
+                                            <div class="m-versus-score" id="mp-0">0</div>
+                                        </div>
+                                        <div class="m-versus-side m-versus-right">
+                                            <div class="m-versus-score" id="mp-1">0</div>
+                                        </div>
+                                        <div class="m-versus-badge">VS</div>
                                     </div>
-                                    <div class="m-versus-side m-versus-right">
-                                        <div class="m-versus-name" id="mp-name-1">${escapeHtml(md.players[1].name)}</div>
-                                        <div class="m-versus-score" id="mp-1">0</div>
+                                    <div class="m-versus-names-row">
+                                        <div class="m-apple-name-card m-name-left">
+                                            <span class="m-name-dot left-dot"></span>
+                                            <span class="m-versus-name" id="mp-name-0">${escapeHtml(md.players[0].name)}</span>
+                                        </div>
+                                        <div class="m-apple-name-card m-name-right">
+                                            <span class="m-versus-name" id="mp-name-1">${escapeHtml(md.players[1].name)}</span>
+                                            <span class="m-name-dot right-dot"></span>
+                                        </div>
                                     </div>
-                                    <div class="m-versus-badge">VS</div>
                                 </div>`;
                         } else {
                             // 3인 이상 다인전: 기존 네온 아크릴 쉴드 박스 레이아웃 유지
@@ -1357,6 +2015,31 @@
                             prevMatchScores[key] = p.score; 
                         } 
                     }); 
+
+                    // 💡 [2인 대결 알약 바 가변 비율 동적 업데이트]
+                    if (isVersusMode && md.players.length === 2) {
+                        let score0 = Math.max(0, md.players[0].score || 0);
+                        let score1 = Math.max(0, md.players[1].score || 0);
+                        let total = score0 + score1;
+                        let ratio0 = 50;
+                        let ratio1 = 50;
+                        
+                        if (total > 0) {
+                            let calc0 = (score0 / total) * 100;
+                            // 최소 12% ~ 최대 88% 범위 내에서 유연하게 지분 차지
+                            ratio0 = Math.max(12, Math.min(88, calc0));
+                            ratio1 = 100 - ratio0;
+                        }
+                        
+                        let leftSide = document.querySelector('.m-versus-left');
+                        let rightSide = document.querySelector('.m-versus-right');
+                        let newRatioStr = `${ratio0.toFixed(1)}`;
+                        if (leftSide && leftSide.dataset.lastRatio !== newRatioStr) {
+                            leftSide.dataset.lastRatio = newRatioStr;
+                            leftSide.style.flex = ratio0;
+                            if (rightSide) rightSide.style.flex = ratio1;
+                        }
+                    }
 
 
 
@@ -1600,6 +2283,25 @@
             }
         }
         setInterval(updateMatchTimer, 100);
+
+        // 🎴 카드 뒤집기 게임 타이머 실시간 카운트다운 (match_data와 동일한 end_time_ms 방식)
+        function updateCardGameTimer() {
+            if (!cardGameData || !cardGameData.active) return;
+            const timerEl = document.getElementById('cg-timer-val');
+            if (!timerEl) return;
+
+            let left;
+            if (cardGameData.is_running) {
+                left = Math.max(0, (cardGameData.end_time_ms || 0) - (Date.now() + serverTimeOffset));
+            } else {
+                left = cardGameData.time_left_ms || 0;
+            }
+            let sec = Math.ceil(left / 1000);
+            let m = Math.floor(sec / 60);
+            let s = sec % 60;
+            timerEl.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+        setInterval(updateCardGameTimer, 200);
 
 
 
@@ -2250,12 +2952,8 @@
             audio.pause();
             audio.src = '';
             
-            // 💡 [개조] 리액션 재생 전 후원 팝업을 먼저 보여줍니다.
-            showToonPopup({
-                name: data.donator || '익명',
-                amount: data.amount || 0,
-                message: data.message || ''
-            }, () => {
+            // 💡 [개조] 리액션 재생 전 후원 팝업을 먼저 보여줍니다. (단, 후원과 무관한 즉시 슬롯 스핀은 팝업 생략)
+            const startReactionFlow = () => {
                 // 팝업이 끝나고 난 뒤 실제 리액션 시작!
                 const proceedToReaction = () => {
                     // 💡 [추가] 리액션 시작 직전 원래 켜져 있던 네온 상태 백업
@@ -2264,7 +2962,10 @@
                     }
 
                     // 2. 새로운 리액션 데이터 입력 (후원자명 + 금액 / 메시지)
-                    let donatorName = data.donator || '익명';
+                    let donatorName = data.donator;
+                    if (!donatorName || donatorName === '익명' || data.slot_machine) {
+                        donatorName = data.slot_machine ? '🎰 슬롯머신' : (data.donator || '슬롯머신');
+                    }
                     let donationAmount = data.amount ? formatNum(data.amount) + '원' : '';
                     
                     // 💡 [추가] 정적 싱글 네온 조명 활성화 (렉 방지용 최적화)
@@ -2370,10 +3071,7 @@
                             audio.onerror = null;
                             audio.onloadedmetadata = null;
                             if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-                            audio.pause();
-                            audio.src = '';
-                            showAutoplayWarning();
-                            // 로컬 화면만 5초 후 닫기 (서버 큐는 건드리지 않음)
+                            // 로컬 화면만 5초 후 닫기
                             reactionTimeout = setTimeout(() => {
                                 stopReactionVisuals();
                             }, 5000);
@@ -2386,13 +3084,38 @@
                     }
                 };
 
+        // 🔓 브라우저 소리 잠금 전역 자동 해제 헬퍼
+        function unlockAudioContext() {
+            const banner = document.getElementById('autoplay-warning-banner');
+            if (banner) banner.style.display = 'none';
+            const audio = document.getElementById('reaction-audio');
+            if (audio) {
+                audio.play().then(() => audio.pause()).catch(() => {});
+            }
+        }
+        window.addEventListener('click', unlockAudioContext, { once: true });
+        window.addEventListener('keydown', unlockAudioContext, { once: true });
+        window.addEventListener('touchstart', unlockAudioContext, { once: true });
+
                 // 슬롯머신 후원인 경우 스핀 연출 후 리액션 재생 진행
                 if (data.slot_machine) {
                     runSlotMachineAnimation(data, proceedToReaction);
                 } else {
                     proceedToReaction();
                 }
-            });
+            };
+
+            // 💡 후원과 무관한 즉시 슬롯 스핀(skip_donation_popup)인 경우 후원 팝업 없이 바로 리액션/슬롯 진행
+            if (data.skip_donation_popup) {
+                isDonationPopupShowing = false;
+                startReactionFlow();
+            } else {
+                showToonPopup({
+                    name: data.donator || '익명',
+                    amount: data.amount || 0,
+                    message: data.message || ''
+                }, startReactionFlow);
+            }
         }
 
         let isEndingReaction = false; // [버그 수정] 리액션 중복 팝 요청 방어 락
@@ -2428,15 +3151,8 @@
             });
         }
 
-        function showAutoplayWarning() {
-            const banner = document.getElementById('autoplay-warning-banner');
-            if (banner) banner.style.display = 'block';
-        }
-
-        function hideAutoplayWarning() {
-            const banner = document.getElementById('autoplay-warning-banner');
-            if (banner) banner.style.display = 'none';
-        }
+        function showAutoplayWarning() {}
+        function hideAutoplayWarning() {}
 
         // 🎁 후원 알림 공통 팝업 노출 함수
         function showToonPopup(donation, callback) {
@@ -2574,21 +3290,109 @@
             }, 2000);
         }
 
-        // 화면 클릭(상호작용) 발생 시 자동재생 차단을 해제하고 음원 즉시 재생 시도
-        window.addEventListener('click', () => {
-            console.log("User clicked screen. Attempting to clear autoplay warning and resume audio.");
-            hideAutoplayWarning();
-            
-            if (globalData && globalData.reaction_queue && globalData.reaction_queue.length > 0) {
-                const firstItem = globalData.reaction_queue[0];
-                const audio = document.getElementById('reaction-audio');
-                
-                if (audio && (audio.paused || !audio.src)) {
-                    console.log("Re-triggering playReaction from click interaction.");
-                    playReaction(firstItem);
-                }
+        // 🎯 목표 100% 달성 1.5초 중앙 연출 헬퍼
+        let goalCelebrationTimer = null;
+        function triggerGoalCelebrationEffect() {
+            const gauge = document.getElementById('gauge-container');
+            if (!gauge) return;
+
+            console.log("🎯 [기여도 위젯: 하단 ➡️ 화면 중앙 이동 확대 ➡️ 1.5초 ➡️ 원래 위치 복귀 연출 시작]");
+            if (goalCelebrationTimer) {
+                clearTimeout(goalCelebrationTimer);
+                goalCelebrationTimer = null;
             }
-        });
+
+            // 트랜지션 초기화 후 현재 위치 및 중앙 좌표차 정밀 산출
+            gauge.style.transition = 'none';
+            gauge.style.transform = 'none';
+            gauge.style.transformOrigin = '50% 50%';
+
+            const rect = gauge.getBoundingClientRect();
+            const currentCenterX = rect.left + (rect.width / 2);
+            const currentCenterY = rect.top + (rect.height / 2);
+
+            const targetCenterX = window.innerWidth / 2;
+            const targetCenterY = window.innerHeight / 2;
+
+            const deltaX = (targetCenterX - currentCenterX);
+            const deltaY = (targetCenterY - currentCenterY);
+
+            // 브라우저 리플로우 강제 후 60fps 대칭 트랜지션 복원
+            gauge.offsetHeight;
+            gauge.style.transition = 'transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), filter 0.55s ease';
+            gauge.classList.add('celebration-active');
+
+            // 화면 100% 정중앙으로 부드럽게 이동하면서 1.6배 큼직하게 정대칭 확대!
+            gauge.style.transform = `translate3d(${deltaX.toFixed(1)}px, ${deltaY.toFixed(1)}px, 0) scale(1.6)`;
+
+            // 정확히 1.5초(1500ms) 유지 후 원래 하단 위치로 부드럽게 복귀
+            goalCelebrationTimer = setTimeout(() => {
+                gauge.style.transform = 'translate3d(0, 0, 0) scale(1)';
+                setTimeout(() => {
+                    gauge.classList.remove('celebration-active');
+                    gauge.style.transform = '';
+                    gauge.style.transition = '';
+                }, 550);
+                goalCelebrationTimer = null;
+                console.log("🎯 [기여도 위젯 제자리 복귀 완료]");
+            }, 1500);
+        }
+
+        let offWorkTimer = null;
+        window.showOffWorkPopup = function(name) {
+            console.log("🎉 showOffWorkPopup called with name:", name);
+            const layer = document.getElementById('offwork-popup-layer');
+            const box = document.getElementById('offwork-popup-box');
+            const nameEl = document.getElementById('offwork-player-name');
+            if (!layer || !nameEl) return;
+
+            // 🎬 알림 발생 시 모든 위젯 바깥으로 촥 퍼지는 시네마틱 효과 발동
+            document.body.classList.add('widgets-spread-out');
+
+            nameEl.innerText = `🎉 ${name} 퇴근! 🏆`;
+            layer.style.opacity = '1';
+            layer.style.visibility = 'visible';
+            if (box) box.style.transform = 'scale(1)';
+
+            if (offWorkTimer) clearTimeout(offWorkTimer);
+            offWorkTimer = setTimeout(() => {
+                layer.style.opacity = '0';
+                layer.style.visibility = 'hidden';
+                if (box) box.style.transform = 'scale(0.6)';
+
+                // 🎬 2초 후 팝업 닫히며 위젯들 원래 자리로 촥 쫀득하게 원복!
+                document.body.classList.remove('widgets-spread-out');
+            }, 2000);
+        };
+
+        // 💡 [버그 수정] 화면 클릭(상호작용) 발생 시 브라우저 자동재생 정책을 해제하기 위한
+        // 오디오 컨텍스트 unlock 전용 처리. 과거에는 클릭할 때마다 재생 중인 리액션을
+        // 다시 트리거해서 "클릭할 때마다 후원이 반복 재생"되는 버그가 있었습니다.
+        // 이제는 오디오 unlock만 수행하고, 이미 재생 중이거나 재생된 적 있는 아이템은
+        // 절대 다시 트리거하지 않습니다.
+        window.addEventListener('click', () => {
+            hideAutoplayWarning();
+            try {
+                const audio = document.getElementById('reaction-audio');
+                if (audio) {
+                    // 무음으로 짧게 재생을 시도해 브라우저에 오디오 재생 권한을 확보(unlock)만 합니다.
+                    if (audio.paused && !audio.src) {
+                        const wasMuted = audio.muted;
+                        audio.muted = true;
+                        audio.play().then(() => {
+                            audio.pause();
+                            audio.muted = wasMuted;
+                        }).catch(() => { audio.muted = wasMuted; });
+                    } else if (audio.paused && audio.src && currentPlayingId) {
+                        // 현재 재생 중이어야 할 리액션이 브라우저 자동재생 차단으로 실제로는
+                        // 멈춰 있는 경우에만(재생된 적 없는 최초 1회) 다시 재생을 시도합니다.
+                        audio.play().catch(() => {});
+                    }
+                }
+            } catch(e) {
+                console.warn("Audio unlock attempt failed:", e);
+            }
+        }, { once: true });
 
         let sseSource = null;
         function initSSE() {
@@ -2635,6 +3439,37 @@
                 console.log("👑 [VIP 변경 신호 감지] SSE 캐시 리프레시를 작동합니다.");
                 loadVipsToCache();
             });
+
+            sseSource.addEventListener('reaction_skip', function(e) {
+                console.log("⏩ [리액션 스킵 명령 수신] 현재 미디어 즉시 중단 및 다음 순번 처리");
+                currentPlayingId = null;
+                isEndingReaction = false;
+                if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
+                const audio = document.getElementById('reaction-audio');
+                if (audio) { 
+                    audio.pause(); 
+                    audio.src = ''; 
+                    audio.onended = null;
+                    audio.onerror = null;
+                }
+                onReactionEnded();
+            });
+
+            sseSource.addEventListener('goal_celebration', function(e) {
+                console.log("🎯 [목표 100% 달성 이벤트 신호 수신]");
+                triggerGoalCelebrationEffect();
+            });
+
+            sseSource.addEventListener('off_work_event', function(e) {
+                try {
+                    const data = e.data ? JSON.parse(e.data) : {};
+                    const name = data.name || '선수';
+                    console.log(`🎉 [퇴근 성공 이펙트 수신] ${name} 퇴근!`);
+                    showOffWorkPopup(name);
+                } catch(err) {
+                    console.error("Error handling off_work_event:", err);
+                }
+            });
             
             sseSource.onerror = function(err) {
                 console.error("SSE connection error. Retrying in 3 seconds...", err);
@@ -2656,32 +3491,40 @@
                     // 👑 VIP Roster Cache 실시간 동기화 (상시 가동)
                     loadVipsToCache();
                     
-                    // 📡 상태 데이터 수집은 SSE가 단절되었을 때만 안전 백업 기동
-                    if (!sseSource || sseSource.readyState !== 1) {
-                        const res = await fetch('/api/data');
-                        if (res.ok) {
-                            const newData = await res.json();
-                            handleData(newData);
-                        }
+                    // 📡 1초 간격 상시 데이터 연동 (SSE 연결 상태와 무관하게 100% 무조건 동기화 보장)
+                    const streamUrl = (!window.location.protocol.startsWith('http')) ? 'http://localhost:5000/api/data' : '/api/data';
+                    const res = await fetch(streamUrl);
+                    if (res.ok) {
+                        const newData = await res.json();
+                        handleData(newData);
                     }
-                } catch(e) {
-                    console.warn("Fallback poll error (network offline?):", e);
+                } catch (e) {
+                    console.error("Polling sync error:", e);
                 }
-            }, 1500);
+            }, 1000);
         }
+        initPollingFallback();
 
-        // 🖼️ 슬롯머신에 사용할 전체 리액션 이미지 썸네일 캐시 데이터베이스
+        // 🖼️ 슬롯머신 실제 당첨 후보로 "선택된" 리액션 이미지만 릴에 표시하도록 수집
         window.slotReelImages = [];
         async function loadSlotReelImages() {
             try {
                 const res = await fetch('/api/reaction/list');
                 if (res.ok) {
                     const list = await res.json();
-                    // 이미지가 정상적으로 등록되어 있는 활성 리액션들만 추출
-                    const urls = list.filter(item => item.image_url && item.is_enabled).map(item => item.image_url);
+                    // 💡 슬롯 후보로 실제 선택된(체크된) 리액션 id 목록만 필터링
+                    const selectedIds = (globalData && globalData.slot_machine && Array.isArray(globalData.slot_machine.selected_reaction_ids))
+                        ? globalData.slot_machine.selected_reaction_ids.map(Number)
+                        : [];
+                    let filtered = list.filter(item => item.image_url && item.is_enabled && selectedIds.includes(Number(item.id)));
+                    // 선택된 후보가 없으면 활성화된 전체 리액션으로 폴백
+                    if (filtered.length === 0) {
+                        filtered = list.filter(item => item.image_url && item.is_enabled);
+                    }
+                    const urls = filtered.map(item => item.image_url);
                     if (urls.length > 0) {
                         window.slotReelImages = urls;
-                        console.log("🎰 [슬롯 썸네일 수집 성공] 후보 이미지 수:", urls.length);
+                        console.log("🎰 [슬롯 썸네일 수집 성공] 실제 당첨 후보 이미지 수:", urls.length);
                         return;
                     }
                 }
@@ -2689,33 +3532,49 @@
                 console.warn("Failed to fetch slot reel images, using fallback default list:", e);
             }
             
-            // 등록된 이미지가 전혀 없을 때를 대비한 고화질 에셋 백업
-            window.slotReelImages = [
-                "/money.png", 
-                "https://cdn-icons-png.flaticon.com/512/3135/3135706.png", // 💎
-                "https://cdn-icons-png.flaticon.com/512/1041/1041916.png", // 👑
-                "https://cdn-icons-png.flaticon.com/512/2853/2853364.png", // 🍒
-                "https://cdn-icons-png.flaticon.com/512/1865/1865313.png", // ⭐
-                "https://cdn-icons-png.flaticon.com/512/9184/9184133.png"  // 🔔
-            ];
+            // 등록된 이미지가 전혀 없을 때를 대비한 기본 백업
+            window.slotReelImages = ["/money.png"];
         }
         loadSlotReelImages();
+        // 슬롯 후보(체크박스) 변경이 서버에 반영될 때마다 릴 이미지 목록도 함께 갱신
+        setInterval(loadSlotReelImages, 5000);
 
-        // 🎰 슬롯머신 실감나는 사운드 효과 및 3-Reel 회전 애니메이션 연출 제어장치
+        // 🎰 슬롯머신 실감나는 사운드 효과 및 세로 스트립 스크롤(아래→위) 3-Reel 애니메이션 연출 제어장치
+        function buildSlotStrip(reelId, targetImage) {
+            const reel = document.getElementById(reelId);
+            if (!reel) return null;
+            reel.innerHTML = '';
+            const strip = document.createElement('div');
+            strip.className = 'slot-strip';
+
+            const imgList = window.slotReelImages.length > 0 ? window.slotReelImages : ["/money.png"];
+            // 랜덤 이미지 여러 장을 세로로 나열 (스크롤 애니메이션용, 최소 8장)
+            const itemCount = 8;
+            for (let i = 0; i < itemCount; i++) {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'slot-strip-item';
+                const imgEl = document.createElement('img');
+                imgEl.src = imgList[Math.floor(Math.random() * imgList.length)];
+                itemDiv.appendChild(imgEl);
+                strip.appendChild(itemDiv);
+            }
+            // 마지막에 당첨 이미지를 미리 하나 추가해두고, 정지 시 여기로 스냅되도록 구성
+            const winItemDiv = document.createElement('div');
+            winItemDiv.className = 'slot-strip-item';
+            const winImgEl = document.createElement('img');
+            winImgEl.src = targetImage;
+            winItemDiv.appendChild(winImgEl);
+            strip.appendChild(winItemDiv);
+
+            reel.appendChild(strip);
+            return strip;
+        }
+
         function runSlotMachineAnimation(data, callback) {
             const slotOverlay = document.getElementById('slot-machine-overlay');
             const reel1 = document.getElementById('slot-reel-1');
             const reel2 = document.getElementById('slot-reel-2');
             const reel3 = document.getElementById('slot-reel-3');
-            
-            const img1 = document.getElementById('slot-reel-img-1');
-            const img2 = document.getElementById('slot-reel-img-2');
-            const img3 = document.getElementById('slot-reel-img-3');
-            
-            const txt1 = document.getElementById('slot-reel-txt-1');
-            const txt2 = document.getElementById('slot-reel-txt-2');
-            const txt3 = document.getElementById('slot-reel-txt-3');
-            
             const resultEl = document.getElementById('slot-machine-result');
 
             if (!slotOverlay || !reel1 || !reel2 || !reel3 || !resultEl) {
@@ -2723,36 +3582,20 @@
                 return;
             }
 
-            // 초기화
             resultEl.innerText = "";
-            
-            // 텍스트는 숨기고 썸네일용 이미지 태그를 켭니다.
-            if (img1) { img1.src = ""; img1.style.display = "block"; }
-            if (img2) { img2.src = ""; img2.style.display = "block"; }
-            if (img3) { img3.src = ""; img3.style.display = "block"; }
-            
-            if (txt1) txt1.style.display = "none";
-            if (txt2) txt2.style.display = "none";
-            if (txt3) txt3.style.display = "none";
+
+            const targetTitle = data.title || "당첨";
+            const targetImage = data.image_url || "/money.png";
+
+            // 각 릴마다 세로 스트립 재구성 (마지막 아이템이 당첨 이미지)
+            const strip1 = buildSlotStrip('slot-reel-1', targetImage);
+            const strip2 = buildSlotStrip('slot-reel-2', targetImage);
+            const strip3 = buildSlotStrip('slot-reel-3', targetImage);
 
             reel1.classList.add('spinning');
             reel2.classList.add('spinning');
             reel3.classList.add('spinning');
             slotOverlay.classList.add('show');
-
-            // 릴 회전 중 리액션 사진 후보 롤링 연출
-            let spinInterval = setInterval(() => {
-                const imgList = window.slotReelImages.length > 0 ? window.slotReelImages : ["/money.png"];
-                if (reel1.classList.contains('spinning') && img1) {
-                    img1.src = imgList[Math.floor(Math.random() * imgList.length)];
-                }
-                if (reel2.classList.contains('spinning') && img2) {
-                    img2.src = imgList[Math.floor(Math.random() * imgList.length)];
-                }
-                if (reel3.classList.contains('spinning') && img3) {
-                    img3.src = imgList[Math.floor(Math.random() * imgList.length)];
-                }
-            }, 60);
 
             // 신디사이저 릴 회전 비프음 (Web Audio API)
             const playBeep = (freq, duration, type="sine") => {
@@ -2776,36 +3619,33 @@
                 playBeep(880, 0.05, "triangle");
             }, 180);
 
-            const targetTitle = data.title || "당첨";
-            const targetImage = data.image_url || "/money.png";
-            
-            const stopReel = (reel, imgElement, winningSrc) => {
+            // 릴 정지: 세로 스크롤 애니메이션 클래스 제거 후, 마지막(당첨) 아이템 위치로 부드럽게 스냅
+            const stopReel = (reel, strip) => {
                 reel.classList.remove('spinning');
-                if (imgElement) {
-                    imgElement.src = winningSrc;
+                if (strip) {
+                    const itemCount = strip.children.length;
+                    strip.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+                    strip.style.transform = `translateY(-${(itemCount - 1) * 118}px)`;
                 }
                 playBeep(440, 0.2, "square"); // 탁- 정지음 타격감
             };
 
             // 2.2초 후 1번 릴 정지
             setTimeout(() => {
-                stopReel(reel1, img1, targetImage);
+                stopReel(reel1, strip1);
             }, 2200);
 
             // 2.8초 후 2번 릴 정지
             setTimeout(() => {
-                stopReel(reel2, img2, targetImage);
+                stopReel(reel2, strip2);
             }, 2800);
 
             // 3.4초 후 3번 릴 정지 및 최종 완성 (당첨 썸네일 일렬 정렬 잭팟)
             setTimeout(() => {
-                clearInterval(spinInterval);
                 clearInterval(soundTimer);
                 
-                // 3번째 릴 정지
-                stopReel(reel3, img3, targetImage);
+                stopReel(reel3, strip3);
                 
-                // 결과 문구 활성화
                 resultEl.innerText = `🎉 잭팟! [${targetTitle}] 당첨! (+2점 적립)`;
                 
                 // 잭팟 팡파레 효과음 재생

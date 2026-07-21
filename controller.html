@@ -41,33 +41,44 @@
         ::-webkit-scrollbar { width: 8px; height: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #3a3a3c; border-radius: 4px; }
         .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid var(--border-light); } .header h1 { margin: 0; font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; } .header h1 i { color: var(--accent); filter: drop-shadow(0 0 3px var(--accent-glow)); } .header-buttons { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .tabs { 
-            display: inline-flex; 
-            gap: 6px; 
-            background: rgba(255, 255, 255, 0.02); 
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 8px; 
+            background: rgba(255, 255, 255, 0.03); 
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            padding: 6px; 
-            border-radius: 16px; 
+            padding: 8px; 
+            border-radius: 18px; 
             margin-bottom: 25px; 
-            overflow-x: auto; 
-            white-space: nowrap; 
             border: 1px solid var(--border-light); 
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.15); 
+            width: 100%;
+            box-sizing: border-box;
+        }
+        @media (max-width: 900px) {
+            .tabs {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         .tab-btn { 
             background: transparent; 
             color: var(--text-muted); 
             border: 1px solid transparent; 
-            padding: 10px 18px; 
+            padding: 11px 14px; 
             border-radius: 12px; 
-            font-size: 14.5px; 
+            font-size: 14px; 
             font-weight: 700; 
             cursor: pointer; 
             transition: var(--transition-smooth); 
-            display: inline-flex; 
+            display: flex; 
             align-items: center; 
+            justify-content: center;
             gap: 8px; 
             letter-spacing: -0.2px;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            white-space: nowrap;
         } 
         .tab-btn.active { 
             background: rgba(255, 255, 255, 0.05); 
@@ -666,12 +677,31 @@
     </div>
 
     <div id="active-broadcast-area" style="display: none;">
+        <!-- 🎯 목표치 달성 위젯 이벤트 승인 알림 센터 카드 (최상단 공통) -->
+        <div class="group-box" id="goal-alert-box" style="display: none; margin-bottom: 15px; border-color: rgba(255, 215, 0, 0.8); background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 152, 0, 0.1)); box-shadow: 0 0 25px rgba(255, 215, 0, 0.3); animation: pulse 1.5s infinite;">
+            <div class="group-title" style="color: var(--gold); border-bottom-color: rgba(255, 215, 0, 0.3); display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span><i class="fa-solid fa-trophy"></i> 🎯 당일 목표치 100% 달성 알림!</span>
+                <span style="font-size: 11px; background: var(--gold); color: #000; padding: 2px 8px; border-radius: 10px; font-weight: 900;">축하합니다! 🎉</span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 10px; flex-wrap: wrap;">
+                <p style="color: #fff; font-size: 14px; font-weight: 700; margin: 0; flex: 1;">
+                    오늘 설정된 목표치가 100% 달성되었습니다!<br>
+                    <span style="font-size: 12.5px; font-weight: normal; color: #aaa;">오버레이 화면에 <strong>"목표 달성 위젯 1.5초 중앙 100% 달성 연출"</strong>을 실행할까요?</span>
+                </p>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="approveGoalEvent()" style="background: linear-gradient(135deg, #ffd700, #ff9800); color: #000; font-weight: 900; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);"><i class="fa-solid fa-play"></i> 승인 (송출)</button>
+                    <button onclick="dismissGoalEvent()" style="background: rgba(255, 255, 255, 0.1); color: #ccc; border: 1px solid #555; padding: 10px 14px; border-radius: 8px; cursor: pointer;">닫기</button>
+                </div>
+            </div>
+        </div>
+
     <div class="tabs">
         <button class="tab-btn active" onclick="openTab(event, 'tab-ranking')"><i class="fa-solid fa-ranking-star"></i> 랭킹</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-match')"><i class="fa-solid fa-gamepad"></i> 대결</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-neon')"><i class="fa-solid fa-wand-magic-sparkles"></i> 이펙트/전광판</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-youtube')"><i class="fa-brands fa-youtube"></i> BGM / 유튜브</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-reaction')"><i class="fa-solid fa-compact-disc"></i> 리액션</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-slot')" style="position:relative;"><i class="fa-solid fa-gamepad"></i> 종합게임<span id="slot-tab-badge" style="display:none; position:absolute; top:2px; right:2px; background:#ff453a; color:#fff; font-size:10px; font-weight:900; min-width:16px; height:16px; border-radius:8px; align-items:center; justify-content:center; padding:0 4px; box-shadow:0 0 6px rgba(255,69,58,0.8);"></span></button>
         <button class="tab-btn" onclick="openTab(event, 'tab-roulette')"><i class="fa-solid fa-circle-notch"></i> 룰렛</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-logs')"><i class="fa-solid fa-list-ul"></i> 로그</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-vip')"><i class="fa-solid fa-crown"></i> 특별 후원자</button>
@@ -963,33 +993,6 @@
                     </button>
                 </div>
 
-                <!-- 3. 쌓인 리액션 목록 (대기열) -->
-                <div style="display: flex; flex-direction: column; gap: 10px; padding: 12px; background: linear-gradient(135deg, rgba(255,0,85,0.12), rgba(0,229,255,0.08)); border-radius: 12px; border: 1px solid rgba(0,255,204,0.18);">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                        <div style="font-size: 13px; font-weight: bold; color: #fff;"><i class="fa-solid fa-dice" style="color:#ffd700;"></i> 슬롯머신 이벤트</div>
-                        <span id="slot-machine-status" style="font-size:11px; font-weight:900; color:#8e8e93;">꺼짐</span>
-                    </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-                        <label style="font-size:11px; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">발동 금액
-                            <input type="number" id="slot-trigger-amount" value="20000" style="height:30px; font-size:12px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; padding:0 8px;">
-                        </label>
-                        <label style="font-size:11px; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">진행 시간(분)
-                            <input type="number" id="slot-duration-minutes" value="20" style="height:30px; font-size:12px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; padding:0 8px;">
-                        </label>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted);">
-                        <span>남은 시간: <b id="slot-machine-remaining" style="color:#fff;">대기 중</b></span>
-                        <span>후보: <b id="slot-machine-selected-count" style="color:#ffd700;">0개 선택</b></span>
-                    </div>
-                    <div style="font-size:11px; color:#aaa; line-height:1.45;">
-                        선택한 리액션 중 하나가 랜덤으로 당첨됩니다. 슬롯 후원은 실제 점수 +2, 기여도는 당첨 리액션 금액/1만원으로 반영됩니다.
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                        <button onclick="startSlotMachine()" class="primary" style="flex:1; height:34px; font-size:12px; font-weight:bold; border-radius:8px; justify-content:center;"><i class="fa-solid fa-play"></i> 시작</button>
-                        <button onclick="stopSlotMachine()" class="danger" style="flex:1; height:34px; font-size:12px; font-weight:bold; border-radius:8px; justify-content:center;"><i class="fa-solid fa-stop"></i> 종료</button>
-                    </div>
-                </div>
-
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                     <div style="font-size: 13px; font-weight: bold; color: #fff; display: flex; justify-content: space-between; align-items: center;">
                         <span><i class="fa-solid fa-list-ol" style="color: var(--accent);"></i> 대기 중인 리액션 큐</span>
@@ -1047,6 +1050,94 @@
                         <i class="fa-solid fa-spinner fa-spin" style="font-size: 28px; color: var(--accent); margin-bottom: 10px; display: block;"></i>
                         불러오는 중...
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-slot" class="tab-content">
+        <!-- 🎮 종합게임 내부 서브 탭 스위처 -->
+        <div style="display:flex; gap:10px; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
+            <button id="btn-subtab-slot" onclick="switchGameSubTab('slot')" style="height:36px; padding:0 18px; font-size:13px; font-weight:900; border-radius:8px; background:linear-gradient(135deg, #ffd700, #ffae00); color:#000; border:none; cursor:pointer;"><i class="fa-solid fa-dice"></i> 🎰 슬롯머신</button>
+            <button id="btn-subtab-card" onclick="switchGameSubTab('card')" style="height:36px; padding:0 18px; font-size:13px; font-weight:900; border-radius:8px; background:rgba(255,255,255,0.1); color:#aaa; border:1px solid rgba(255,255,255,0.15); cursor:pointer;"><i class="fa-solid fa-clone"></i> 🎴 카드 뒤집기</button>
+        </div>
+
+        <!-- 서브 탭 1: 슬롯머신 -->
+        <div id="game-sec-slot" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+            <div class="group-box" style="display: flex; flex-direction: column; gap: 15px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                    <div class="group-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;"><i class="fa-solid fa-dice" style="color:#ffd700;"></i> 슬롯머신 이벤트 설정</div>
+                    <span id="slot-machine-status" style="font-size:12px; font-weight:900; color:#8e8e93;">꺼짐</span>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <label style="font-size:12px; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">발동 금액
+                        <input type="number" id="slot-trigger-amount" value="20000" style="height:36px; font-size:13px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; padding:0 10px;">
+                    </label>
+                    <label style="font-size:12px; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">진행 시간(분)
+                        <input type="number" id="slot-duration-minutes" value="20" style="height:36px; font-size:13px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; padding:0 10px;">
+                    </label>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted);">
+                    <span>남은 시간: <b id="slot-machine-remaining" style="color:#fff;">대기 중</b></span>
+                    <span>후보: <b id="slot-machine-selected-count" style="color:#ffd700;">0개 선택</b></span>
+                </div>
+                <div style="font-size:12px; color:#aaa; line-height:1.5; background:rgba(0,0,0,0.15); padding:10px; border-radius:8px;">
+                    리액션 탭 카드에서 <b style="color:#ffd700;">🎰 슬롯</b> 체크박스로 당첨 후보를 선택하세요. 발동 금액 후원이 들어오면 여기 대기열에 쌓이고, 직접 "돌리기"를 눌러야 실제로 회전 및 재생됩니다. 점수는 항상 +2, 기여도는 당첨 리액션 금액/1만원으로 반영되며 승인 후 최종 적용됩니다.
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="startSlotMachine()" class="primary" style="flex:1; height:38px; font-size:13px; font-weight:bold; border-radius:8px; justify-content:center;"><i class="fa-solid fa-play"></i> 시작</button>
+                    <button onclick="stopSlotMachine()" class="danger" style="flex:1; height:38px; font-size:13px; font-weight:bold; border-radius:8px; justify-content:center;"><i class="fa-solid fa-stop"></i> 종료</button>
+                </div>
+                <button onclick="spinSlotMachineNow()" style="width:100%; height:46px; font-size:14px; font-weight:900; border-radius:10px; justify-content:center; background:linear-gradient(135deg, #ffd700, #ffae00); color:#000; border:none; box-shadow:0 4px 15px rgba(255,215,0,0.35); cursor:pointer;"><i class="fa-solid fa-dice"></i> 🎰 지금 바로 돌리기 (후원 무관)</button>
+            </div>
+
+            <div class="group-box" style="display: flex; flex-direction: column; gap: 15px;">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <div class="group-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;"><i class="fa-solid fa-hourglass-half" style="color:#ffd700;"></i> 슬롯 돌리기 대기열</div>
+                    <span id="slot-spin-queue-count" style="font-size:11px; background:rgba(255,215,0,0.15); color:#ffd700; padding:3px 8px; border-radius:10px; font-weight:bold;">0건 대기</span>
+                </div>
+                <div id="slot-spin-queue-container" style="max-height:420px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+                    <div style="color: #666; font-size: 12px; text-align: center; padding: 40px 0;">대기 중인 슬롯 스핀이 없습니다.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 서브 탭 2: 🎴 카드 뒤집기 -->
+        <div id="game-sec-card" style="display:none; flex-direction:column; gap:20px;">
+            <div class="group-box" style="display:flex; flex-direction:column; gap:15px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                    <div class="group-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;"><i class="fa-solid fa-clone" style="color:#ffd700;"></i> 🎴 카드 뒤집기 방송 게임 제어</div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span id="card-game-status-badge" style="font-size:12px; font-weight:900; padding:4px 10px; border-radius:12px; background:rgba(255,255,255,0.1); color:#8e8e93;">꺼짐 🔴</span>
+                        <button onclick="toggleCardGameActive()" id="btn-toggle-card-game" style="height:36px; padding:0 16px; font-size:13px; font-weight:900; border-radius:10px; background:linear-gradient(135deg, #ffd700, #ff8c00); color:#000; border:none; cursor:pointer;"><i class="fa-solid fa-power-off"></i> 방송 화면 위젯 켜기</button>
+                    </div>
+                </div>
+
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:15px; flex-wrap:wrap; background:rgba(0,0,0,0.25); padding:12px 16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:13px; color:#aaa; font-weight:700;"><i class="fa-solid fa-stopwatch" style="color:#ffd700;"></i> 타이머:</span>
+                        <b id="card-game-timer-disp" style="font-size:18px; font-family:Consolas, monospace; color:#ffd700; font-weight:900; min-width:60px;">05:00</b>
+                        <button onclick="setCardGameTimer(3)" class="secondary" style="height:28px; padding:0 8px; font-size:11px; border-radius:6px; cursor:pointer;">3분</button>
+                        <button onclick="setCardGameTimer(5)" class="secondary" style="height:28px; padding:0 8px; font-size:11px; border-radius:6px; cursor:pointer;">5분</button>
+                        <button onclick="setCardGameTimer(10)" class="secondary" style="height:28px; padding:0 8px; font-size:11px; border-radius:6px; cursor:pointer;">10분</button>
+                        <button onclick="toggleCardGameTimer()" id="btn-card-timer-toggle" class="primary" style="height:28px; padding:0 12px; font-size:11px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-play"></i> 시작</button>
+                        <button onclick="resetCardGameTimer()" class="danger" style="height:28px; padding:0 10px; font-size:11px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-rotate-left"></i> 리셋</button>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button onclick="openCardPickerModal()" style="height:34px; padding:0 12px; font-size:12px; font-weight:bold; border-radius:8px; background:rgba(0, 229, 255, 0.15); color:#00e5ff; border:1px solid #00e5ff; cursor:pointer;"><i class="fa-solid fa-list-check"></i> 📋 20장 직접 선택 피커</button>
+                        <button onclick="shuffleCardGameDeck()" style="height:34px; padding:0 12px; font-size:12px; font-weight:bold; border-radius:8px; background:rgba(255, 215, 0, 0.15); color:#ffd700; border:1px solid #ffd700; cursor:pointer;"><i class="fa-solid fa-shuffle"></i> 🎲 20장 무작위 셔플</button>
+                        <button onclick="flipCardGameRandom(5)" style="height:34px; padding:0 14px; font-size:12px; font-weight:900; border-radius:8px; background:linear-gradient(90deg, #ff0055, #ff5500); color:#fff; border:none; cursor:pointer;"><i class="fa-solid fa-hand-pointer"></i> 🎴 무작위 5장 뒤집기</button>
+                    </div>
+                </div>
+
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-top:5px;">
+                    <div style="font-size:13px; font-weight:bold; color:#fff;"><i class="fa-solid fa-th"></i> 20장 카드 상태 현황판</div>
+                    <div style="font-size:12px; color:#aaa;">진행 현황: <b id="card-game-pass-count" style="color:#00ffcc; font-size:14px;">0 / 5 PASS</b></div>
+                </div>
+
+                <div id="card-game-grid-admin" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:12px; max-height:480px; overflow-y:auto; padding:5px;">
+                    <div style="color:#666; font-size:12px; grid-column: 1 / -1; text-align:center; padding:40px 0;">등록된 카드가 없습니다. [20장 무작위 셔플] 버튼을 눌러주세요.</div>
                 </div>
             </div>
         </div>
@@ -1316,6 +1407,18 @@
                     <button id="btn-end-broadcast" onclick="endBroadcast()" style="display: none; width: 100%; height: 36px; justify-content: center; background: var(--danger); border-color: var(--danger); color: #fff; font-weight: bold; border-radius: 8px; font-size: 12px; cursor: pointer;"><i class="fa-solid fa-power-off"></i> 방송 종료 및 초기화</button>
                 </div>
             </div>
+
+            <!-- 🏦 3. 은행 원장 재정산 카드 -->
+            <div class="group-box" style="margin-bottom: 0;">
+                <div class="group-title"><i class="fa-solid fa-scale-balanced"></i> 은행 원장 잔액 재정산</div>
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                        점수판이 실제 거래 내역과 어긋난 것 같으면, 은행 거래 원장(bank_ledger)의 모든 기록을 처음부터 다시 합산하여 각 플레이어의 잔액을 정확하게 재구성합니다. 이 작업은 거래 내역 자체는 건드리지 않고, 현재 표시되는 점수/기여도 캐시만 원장 기준으로 다시 맞춥니다.
+                    </div>
+                    <button onclick="triggerBankRecalculate()" style="width: 100%; height: 36px; justify-content: center; background: rgba(0, 255, 204, 0.12); border: 1px solid var(--accent); color: var(--accent); font-weight: bold; border-radius: 8px; font-size: 12px; cursor: pointer;"><i class="fa-solid fa-scale-balanced"></i> 원장 기준으로 잔액 재정산</button>
+                    <button onclick="openBankLedgerModal()" style="width: 100%; height: 36px; justify-content: center; background: rgba(255, 215, 0, 0.12); border: 1px solid var(--gold); color: var(--gold); font-weight: bold; border-radius: 8px; font-size: 12px; cursor: pointer;"><i class="fa-solid fa-piggy-bank"></i> 🏦 은행 통장 내역 보기</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1549,14 +1652,26 @@
                     body: JSON.stringify(gd) 
                 });
                 if (res.status === 409) {
-                    console.warn("⚠️ 서버에 더 최신 상태가 있어 저장을 중단하고 다시 동기화합니다.");
+                    console.warn("⚠️ 서버에 더 최신 상태가 있어 저장을 중단하고 다시 조용히 자동 동기화합니다.");
                     isPushing = false;
                     lastPushTime = 0;
-                    await fetchAPI();
-                    if (typeof premiumAlert === 'function') {
-                        premiumAlert("다른 화면에서 더 최신 상태가 저장되어 현재 화면을 다시 불러왔습니다. 방금 조작은 한 번 더 적용해주세요.", "동기화 충돌", "warning");
+                    const silentRes = await fetch('/api/data').catch(() => null);
+                    if (silentRes && silentRes.ok) {
+                        const latestData = await silentRes.json().catch(() => null);
+                        if (latestData) {
+                            gd = latestData;
+                            renderUI();
+                        }
                     }
                     return;
+                }
+                // 💡 [버그 수정] 서버가 실제로 저장한 최신 버전 번호를 즉시 반영하여,
+                // 빠르게 연속 조작해도 불필요한 409 동기화 충돌이 발생하지 않도록 함
+                if (res.ok) {
+                    const resData = await res.json().catch(() => null);
+                    if (resData && typeof resData.server_version === 'number') {
+                        gd.version = resData.server_version;
+                    }
                 }
             } catch(e) {
                 console.error("⚠️ pushAPI Error:", e);
@@ -1685,6 +1800,7 @@
 
             setVal('sel-theme', gd.theme || 'default');
             setVal('in-goal', gd.target_goal);
+            renderGoalAchievementNotice();
             
             setChk('chk-reaction', gd.reaction_mode);
             let reactLbl = gd.reaction_mode ? "<i class='fa-solid fa-eye-slash'></i> 위젯 숨김 (리액션 ON)" : "<i class='fa-solid fa-eye'></i> 수동 리액션 켜기";
@@ -1699,6 +1815,7 @@
             setChk('chk-roulette-enabled', gd.roulette_enabled || false);
             setChk('chk-home-race', gd.home_race_enabled || false);
             renderHomeRaceGoalInputs();
+            renderCardGameUI();
             // 조명 속도 슬라이더 갱신
             if (document.getElementById('in-neon-speed')) {
                 document.getElementById('in-neon-speed').value = gd.neon_speed || 1.5;
@@ -1718,8 +1835,27 @@
                 let isExtra = gd.extra_game_active || false;
                 let activeBjs = isExtra ? (gd.extra_bjs || []) : (gd.bjs || []);
                 gd.pending_donations.forEach(don => {
+                    let isOffWork = don.type === 'off_work';
+                    if (isOffWork) {
+                        let offBadge = `<span style="display:inline-block; background:linear-gradient(90deg, #ffd700, #ff8c00); color:#000; font-size:11px; font-weight:900; padding:2px 10px; border-radius:12px; margin-right:8px;">🏆 퇴근전쟁 승리</span>`;
+                        let infoText = `${offBadge}<span style="color:#888;">[${don.time}]</span> <b style="color:#fff; font-size:16px;">🎉 ${escapeHTML(don.name)}님 퇴근 성공!</b><br><span style="color:#ffd700; font-weight:800;">아래 [송출하기] 버튼을 누르면 오버레이 화면에 '{escapeHTML(don.name)} 퇴근!' 이 쏘아집니다.</span>`;
+                        let cardStyle = 'border-left-color:#ffd700; background:rgba(255, 215, 0, 0.12); border:1.5px solid rgba(255, 215, 0, 0.4);';
+                        pHtml += `<div class="pending-item" style="${cardStyle}"><div class="pending-info">${infoText}</div><div class="bj-buttons"><button class="bj-btn" style="background:linear-gradient(90deg, #ffd700, #ff8c00); color:#000; font-weight:900; font-size:13px; padding:6px 14px; border:none; cursor:pointer;" onclick="broadcastOffWorkCard('${don.id}', '${escapeHTML(don.name)}')"><i class="fa-solid fa-paper-plane"></i> 🚀 방송에 '${escapeHTML(don.name)} 퇴근!' 송출하기</button><button class="delete-btn" onclick="deletePending('${don.id}')"><i class="fa-solid fa-trash-can"></i> 삭제</button></div></div>`;
+                        return;
+                    }
+
                     let bjBtns = activeBjs.map((bj, idx) => `<button class="bj-btn" onclick="assignPending('${don.id}', ${idx})">${escapeHTML(bj.name)}</button>`).join('');
-                    pHtml += `<div class="pending-item"><div class="pending-info"><span style="color:#888;">[${don.time}]</span> <b style="color:#fff; font-size:15px;">${escapeHTML(don.name)}</b>님 - <span class="pending-amount">${don.amount.toLocaleString()}원</span><br><span style="color:#aaa; font-style:italic;">"${escapeHTML(don.message)}"</span></div><div class="bj-buttons"><span style="font-size:12px; color:#888;"><i class="fa-solid fa-hand-holding-dollar"></i> 지급:</span>${bjBtns}<button class="bj-btn" style="background:rgba(255, 215, 0, 0.15); color:var(--gold); border-color:var(--gold);" onclick="assignHalf('${don.id}')">🌓 반반</button><button class="bj-btn" style="background:rgba(0, 191, 255, 0.15); color:#00bfff; border-color:#00bfff;" onclick="assignSplitEqual('${don.id}')">🔢 N분할</button><button class="delete-btn" onclick="deletePending('${don.id}')"><i class="fa-solid fa-trash-can"></i> 무시</button></div></div>`;
+                    let isSlot = !!don.slot_result;
+                    let slotBadge = '';
+                    let infoText = `<span style="color:#888;">[${don.time}]</span> <b style="color:#fff; font-size:15px;">${escapeHTML(don.name)}</b>님 - <span class="pending-amount">${don.amount.toLocaleString()}원</span><br><span style="color:#aaa; font-style:italic;">"${escapeHTML(don.message)}"</span>`;
+                    let cardStyle = '';
+                    if (isSlot) {
+                        let sr = don.slot_result;
+                        slotBadge = `<span style="display:inline-block; background:#ffd700; color:#000; font-size:10px; font-weight:900; padding:2px 8px; border-radius:10px; margin-right:8px;">🎰 슬롯머신</span>`;
+                        infoText = `${slotBadge}<span style="color:#888;">[${don.time}]</span> <b style="color:#fff; font-size:15px;">${escapeHTML(don.name)}</b>님 - <span style="color:#ffd700; font-weight:900;">"${escapeHTML(sr.title)}"</span> 당첨!<br><span style="color:#ffd700; font-weight:800;">점수 +${sr.score_delta} / 기여도 +${sr.contribution_delta}</span>`;
+                        cardStyle = 'border-left-color:#ffd700; background:rgba(255,215,0,0.05);';
+                    }
+                    pHtml += `<div class="pending-item" style="${cardStyle}"><div class="pending-info">${infoText}</div><div class="bj-buttons"><span style="font-size:12px; color:#888;"><i class="fa-solid fa-hand-holding-dollar"></i> ${isSlot ? '승인:' : '지급:'}</span>${bjBtns}${isSlot ? '' : `<button class="bj-btn" style="background:rgba(255, 215, 0, 0.15); color:var(--gold); border-color:var(--gold);" onclick="assignHalf('${don.id}')">🌓 반반</button><button class="bj-btn" style="background:rgba(0, 191, 255, 0.15); color:#00bfff; border-color:#00bfff;" onclick="assignSplitEqual('${don.id}')">🔢 N분할</button>`}<button class="delete-btn" onclick="deletePending('${don.id}')"><i class="fa-solid fa-trash-can"></i> 무시</button></div></div>`;
                 });
                 if (lastPendingHtml !== pHtml) { document.getElementById('pending-list').innerHTML = pHtml; lastPendingHtml = pHtml; }
             } else {
@@ -1912,6 +2048,7 @@
             }
             renderReactionQueue();
             renderSlotMachinePanel();
+            renderSlotSpinQueue();
 
             renderRouletteTab();
         }
@@ -2133,6 +2270,13 @@
                 targetList.sort((a, b) => (b.contribution || 0) - (a.contribution || 0));
                 if (isExtra) gd.extra_bjs = targetList; else gd.bjs = targetList;
 
+                // 💡 [퇴근전쟁 감지] 후원 승인으로 목표 달성(퇴근 성공) 시 알림센터에 '퇴근 성공!' 카드 추가
+                let targetGoal = gd.target_goal || 0;
+                let homeGoal = (gd.home_goals && gd.home_goals[targetList[bjIdx].name]) || 0;
+                if ((targetGoal > 0 && targetList[bjIdx].contribution >= targetGoal) || (homeGoal > 0 && targetList[bjIdx].contribution >= homeGoal)) {
+                    addOffWorkPendingCard(targetList[bjIdx].name);
+                }
+
                 let timeStr = new Date().toLocaleTimeString('ko-KR', { hour12: false });
                 if (!gd.logs) gd.logs = [];
                 gd.logs.unshift({time: timeStr, name: slotResult ? `슬롯머신 ${targetList[bjIdx].name}` : targetList[bjIdx].name, val: addPoint});
@@ -2177,6 +2321,50 @@
 
             if(gd.logs.length > 200) gd.logs.splice(200);
             gd.pending_donations.splice(donIdx, 1);
+            pushAPI();
+        }
+
+        async function broadcastOffWorkCard(donId, name) {
+            try {
+                let res = await fetch('/api/offwork/broadcast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name })
+                });
+                let data = await res.json();
+                if (data.status === 'success') {
+                    if (typeof premiumAlert === 'function') {
+                        premiumAlert(`🎉 ${name}님 퇴근 성공 이펙트를 방송 화면에 송출했습니다!`, "송출 성공", "success");
+                    }
+                    let donIdx = gd.pending_donations.findIndex(d => d.id === donId);
+                    if (donIdx !== -1) {
+                        gd.pending_donations.splice(donIdx, 1);
+                        pushAPI();
+                    }
+                } else {
+                    if (typeof premiumAlert === 'function') {
+                        premiumAlert("송출 실패: " + data.message, "오류", "warning");
+                    }
+                }
+            } catch (e) {
+                if (typeof premiumAlert === 'function') {
+                    premiumAlert("통신 에러: " + e.message, "오류", "warning");
+                }
+            }
+        }
+
+        function addOffWorkPendingCard(playerName) {
+            if (!gd.pending_donations) gd.pending_donations = [];
+            let cardId = `off_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+            let timeStr = new Date().toLocaleTimeString('ko-KR', { hour12: false });
+            gd.pending_donations.unshift({
+                id: cardId,
+                type: 'off_work',
+                name: playerName,
+                amount: 0,
+                message: '퇴근전쟁 승리 달성!',
+                time: timeStr
+            });
             pushAPI();
         }
 
@@ -2332,7 +2520,53 @@
         function toggleMatch() { gd.match_data.active = !gd.match_data.active; pushAPI(); }
         function toggleMatchFire() { gd.match_data.fire_effect = !gd.match_data.fire_effect; pushAPI(); }
         function updateTheme() { gd.theme = document.getElementById('sel-theme').value; pushAPI(); }
-        function updateGoal() { gd.target_goal = parseInt(document.getElementById('in-goal').value)||0; pushAPI(); }
+        function updateGoal() { 
+            gd.target_goal = parseInt(document.getElementById('in-goal').value)||0; 
+            gd.goal_event_pending = false;
+            gd.goal_event_approved = false;
+            pushAPI(); 
+        }
+
+        async function approveGoalEvent() {
+            try {
+                const res = await fetch('/api/goal/approve_event', { method: 'POST' });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    if (typeof premiumAlert === 'function') {
+                        premiumAlert(data.message, "송출 성공", "success");
+                    }
+                    const box = document.getElementById('goal-alert-box');
+                    if (box) box.style.display = 'none';
+                }
+            } catch(e) {
+                console.error("approveGoalEvent error:", e);
+            }
+        }
+
+        async function dismissGoalEvent() {
+            try {
+                await fetch('/api/goal/dismiss_event', { method: 'POST' });
+                const box = document.getElementById('goal-alert-box');
+                if (box) box.style.display = 'none';
+            } catch(e) {
+                console.error("dismissGoalEvent error:", e);
+            }
+        }
+
+        function renderGoalAchievementNotice() {
+            const box = document.getElementById('goal-alert-box');
+            if (!box) return;
+            
+            const tgt = gd.target_goal || 0;
+            const bjs = gd.bjs || [];
+            const totalContrib = bjs.reduce((acc, b) => acc + (b.contribution || 0), 0);
+
+            // 100% 이상 달성했거나 서버 state가 goal_event_pending 인 경우 승인 알림 팝업!
+            const isGoalReached = (tgt > 0 && totalContrib >= tgt);
+            const shouldShow = (gd.goal_event_pending || isGoalReached) && !gd.goal_event_approved;
+            
+            box.style.display = shouldShow ? 'block' : 'none';
+        }
 
         function toggleHomeRacePanel(event) {
             if (event) event.stopPropagation();
@@ -2354,9 +2588,10 @@
             let html = '';
             gd.bjs.forEach((bj) => {
                 let goalVal = gd.home_goals[bj.name] || 0;
-                html += `<div style="display:flex; align-items:center; gap:10px;">
+                html += `<div style="display:flex; align-items:center; gap:10px; padding:4px 0;">
                     <span style="flex:1; font-size:13px; font-weight:700; color:#fff;">${escapeHTML(bj.name)}</span>
-                    <input type="number" class="home-race-goal-input" data-name="${escapeHTML(bj.name)}" value="${goalVal}" placeholder="목표 기여도" style="width:140px; height:34px; font-size:13px;" onchange="updateHomeRaceGoal(${escapeHTML(JSON.stringify(bj.name))}, this.value)">
+                    <input type="number" class="home-race-goal-input" data-name="${escapeHTML(bj.name)}" value="${goalVal}" placeholder="목표 기여도" style="width:110px; height:32px; font-size:12px;" onchange="updateHomeRaceGoal(${escapeHTML(JSON.stringify(bj.name))}, this.value)">
+                    <button class="bj-btn" style="background:linear-gradient(90deg, #ffd700, #ff8c00); color:#000; font-weight:900; font-size:11px; padding:4px 10px; border:none; cursor:pointer;" onclick="addOffWorkPendingCard(${escapeHTML(JSON.stringify(bj.name))})">🎉 퇴근 대기 등록</button>
                 </div>`;
             });
             container.innerHTML = html || '<div style="color:var(--text-muted); font-size:12px;">등록된 플레이어가 없습니다.</div>';
@@ -2594,7 +2829,335 @@
             }
         }
 
-        // 🟢 실시간 연결 상태 표시등 제어 함수
+        // 🎮 종합게임 서브탭 전환
+        function switchGameSubTab(type) {
+            const btnSlot = document.getElementById('btn-subtab-slot');
+            const btnCard = document.getElementById('btn-subtab-card');
+            const secSlot = document.getElementById('game-sec-slot');
+            const secCard = document.getElementById('game-sec-card');
+            if (!secSlot || !secCard) return;
+
+            if (type === 'slot') {
+                secSlot.style.display = 'grid';
+                secCard.style.display = 'none';
+                btnSlot.style.background = 'linear-gradient(135deg, #ffd700, #ffae00)';
+                btnSlot.style.color = '#000';
+                btnSlot.style.border = 'none';
+                btnCard.style.background = 'rgba(255,255,255,0.1)';
+                btnCard.style.color = '#aaa';
+                btnCard.style.border = '1px solid rgba(255,255,255,0.15)';
+            } else {
+                secSlot.style.display = 'none';
+                secCard.style.display = 'flex';
+                btnCard.style.background = 'linear-gradient(135deg, #ffd700, #ffae00)';
+                btnCard.style.color = '#000';
+                btnCard.style.border = 'none';
+                btnSlot.style.background = 'rgba(255,255,255,0.1)';
+                btnSlot.style.color = '#aaa';
+                btnSlot.style.border = '1px solid rgba(255,255,255,0.15)';
+            }
+        }
+
+        let lastCardGridHtml = "";
+        // 🎴 카드 뒤집기 컨트롤러 UI 렌더링
+        function renderCardGameUI() {
+            if (!gd) return;
+            const cg = gd.card_game || { active: false, is_running: false, time_left_ms: 300000, cards: [] };
+            
+            // 배지 & 버튼
+            const badge = document.getElementById('card-game-status-badge');
+            const toggleBtn = document.getElementById('btn-toggle-card-game');
+            if (badge) {
+                badge.innerText = cg.active ? "방송 중 🟢" : "꺼짐 🔴";
+                badge.style.color = cg.active ? "#34c759" : "#8e8e93";
+                badge.style.background = cg.active ? "rgba(52,199,89,0.15)" : "rgba(255,255,255,0.1)";
+            }
+            if (toggleBtn) {
+                toggleBtn.innerHTML = cg.active ? '<i class="fa-solid fa-power-off"></i> 방송 화면 위젯 끄기' : '<i class="fa-solid fa-power-off"></i> 방송 화면 위젯 켜기';
+                toggleBtn.style.background = cg.active ? "rgba(255,69,58,0.2)" : "linear-gradient(135deg, #ffd700, #ff8c00)";
+                toggleBtn.style.color = cg.active ? "#ff453a" : "#000";
+            }
+
+            // 타이머
+            const timerDisp = document.getElementById('card-game-timer-disp');
+            const timerBtn = document.getElementById('btn-card-timer-toggle');
+            if (timerDisp) {
+                let sec = Math.ceil((cg.time_left_ms || 0) / 1000);
+                let m = Math.floor(sec / 60);
+                let s = sec % 60;
+                timerDisp.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }
+            if (timerBtn) {
+                timerBtn.innerHTML = cg.is_running ? '<i class="fa-solid fa-pause"></i> 일시정지' : '<i class="fa-solid fa-play"></i> 시작';
+                timerBtn.className = cg.is_running ? 'warning' : 'primary';
+            }
+
+            // 카운트 현황 (뒤집힌 카드 중 PASS된 개수)
+            const cards = cg.cards || [];
+            const passedCount = cards.filter(c => c.is_flipped && c.is_passed).length;
+            const passDisp = document.getElementById('card-game-pass-count');
+            if (passDisp) {
+                passDisp.innerText = `${passedCount} / 5 PASS`;
+            }
+
+            // 20장 카드 그리드
+            const grid = document.getElementById('card-game-grid-admin');
+            if (grid) {
+                if (cards.length === 0) {
+                    grid.innerHTML = '<div style="color:#666; font-size:12px; grid-column: 1 / -1; text-align:center; padding:40px 0;">등록된 카드가 없습니다. [20장 무작위 셔플] 버튼을 눌러주세요.</div>';
+                    return;
+                }
+                let html = '';
+                cards.forEach((c, idx) => {
+                    let step = c.step !== undefined ? c.step : (c.is_passed ? 2 : (c.is_flipped ? 1 : 0));
+                    let borderColor = step === 2 ? '#ff2a4b' : (step === 1 ? '#ffd700' : 'rgba(255,255,255,0.12)');
+                    let badgeBg = step === 2 ? 'linear-gradient(90deg, #ff2a4b, #ff0055)' : (step === 1 ? 'linear-gradient(90deg, #ffd700, #ff8c00)' : '#333');
+                    let badgeText = step === 2 ? 'CLEAR!' : (step === 1 ? '앞면 공개' : '뒷면');
+                    let badgeColor = (step === 1 || step === 2) ? '#fff' : '#888';
+
+                    html += `
+                        <div style="background:rgba(0,0,0,0.35); border:1.5px solid ${borderColor}; border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:8px; transition:all 0.2s ease; cursor:pointer;" onclick="stepCardGameCard(${c.id})">
+                            <div style="display:flex; align-items:center; justify-content:space-between;">
+                                <span style="font-size:11px; font-weight:900; color:#ffd700;">#${idx+1} 카드</span>
+                                <span style="padding:2px 8px; border-radius:6px; font-size:10px; font-weight:900; background:${badgeBg}; color:${badgeColor};">${badgeText}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px; min-height:40px;">
+                                ${c.image_url ? `<img src="${c.image_url}" style="width:38px; height:38px; object-fit:cover; border-radius:6px;">` : `<div style="width:38px; height:38px; background:#222; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#555; font-size:16px;">🎴</div>`}
+                                <div style="flex:1; overflow:hidden;">
+                                    <div style="font-size:12px; font-weight:bold; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(c.title || '리액션')}</div>
+                                    <div style="font-size:11px; color:#ffd700; font-weight:800;">${(c.amount || 0).toLocaleString()}원</div>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:3px; margin-top:2px;" onclick="event.stopPropagation()">
+                                <button onclick="stepCardGameCard(${c.id}, 0)" style="flex:1; height:24px; font-size:10px; font-weight:bold; border-radius:4px; background:${step===0 ? '#ffd700' : 'rgba(255,255,255,0.08)'}; color:${step===0 ? '#000' : '#aaa'}; border:none; cursor:pointer;">뒷면</button>
+                                <button onclick="stepCardGameCard(${c.id}, 1)" style="flex:1; height:24px; font-size:10px; font-weight:bold; border-radius:4px; background:${step===1 ? '#00e5ff' : 'rgba(255,255,255,0.08)'}; color:${step===1 ? '#000' : '#aaa'}; border:none; cursor:pointer;">앞면</button>
+                                <button onclick="stepCardGameCard(${c.id}, 2)" style="flex:1; height:24px; font-size:10px; font-weight:900; border-radius:4px; background:${step===2 ? '#ff2a4b' : 'rgba(255,42,75,0.2)'}; color:${step===2 ? '#fff' : '#ff2a4b'}; border:none; cursor:pointer;">CLEAR!</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                if (lastCardGridHtml !== html) {
+                    grid.innerHTML = html;
+                    lastCardGridHtml = html;
+                }
+            }
+        }
+
+        // Card Game API 핸들러
+        async function stepCardGameCard(cardId, stepVal) {
+            let bodyData = { card_id: cardId };
+            if (stepVal !== undefined) bodyData.step = stepVal;
+            let res = await fetch('/api/card_game/step', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyData) });
+            let data = await res.json();
+            if (data.status === 'success') {
+                if (!gd.card_game) gd.card_game = {};
+                gd.card_game.cards = data.cards;
+                renderCardGameUI();
+            }
+        }
+        async function toggleCardGameActive() {
+            let res = await fetch('/api/card_game/toggle', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+            let data = await res.json();
+            if (data.status === 'success' && data.card_game) {
+                gd.card_game = data.card_game;
+                renderCardGameUI();
+            }
+        }
+
+        async function shuffleCardGameDeck() {
+            let res = await fetch('/api/card_game/shuffle', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+            let data = await res.json();
+            if (data.status === 'success') {
+                if (!gd.card_game) gd.card_game = {};
+                gd.card_game.cards = data.cards;
+                renderCardGameUI();
+            }
+        }
+
+        async function flipCardGameRandom(count) {
+            let res = await fetch('/api/card_game/flip', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: count }) });
+            let data = await res.json();
+            if (data.status === 'success') {
+                if (!gd.card_game) gd.card_game = {};
+                gd.card_game.cards = data.cards;
+                renderCardGameUI();
+            }
+        }
+
+        async function toggleCardGameCardFlip(cardId) {
+            let res = await fetch('/api/card_game/flip', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ card_id: cardId }) });
+            let data = await res.json();
+            if (data.status === 'success') {
+                if (!gd.card_game) gd.card_game = {};
+                gd.card_game.cards = data.cards;
+                renderCardGameUI();
+            }
+        }
+
+        async function toggleCardGameCardPass(cardId) {
+            let res = await fetch('/api/card_game/pass', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ card_id: cardId }) });
+            let data = await res.json();
+            if (data.status === 'success') {
+                if (!gd.card_game) gd.card_game = {};
+                gd.card_game.cards = data.cards;
+                renderCardGameUI();
+            }
+        }
+
+        async function setCardGameTimer(minutes) {
+            let ms = minutes * 60 * 1000;
+            let res = await fetch('/api/card_game/timer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ time_left_ms: ms, is_running: false }) });
+            let data = await res.json();
+            if (data.status === 'success') {
+                gd.card_game = data.card_game;
+                renderCardGameUI();
+            }
+        }
+
+        async function toggleCardGameTimer() {
+            let isRunning = !(gd.card_game && gd.card_game.is_running);
+            let res = await fetch('/api/card_game/timer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_running: isRunning }) });
+            let data = await res.json();
+            if (data.status === 'success') {
+                gd.card_game = data.card_game;
+                renderCardGameUI();
+            }
+        }
+
+        async function resetCardGameTimer() {
+            let res = await fetch('/api/card_game/timer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ time_left_ms: 300000, is_running: false }) });
+            let data = await res.json();
+            if (data.status === 'success') {
+                gd.card_game = data.card_game;
+                renderCardGameUI();
+            }
+        }
+
+        // 📋 20장 커스텀 피커 모달 관련 함수
+        let allReactionItemsForPicker = [];
+        let selectedPickerIds = new Set();
+
+        async function openCardPickerModal() {
+            const modal = document.getElementById('card-picker-modal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+
+            selectedPickerIds.clear();
+            if (gd.card_game && gd.card_game.selected_reaction_ids) {
+                gd.card_game.selected_reaction_ids.forEach(id => selectedPickerIds.add(id));
+            }
+
+            try {
+                let res = await fetch('/api/reactions/list');
+                let data = await res.json();
+                if (data.status === 'success') {
+                    allReactionItemsForPicker = data.items || [];
+                    renderCardPickerItems();
+                }
+            } catch (e) {
+                console.error("Error loading reactions for picker:", e);
+            }
+        }
+
+        function closeCardPickerModal() {
+            const modal = document.getElementById('card-picker-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function renderCardPickerItems() {
+            const listEl = document.getElementById('card-picker-list');
+            const searchVal = (document.getElementById('card-picker-search')?.value || '').toLowerCase().trim();
+            const countEl = document.getElementById('card-picker-count');
+            if (countEl) countEl.innerText = selectedPickerIds.size;
+
+            if (!listEl) return;
+            
+            let filtered = allReactionItemsForPicker.filter(item => {
+                if (!searchVal) return true;
+                
+                // 1. 제목 검색
+                const titleMatch = (item.title || '').toLowerCase().includes(searchVal);
+                
+                // 2. 금액 검색 (입력값 중 숫자만 추출하여 포함 여부 확인)
+                const queryNum = searchVal.replace(/[^\d]/g, '');
+                const amountStr = String(item.amount || 0);
+                const amountMatch = queryNum && amountStr.includes(queryNum);
+
+                // 3. 만원/천원 단위 한국어 지원 (예: '2만' -> 20000, '5천' -> 5000)
+                let unitMatch = false;
+                if (searchVal.includes('만') || searchVal.includes('천')) {
+                    let parsedVal = 0;
+                    const manMatch = searchVal.match(/^(\d+(?:\.\d+)?)\s*만/);
+                    const chunMatch = searchVal.match(/^(\d+(?:\.\d+)?)\s*천/);
+                    if (manMatch) {
+                        parsedVal = parseFloat(manMatch[1]) * 10000;
+                    } else if (chunMatch) {
+                        parsedVal = parseFloat(chunMatch[1]) * 1000;
+                    }
+                    if (parsedVal > 0 && item.amount === parsedVal) {
+                        unitMatch = true;
+                    }
+                }
+                
+                return titleMatch || amountMatch || unitMatch;
+            });
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = '<div style="color:#666; font-size:12px; grid-column:1/-1; text-align:center; padding:30px 0;">검색 결과가 없습니다.</div>';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(item => {
+                let isChecked = selectedPickerIds.has(item.id);
+                html += `
+                    <label style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.05); padding:8px 10px; border-radius:8px; cursor:pointer; border:1px solid ${isChecked ? '#00e5ff' : 'transparent'};">
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="togglePickerItemId(${item.id}, this.checked)">
+                        <div style="flex:1; overflow:hidden;">
+                            <div style="font-size:12px; font-weight:bold; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(item.title)}</div>
+                            <div style="font-size:11px; color:#ffd700;">${(item.amount||0).toLocaleString()}원</div>
+                        </div>
+                    </label>
+                `;
+            });
+            listEl.innerHTML = html;
+        }
+
+        function togglePickerItemId(id, isChecked) {
+            if (isChecked) {
+                if (selectedPickerIds.size >= 20) {
+                    if (typeof premiumAlert === 'function') premiumAlert("최대 20개까지만 선택할 수 있습니다.", "선택 초과", "warning");
+                    renderCardPickerItems();
+                    return;
+                }
+                selectedPickerIds.add(id);
+            } else {
+                selectedPickerIds.delete(id);
+            }
+            renderCardPickerItems();
+        }
+
+        function filterCardPickerList() {
+            renderCardPickerItems();
+        }
+
+        async function applyCardPickerSelection() {
+            let arr = Array.from(selectedPickerIds);
+            let res = await fetch('/api/card_game/shuffle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ selected_ids: arr })
+            });
+            let data = await res.json();
+            if (data.status === 'success') {
+                if (typeof premiumAlert === 'function') premiumAlert(`선택하신 ${arr.length}개 리액션을 포함하여 20장 카드가 세팅되었습니다!`, "적용 완료", "success");
+                if (!gd.card_game) gd.card_game = {};
+                gd.card_game.cards = data.cards;
+                gd.card_game.selected_reaction_ids = arr;
+                renderCardGameUI();
+                closeCardPickerModal();
+            }
+        }
         function updateConnectionStatus(status) {
             const badge = document.getElementById('connection-status-badge');
             if(!badge) return;
@@ -3445,6 +4008,85 @@
             if (gd && gd.slot_machine) renderSlotMachinePanel();
         }, 1000);
 
+        // 🎰 [슬롯 스핀 대기열] 트리거 금액 후원 발생 시 대기 큐 렌더링 및 팝업 알림
+        let lastSlotSpinIds = new Set();
+        function renderSlotSpinQueue() {
+            if (!gd) return;
+            const spins = gd.pending_slot_spins || [];
+            const container = document.getElementById('slot-spin-queue-container');
+            const countEl = document.getElementById('slot-spin-queue-count');
+            if (countEl) countEl.innerText = `${spins.length}건 대기`;
+
+            // 아이폰 스타일 탭 배지 갱신
+            const tabBadge = document.getElementById('slot-tab-badge');
+            if (tabBadge) {
+                if (spins.length > 0) {
+                    tabBadge.innerText = spins.length > 99 ? '99+' : spins.length;
+                    tabBadge.style.display = 'flex';
+                } else {
+                    tabBadge.style.display = 'none';
+                }
+            }
+            if (container) {
+                if (spins.length === 0) {
+                    container.innerHTML = `<div style="color: #666; font-size: 11px; text-align: center; padding: 25px 0;">대기 중인 슬롯 스핀이 없습니다.</div>`;
+                } else {
+                    container.innerHTML = spins.map(s => `
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.3); border-radius:10px; padding:10px 14px;">
+                            <div style="font-size:13px; color:#fff;"><b>${escapeHTML(s.name)}</b>님이 <span style="color:#ffd700; font-weight:900;">${(s.amount||0).toLocaleString()}원</span> 후원! [${s.time}]</div>
+                            <div style="display:flex; gap:6px;">
+                                <button onclick="doSlotSpin('${s.id}')" style="background:#ffd700; color:#000; border:none; padding:6px 14px; border-radius:8px; font-weight:900; font-size:12px; cursor:pointer;"><i class="fa-solid fa-dice"></i> 돌리기</button>
+                                <button onclick="cancelSlotSpin('${s.id}')" style="background:rgba(255,69,58,0.15); color:#ff453a; border:1px solid rgba(255,69,58,0.3); padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // 신규 스핀 발생 시 팝업 알림
+            const currentIds = new Set(spins.map(s => s.id));
+            spins.forEach(s => {
+                if (!lastSlotSpinIds.has(s.id)) {
+                    premiumAlert(`${s.name}님이 ${(s.amount||0).toLocaleString()}원 후원! 슬롯머신을 돌려주세요.`, '🎰 슬롯머신 돌리기', 'success');
+                }
+            });
+            lastSlotSpinIds = currentIds;
+        }
+
+        async function spinSlotMachineNow() {
+            try {
+                const res = await fetch('/api/slot/spin_now', { method: 'POST' });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    premiumAlert('슬롯머신을 돌렸습니다! 승인 대기함에서 결과를 확인해주세요.', '🎰 슬롯머신 돌리기 완료', 'success');
+                } else {
+                    premiumAlert(data.message || '슬롯머신 회전 실패', '오류', 'warning');
+                }
+            } catch(e) {
+                premiumAlert('서버 통신 실패: ' + e.message, '오류', 'warning');
+            }
+        }
+
+        async function doSlotSpin(spinId) {
+            try {
+                const res = await fetch(`/api/slot/spin/${spinId}`, { method: 'POST' });
+                const data = await res.json();
+                if (data.status !== 'success') {
+                    premiumAlert(data.message || '슬롯머신 회전 실패', '오류', 'warning');
+                }
+            } catch(e) {
+                premiumAlert('서버 통신 실패: ' + e.message, '오류', 'warning');
+            }
+        }
+
+        async function cancelSlotSpin(spinId) {
+            try {
+                await fetch(`/api/slot/spin/${spinId}/cancel`, { method: 'POST' });
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
         document.addEventListener('mousedown', function(event) {
             let popover = document.getElementById('contrib-popover');
             if (popover) {
@@ -3646,6 +4288,23 @@
 
         function triggerServerLogout() {
             window.location.href = '/logout';
+        }
+
+        async function triggerBankRecalculate() {
+            let confirm = await premiumConfirm("은행 거래 원장(bank_ledger) 전체를 다시 합산하여 모든 플레이어의 잔액을 재정산하시겠습니까?\n거래 내역 자체는 삭제되지 않으며, 현재 점수/기여도 캐시만 원장 기준으로 다시 계산됩니다.", "잔액 재정산 확인", "question");
+            if (!confirm) return;
+            
+            try {
+                let res = await fetch('/api/bank/recalculate', { method: 'POST' });
+                let data = await res.json();
+                if (data.status === 'success') {
+                    await premiumAlert(data.message, "재정산 완료", "success");
+                } else {
+                    await premiumAlert("재정산 실패: " + data.message, "오류", "warning");
+                }
+            } catch (e) {
+                await premiumAlert("서버 통신 실패: " + e.message, "통신 실패", "warning");
+            }
         }
 
         // ==========================================
@@ -3880,8 +4539,8 @@
                             
                             ${thumbnail}
                             <div style="flex: 1; min-width: 0; margin-top: 2px;">
-                                <div style="font-weight: bold; font-size: 13px; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${escapeHTML(item.title)}">${escapeHTML(item.title)}</div>
-                                <div style="font-size: 11px; color: var(--accent); font-weight: 600; margin-top: 3px;">
+                                <div style="font-weight: 800; font-size: 13.5px; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${escapeHTML(item.title)}">${escapeHTML(item.title)}</div>
+                                <div style="font-size: 11.5px; color: var(--accent); font-weight: 700; margin-top: 3px;">
                                     <i class="fa-solid fa-coins"></i> ${amountText}
                                 </div>
                             </div>
@@ -4591,6 +5250,28 @@
             <div style="padding: 14px 24px; background: rgba(0,0,0,0.5); border-top: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-muted);">
                 <span><i class="fa-solid fa-lock" style="color: #00ffcc;"></i> 본 통장 내역은 데이터베이스(Bank Ledger)에 무한 보존되며 덮어쓰기 위험이 없습니다.</span>
                 <button onclick="closeBankLedgerModal()" class="secondary" style="height: 34px; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;">닫기</button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- 📋 20장 리액션 커스텀 선택 모달 -->
+    <div id="card-picker-modal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); align-items:center; justify-content:center;">
+        <div style="background:#1c1c1e; border:1px solid rgba(255,255,255,0.15); border-radius:20px; width:720px; max-width:92vw; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 20px 50px rgba(0,0,0,0.9); overflow:hidden;">
+            <div style="padding:18px 24px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:16px; font-weight:900; color:#fff;"><i class="fa-solid fa-list-check" style="color:#00e5ff;"></i> 카드 뒤집기용 20장 리액션 직접 선택</span>
+                <button onclick="closeCardPickerModal()" style="background:none; border:none; color:#aaa; font-size:18px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding:15px 24px; display:flex; align-items:center; justify-content:space-between; gap:15px; background:rgba(0,0,0,0.2);">
+                <input type="text" id="card-picker-search" placeholder="리액션 제목 또는 금액 검색 (예: 2만, 5000)..." oninput="filterCardPickerList()" style="flex:1; height:36px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#fff; padding:0 12px; font-size:13px;">
+                <span style="font-size:13px; font-weight:bold; color:#ffd700;">선택 항목: <b id="card-picker-count" style="color:#00e5ff; font-size:16px;">0</b> / 20개</span>
+            </div>
+            <div id="card-picker-list" style="flex:1; overflow-y:auto; padding:15px 24px; display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
+                <!-- 리액션 목록 체크박스 들 -->
+            </div>
+            <div style="padding:15px 24px; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:flex-end; gap:10px; background:rgba(0,0,0,0.2);">
+                <button onclick="closeCardPickerModal()" class="secondary" style="height:36px; padding:0 16px; font-size:13px; border-radius:8px; cursor:pointer;">취소</button>
+                <button onclick="applyCardPickerSelection()" style="height:36px; padding:0 20px; font-size:13px; font-weight:900; border-radius:8px; background:linear-gradient(135deg, #00e5ff, #0088ff); color:#fff; border:none; cursor:pointer;"><i class="fa-solid fa-check"></i> 선택한 20장 적용하기</button>
             </div>
         </div>
     </div>

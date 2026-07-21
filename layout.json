@@ -5,9 +5,14 @@
         "scale": 1
     },
     "gauge": {
-        "x_px": 29,
-        "y_px": 1598,
-        "scale": 1
+        "x_px": 26,
+        "y_px": 1597,
+        "scale": 0.9567703877155852
+    },
+    "home-race": {
+        "x_px": 390,
+        "y_px": 187,
+        "scale": 1.4727026527974396
     },
     "match": {
         "x_px": 50,
@@ -20,8 +25,8 @@
         "scale": 1
     },
     "ranking": {
-        "x_px": 362,
-        "y_px": 178,
+        "x_px": 371,
+        "y_px": 180,
         "scale": 1
     },
     "roulette": {

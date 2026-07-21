@@ -1,12 +1,11 @@
 // ==UserScript==
-// @name         🎯 투네이션 마스터 V11.4 (실시간 정밀 디버깅 로그 탑재)
+// @name         🎯 투네이션 마스터 V12.0 (100% 로컬 로컬서버 연동 전용)
 // @namespace    http://tampermonkey.net/
-// @version      11.4
-// @description  시그니처 및 일반 캐시 후원 감지 시 디버그 로그를 상세히 출력하여 인식이 안 되는 구간을 명확히 추적합니다.
+// @version      12.0
+// @description  투네이션 알림창 후원 유입 시 로컬 파이썬 서버(http://localhost:5000/api/donation)로 0ms 즉각 전송합니다.
 // @match        https://toon.at/widget/alertbox/*
 // @noframes
 // @grant        GM_xmlhttpRequest
-// @connect      live-master-server-vercel.vercel.app
 // @connect      127.0.0.1
 // @connect      localhost
 // ==/UserScript==
@@ -217,10 +216,9 @@
             const txId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : (Math.random().toString(36).substring(2) + Date.now().toString(36));
             GM_xmlhttpRequest({
                 method: "POST",
-                url: "https://live-master-server-vercel.vercel.app/api/donation",
+                url: "http://localhost:5000/api/donation",
                 headers: { 
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer isacbin_master_key_0508"
+                    "Content-Type": "application/json"
                 },
                 data: JSON.stringify({
                     name: name,

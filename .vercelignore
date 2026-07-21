@@ -1,9 +1,0 @@
-사진/
-backup_reaction_pre/
-저장본/
-*.db
-*.db.bak
-*.log
-*.mp3
-local_server_run_log.txt
-server_startup_log.txt
