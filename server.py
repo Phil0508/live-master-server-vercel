@@ -2957,7 +2957,7 @@ def shuffle_card_game_order():
 
 @app.route('/api/card_game/finalize', methods=['POST'])
 def finalize_card_game():
-    """💡 [신규] 현재 CLEAR(step=2)된 카드들만 최종 선택하여 finalized 모드로 전환합니다.
+    """💡 [신규] 현재 앞면이거나 CLEAR(step>=1)된 카드들만 최종 선택하여 finalized 모드로 전환합니다.
     오버레이에서는 20장 그리드 대신 선택된 카드만 작게 표시되고, 원래 점수판이 다시 나타납니다."""
     try:
         with file_lock:
@@ -2965,9 +2965,9 @@ def finalize_card_game():
             cg = state.get('card_game', {})
             cards = cg.get('cards', [])
             
-            passed_cards = [c for c in cards if c.get('step') == 2 or c.get('is_passed')]
+            passed_cards = [c for c in cards if c.get('step', 0) >= 1 or c.get('is_flipped') or c.get('is_passed')]
             if not passed_cards:
-                return jsonify({"status": "error", "message": "CLEAR(통과)된 카드가 없습니다."}), 400
+                return jsonify({"status": "error", "message": "앞면 공개 또는 CLEAR(통과)된 카드가 없습니다."}), 400
 
             cg['finalized'] = True
             cg['final_card_ids'] = [c.get('id') for c in passed_cards]
@@ -2998,6 +2998,40 @@ def unfinalize_card_game():
         return jsonify({"status": "success", "card_game": state['card_game']})
     except Exception as e:
         print(f"Error unfinalizing card game: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/card_game/reset', methods=['POST'])
+def reset_card_game():
+    """💡 [신규] 카드 게임의 진행 상태(카드 뒤집힘, 타이머, 고정 모드 등)를 전부 초기화합니다."""
+    try:
+        with file_lock:
+            state = load_data()
+            cg = state.get('card_game', {})
+            cards = cg.get('cards', [])
+            
+            # 모든 카드의 상태 초기화
+            for c in cards:
+                c['step'] = 0
+                c['is_flipped'] = False
+                c['is_passed'] = False
+                
+            # 타이머 초기화 (5분으로 리셋 및 일시정지)
+            cg['time_left_ms'] = 300000
+            cg['is_running'] = False
+            
+            # 고정 상태 초기화
+            cg['finalized'] = False
+            cg['final_card_ids'] = []
+            cg['final_reaction_ids'] = []
+            
+            cg['cards'] = cards
+            state['card_game'] = cg
+            state['version'] = state.get('version', 0) + 1
+            save_data(state)
+            broadcast_event('update', state)
+        return jsonify({"status": "success", "card_game": state['card_game']})
+    except Exception as e:
+        print(f"Error resetting card game: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/api/card_game/step', methods=['POST'])
