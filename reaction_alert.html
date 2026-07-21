@@ -25,32 +25,7 @@
             user-select: none;
         }
 
-        /* 📡 [오디오 클릭 유도 배너] */
-        #autoplay-warning-banner {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 69, 58, 0.95);
-            color: white;
-            padding: 14px 28px;
-            border-radius: 16px;
-            font-size: 16px;
-            font-weight: 800;
-            box-shadow: 0 10px 30px rgba(255, 69, 58, 0.4);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            z-index: 100020;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-            animation: bannerPulse 1.5s infinite alternate;
-        }
-        @keyframes bannerPulse {
-            0% { transform: translateX(-50%) scale(1); box-shadow: 0 10px 30px rgba(255, 69, 58, 0.4); }
-            100% { transform: translateX(-50%) scale(1.03); box-shadow: 0 10px 40px rgba(255, 69, 58, 0.7); }
-        }
+
 
         /* 🎵 리액션 팝업 오버레이 */
         .reaction-screen-overlay {
@@ -93,6 +68,8 @@
             text-shadow: 3px 3px 0 #000, -3px 3px 0 #000, 3px -3px 0 #000, -3px -3px 0 #000, 0 5px 25px rgba(255, 215, 0, 0.6);
             text-align: center;
             letter-spacing: -0.5px;
+            white-space: nowrap;
+            word-break: keep-all;
         }
         .reaction-text-message {
             margin-top: 24px;
@@ -106,7 +83,8 @@
             text-shadow: 1.5px 1.5px 3px rgba(0, 0, 0, 0.85);
             text-align: center;
             max-width: 780px;
-            word-break: break-all;
+            word-break: keep-all;
+            overflow-wrap: break-word;
             line-height: 1.5;
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75);
             display: inline-block;
@@ -115,11 +93,7 @@
 </head>
 <body>
 
-    <!-- 오디오 클릭 활성화 유도 배너 -->
-    <div id="autoplay-warning-banner" onclick="unlockAudioContext()">
-        <i class="fa-solid fa-volume-high"></i>
-        <span>소리 재생을 위해 화면 아무 곳이나 한 번 클릭해주세요!</span>
-    </div>
+
 
     <!-- 🎵 리액션 음원/사진 송출 전광판 및 오디오 객체 -->
     <div id="reaction-screen-overlay" class="reaction-screen-overlay">
@@ -127,7 +101,7 @@
         <div id="reaction-donator-info" class="reaction-text-donator"></div>
         <div id="reaction-message-info" class="reaction-text-message"></div>
     </div>
-    <audio id="reaction-audio" style="display:none;"></audio>
+
 
     <script>
         // API Token
@@ -168,18 +142,6 @@
         let isEndingReaction = false;
         let reactionTimeout = null;
         let reactionImgClearTimeout = null;
-        let audioSafetyTimeout = null;
-        
-        let audioCtx = null;
-        function initAudio() {
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-            } catch(e) {
-                console.warn("AudioContext initialization warning:", e);
-            }
-        }
-        document.addEventListener('click', initAudio, { once: true });
 
         // XSS defense helper
         function escapeHtml(str) {
@@ -217,25 +179,13 @@
         function stopReactionVisuals() {
             const overlay = document.getElementById('reaction-screen-overlay');
             const img = document.getElementById('reaction-screen-image');
-            const audio = document.getElementById('reaction-audio');
 
             if (overlay) {
                 overlay.classList.remove('show');
             }
-            if (audio) {
-                audio.onended = null;
-                audio.onerror = null;
-                audio.onloadedmetadata = null;
-                audio.pause();
-                audio.src = '';
-            }
             if (reactionTimeout) {
                 clearTimeout(reactionTimeout);
                 reactionTimeout = null;
-            }
-            if (audioSafetyTimeout) {
-                clearTimeout(audioSafetyTimeout);
-                audioSafetyTimeout = null;
             }
             
             if (reactionImgClearTimeout) clearTimeout(reactionImgClearTimeout);
@@ -245,28 +195,21 @@
         }
 
         function playReaction(data) {
-            console.log('Playing reaction:', data);
+            console.log('Playing reaction (visual only, no audio):', data);
             window.isReactionCurrentlyActive = true;
             
             const overlay = document.getElementById('reaction-screen-overlay');
             const img = document.getElementById('reaction-screen-image');
             const donatorEl = document.getElementById('reaction-donator-info');
             const messageEl = document.getElementById('reaction-message-info');
-            const audio = document.getElementById('reaction-audio');
             
-            if (!overlay || !img || !audio) return;
+            if (!overlay || !img) return;
             
             // 1. Reset any playing timers
             isEndingReaction = false;
             img.onload = null;
             if (reactionTimeout) clearTimeout(reactionTimeout);
             if (reactionImgClearTimeout) { clearTimeout(reactionImgClearTimeout); reactionImgClearTimeout = null; }
-            if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-            audio.onended = null;
-            audio.onerror = null;
-            audio.onloadedmetadata = null;
-            audio.pause();
-            audio.src = '';
             
             // 2. Set donator and amount information
             let donatorName = data.donator;
@@ -306,60 +249,11 @@
             // 4. Reveal widget (always centered, no minimize timeout!)
             overlay.classList.add('show');
             
-            // 5. Play audio and handle completion callbacks
-            if (data.audio_url) {
-                let audioUrl = data.audio_url;
-                if (!audioUrl.startsWith('http') && !audioUrl.startsWith('/')) {
-                    audioUrl = '/' + audioUrl;
-                }
-                audio.src = audioUrl + '?t=' + (data.id || Date.now());
-                
-                audio.onended = function() {
-                    console.log('Audio playback ended.');
-                    if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-                    onReactionEnded();
-                };
-                
-                audio.onerror = function(err) {
-                    console.error('Audio error:', err);
-                    if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-                    onReactionEnded();
-                };
-                
-                const setupSafetyTimer = () => {
-                    if (audioSafetyTimeout) clearTimeout(audioSafetyTimeout);
-                    const duration = audio.duration;
-                    const safetyDuration = (isFinite(duration) && duration > 0) ? (duration * 1000 + 2000) : 30000;
-                    audioSafetyTimeout = setTimeout(() => {
-                        console.warn('Audio safety timeout. Skipping.');
-                        onReactionEnded();
-                    }, safetyDuration);
-                };
-
-                if (audio.readyState >= 1) {
-                    setupSafetyTimer();
-                } else {
-                    audio.onloadedmetadata = setupSafetyTimer;
-                }
-                
-                audio.play().then(() => {
-                    console.log('Audio play started.');
-                }).catch(err => {
-                    console.error('Autoplay block cleanup fallback in 5 seconds:', err);
-                    audio.onended = null;
-                    audio.onerror = null;
-                    audio.onloadedmetadata = null;
-                    if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-                    reactionTimeout = setTimeout(() => {
-                        stopReactionVisuals();
-                    }, 5000);
-                });
-            } else {
-                // If there's no audio, hide after 5 seconds
-                reactionTimeout = setTimeout(() => {
-                    onReactionEnded();
-                }, 5000);
-            }
+            // 5. No audio on this page - visual display stays until overlay page finishes audio
+            //    and sends onReactionEnded via SSE. Use a safety timeout of 120s as fallback.
+            reactionTimeout = setTimeout(() => {
+                onReactionEnded();
+            }, 120000);
         }
 
         function onReactionEnded() {
@@ -387,18 +281,7 @@
             });
         }
 
-        function unlockAudioContext() {
-            const banner = document.getElementById('autoplay-warning-banner');
-            if (banner) banner.style.display = 'none';
-            const audio = document.getElementById('reaction-audio');
-            if (audio) {
-                audio.play().then(() => audio.pause()).catch(() => {});
-            }
-            initAudio();
-        }
-        window.addEventListener('click', unlockAudioContext, { once: true });
-        window.addEventListener('keydown', unlockAudioContext, { once: true });
-        window.addEventListener('touchstart', unlockAudioContext, { once: true });
+
 
         // SSE Real-time connection
         let sseSource = null;
@@ -436,14 +319,6 @@
             sseSource.addEventListener('reaction_skip', function(e) {
                 currentPlayingId = null;
                 isEndingReaction = false;
-                if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-                const audio = document.getElementById('reaction-audio');
-                if (audio) { 
-                    audio.pause(); 
-                    audio.src = ''; 
-                    audio.onended = null;
-                    audio.onerror = null;
-                }
                 onReactionEnded();
             });
             

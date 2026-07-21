@@ -1106,7 +1106,8 @@ def receive_donation():
                 print(f"[장부 기록 오류] {dbe}")
                 
             # 🎵 자동 리액션 송 연동 감지 (근사치 매칭: 후원금액 이하 중 가장 가까운 리액션)
-            if amount > 0 and not slot_result:
+            # 💡 10,300원 미만 후원은 리액션 재생 대상에서 제외
+            if amount >= 10300 and not slot_result:
                 try:
                     with get_db_connection() as conn:
                         cursor = conn.cursor()
