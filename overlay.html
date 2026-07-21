@@ -1568,11 +1568,15 @@
             const passedCount = allCards.filter(c => c.is_flipped && c.is_passed).length;
             if (passEl) passEl.innerText = `${passedCount} / 5 PASS`;
 
-            // 5개 카드가 모두 PASS 되었을 때 GAME CLEAR 이펙트 1회 발동
+            // 5개 카드가 모두 PASS 되었을 때 GAME CLEAR 이펙트 1회 발동 (기여도 위젯 크기 버그 해결 및 꽃가루 연출만 발동)
             if (passedCount >= 5 && !cgClearCelebrated) {
                 cgClearCelebrated = true;
-                if (typeof triggerGoalCelebrationEffect === 'function') {
-                    triggerGoalCelebrationEffect();
+                if (typeof confetti === 'function') {
+                    try {
+                        confetti({ particleCount: 150, spread: 80, origin: { y: 0.65 }, zIndex: 100005 });
+                    } catch (e) {
+                        console.error("Confetti clear error:", e);
+                    }
                 }
             } else if (passedCount < 5) {
                 cgClearCelebrated = false;

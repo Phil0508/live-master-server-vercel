@@ -1127,7 +1127,10 @@
                     <div style="display:flex; align-items:center; gap:10px;">
                         <button onclick="openCardPickerModal()" style="height:34px; padding:0 12px; font-size:12px; font-weight:bold; border-radius:8px; background:rgba(0, 229, 255, 0.15); color:#00e5ff; border:1px solid #00e5ff; cursor:pointer;"><i class="fa-solid fa-list-check"></i> 📋 20장 직접 선택 피커</button>
                         <button onclick="shuffleCardGameDeck()" style="height:34px; padding:0 12px; font-size:12px; font-weight:bold; border-radius:8px; background:rgba(255, 215, 0, 0.15); color:#ffd700; border:1px solid #ffd700; cursor:pointer;"><i class="fa-solid fa-shuffle"></i> 🎲 20장 무작위 셔플</button>
+                        <button onclick="shuffleCardGameOrder()" id="btn-shuffle-order-card-game" style="height:34px; padding:0 12px; font-size:12px; font-weight:bold; border-radius:8px; background:rgba(255,255,255,0.08); color:#fff; border:1px solid rgba(255,255,255,0.15); cursor:pointer;"><i class="fa-solid fa-arrows-spin"></i> 🔀 카드 순서 섞기</button>
                         <button onclick="flipCardGameRandom(5)" style="height:34px; padding:0 14px; font-size:12px; font-weight:900; border-radius:8px; background:linear-gradient(90deg, #ff0055, #ff5500); color:#fff; border:none; cursor:pointer;"><i class="fa-solid fa-hand-pointer"></i> 🎴 무작위 5장 뒤집기</button>
+                        <button onclick="finalizeCardGame()" id="btn-finalize-card-game" style="display:none; height:34px; padding:0 12px; font-size:12px; font-weight:bold; border-radius:8px; background:rgba(52, 199, 89, 0.15); color:#34c759; border:1px solid #34c759; cursor:pointer;"><i class="fa-solid fa-lock"></i> 🏆 완료 카드 고정</button>
+                        <button onclick="unfinalizeCardGame()" id="btn-unfinalize-card-game" style="display:none; height:34px; padding:0 12px; font-size:12px; font-weight:bold; border-radius:8px; background:rgba(255,69,58,0.15); color:#ff453a; border:1px solid #ff453a; cursor:pointer;"><i class="fa-solid fa-rotate-left"></i> ↩️ 20장 전체 모드 복귀</button>
                     </div>
                 </div>
 
@@ -2894,10 +2897,22 @@
 
             // 카운트 현황 (뒤집힌 카드 중 PASS된 개수)
             const cards = cg.cards || [];
-            const passedCount = cards.filter(c => c.is_flipped && c.is_passed).length;
+            const passedCount = cards.filter(c => (c.step !== undefined ? c.step === 2 : c.is_passed)).length;
             const passDisp = document.getElementById('card-game-pass-count');
             if (passDisp) {
                 passDisp.innerText = `${passedCount} / 5 PASS`;
+            }
+
+            // 🏆 finalize 상태에 따른 고정/복귀 버튼 표시/숨김
+            const btnFinalize = document.getElementById('btn-finalize-card-game');
+            const btnUnfinalize = document.getElementById('btn-unfinalize-card-game');
+            if (btnFinalize) {
+                // 아직 완료 고정(finalized) 상태가 아니고, 완료된 카드가 1개 이상 있을 때 노출! (5개 이상도 상시 노출)
+                btnFinalize.style.display = (!cg.finalized && passedCount > 0) ? 'inline-flex' : 'none';
+            }
+            if (btnUnfinalize) {
+                // 이미 완료 고정(finalized) 상태일 때 복귀 단추 노출
+                btnUnfinalize.style.display = cg.finalized ? 'inline-flex' : 'none';
             }
 
             // 20장 카드 그리드
@@ -3000,6 +3015,45 @@
             if (data.status === 'success') {
                 if (!gd.card_game) gd.card_game = {};
                 gd.card_game.cards = data.cards;
+                renderCardGameUI();
+            }
+        }
+
+        // 🔀 카드 위치(순서)만 섞기 - 리액션 구성은 그대로 유지, 오버레이에서 FLIP 애니메이션으로 자연스럽게 이동
+        async function shuffleCardGameOrder() {
+            let res = await fetch('/api/card_game/shuffle_order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+            let data = await res.json();
+            if (data.status === 'success') {
+                if (data.card_game) {
+                    gd.card_game = data.card_game;
+                } else {
+                    if (!gd.card_game) gd.card_game = {};
+                    gd.card_game.cards = data.cards;
+                }
+                renderCardGameUI();
+            } else if (data.message) {
+                if (typeof premiumAlert === 'function') premiumAlert(data.message, "오류", "warning");
+            }
+        }
+
+        // 🏆 CLEAR된 카드만 최종 선택하여 하단 고정 모드로 전환
+        async function finalizeCardGame() {
+            let res = await fetch('/api/card_game/finalize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+            let data = await res.json();
+            if (data.status === 'success') {
+                gd.card_game = data.card_game;
+                renderCardGameUI();
+            } else if (data.message) {
+                if (typeof premiumAlert === 'function') premiumAlert(data.message, "고정 실패", "warning");
+            }
+        }
+
+        // ↩️ 20장 전체 모드로 복귀
+        async function unfinalizeCardGame() {
+            let res = await fetch('/api/card_game/unfinalize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+            let data = await res.json();
+            if (data.status === 'success') {
+                gd.card_game = data.card_game;
                 renderCardGameUI();
             }
         }
