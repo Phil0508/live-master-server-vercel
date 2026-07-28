@@ -1,0 +1,9 @@
+media_cache/
+사진/
+카드뒤집기/
+*.exe
+*.db
+*.db-shm
+*.db-wal
+server_error.log
+.git/
