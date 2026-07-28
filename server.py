@@ -602,15 +602,13 @@ def db_worker():
 threading.Thread(target=db_worker, daemon=True).start()
 
 # 🏦 은행 입출금 통장 거래내역 기록 및 수학적 잔액 검증 엔진
-def record_bank_transaction(player_name, score_change, contrib_change=0, tx_type="CHANGE", description=""):
+def record_bank_transaction(player_name, score_change, contrib_change=0, tx_type="CHANGE", description="", cursor=None):
     try:
         now_str = time.strftime('%Y-%m-%d %H:%M:%S')
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            
+        def _do_record(cur):
             # 1. 현재 잔액 조회
-            cursor.execute(db_query("SELECT score, contribution FROM players WHERE name = ?"), (player_name,))
-            row = cursor.fetchone()
+            cur.execute(db_query("SELECT score, contribution FROM players WHERE name = ?"), (player_name,))
+            row = cur.fetchone()
             current_score = row[0] if row else 0
             current_contrib = row[1] if row else 0
             
@@ -620,14 +618,14 @@ def record_bank_transaction(player_name, score_change, contrib_change=0, tx_type
             
             # 3. 은행 장부에 영구 통장 내역 작성 (INSERT)
             if IS_POSTGRES:
-                cursor.execute(
+                cur.execute(
                     """INSERT INTO bank_ledger 
                        (timestamp, player_name, tx_type, score_change, score_balance, contrib_change, contrib_balance, description)
                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
                     (now_str, player_name, tx_type, score_change, new_score_balance, contrib_change, new_contrib_balance, description)
                 )
             else:
-                cursor.execute(
+                cur.execute(
                     """INSERT INTO bank_ledger 
                        (timestamp, player_name, tx_type, score_change, score_balance, contrib_change, contrib_balance, description)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -636,12 +634,12 @@ def record_bank_transaction(player_name, score_change, contrib_change=0, tx_type
                 
             # 4. 플레이어 실시간 잔액 테이블 갱신 (UPSERT)
             if IS_POSTGRES:
-                cursor.execute(
+                cur.execute(
                     "INSERT INTO players (name, score, contribution) VALUES (%s, %s, %s) ON CONFLICT (name) DO UPDATE SET score = EXCLUDED.score, contribution = EXCLUDED.contribution",
                     (player_name, new_score_balance, new_contrib_balance)
                 )
             else:
-                cursor.execute(
+                cur.execute(
                     "INSERT INTO players (name, score, contribution) VALUES (?, ?, ?) ON CONFLICT(name) DO UPDATE SET score = excluded.score, contribution = excluded.contribution",
                     (player_name, new_score_balance, new_contrib_balance)
                 )
@@ -654,6 +652,12 @@ def record_bank_transaction(player_name, score_change, contrib_change=0, tx_type
                 "contrib_balance": new_contrib_balance,
                 "timestamp": now_str
             }
+
+        if cursor is not None:
+            return _do_record(cursor)
+        else:
+            with get_db_connection() as conn:
+                return _do_record(conn.cursor())
     except Exception as e:
         print(f"❌ [은행 통장 거래 기록 실패] {e}")
         return None
@@ -696,38 +700,35 @@ def save_data_sync(new_data, is_initial=False):
                                     db_query("INSERT INTO donation_history (timestamp, name, amount, current_total, message, source) VALUES (?, ?, ?, ?, ?, ?)"),
                                     (time.strftime('%Y-%m-%d %H:%M:%S'), p_name, score_diff, p_score, "점수 변동 (은행 통장 기록)", "system")
                                 )
-                            record_bank_transaction(p_name, score_diff, contrib_diff, "MANUAL_CHANGE", f"점수 변동 ({score_diff:+}점) / 기여도 변동 ({contrib_diff:+}점)")
+                            record_bank_transaction(p_name, score_diff, contrib_diff, "MANUAL_CHANGE", f"점수 변동 ({score_diff:+}점) / 기여도 변동 ({contrib_diff:+}점)", cursor=cursor)
             
-            # 2. 플레이어 점수 및 기여도 저장 (항상 최신 점수로 DB에 즉각 UPSERT)
-            for bj in new_data.get("bjs", []):
-                p_name = bj["name"]
-                p_score = int(bj.get("score") or 0)
-                p_contrib = int(bj.get("contribution") or 0)
+            # 2. 플레이어 점수 및 기여도 저장 (executemany로 1회 라운드트립 단축)
+            player_rows = [(bj["name"], int(bj.get("score") or 0), int(bj.get("contribution") or 0)) for bj in new_data.get("bjs", [])]
+            if player_rows:
                 if IS_POSTGRES:
-                    cursor.execute(
+                    cursor.executemany(
                         "INSERT INTO players (name, score, contribution) VALUES (%s, %s, %s) ON CONFLICT (name) DO UPDATE SET score = EXCLUDED.score, contribution = EXCLUDED.contribution",
-                        (p_name, p_score, p_contrib)
+                        player_rows
                     )
                 else:
-                    cursor.execute(
+                    cursor.executemany(
                         "INSERT INTO players (name, score, contribution) VALUES (?, ?, ?) ON CONFLICT(name) DO UPDATE SET score = excluded.score, contribution = excluded.contribution",
-                        (p_name, p_score, p_contrib)
+                        player_rows
                     )
             
-            # 3. 설정 상태 키-값 저장 (kv_store)
-            for key, value in new_data.items():
-                if key != "bjs":
-                    new_val_str = json.dumps(value, ensure_ascii=False)
-                    if IS_POSTGRES:
-                        cursor.execute(
-                            "INSERT INTO kv_store (key, value) VALUES (%s, %s) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
-                            (key, new_val_str)
-                        )
-                    else:
-                        cursor.execute(
-                            "INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?)",
-                            (key, new_val_str)
-                        )
+            # 3. 설정 상태 키-값 저장 (executemany로 1회 라운드트립 단축)
+            kv_rows = [(key, json.dumps(value, ensure_ascii=False)) for key, value in new_data.items() if key != "bjs"]
+            if kv_rows:
+                if IS_POSTGRES:
+                    cursor.executemany(
+                        "INSERT INTO kv_store (key, value) VALUES (%s, %s) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
+                        kv_rows
+                    )
+                else:
+                    cursor.executemany(
+                        "INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?)",
+                        kv_rows
+                    )
                             
     except Exception as e:
         print(f"❌ [DB 동기화 저장 실패] {e}")
