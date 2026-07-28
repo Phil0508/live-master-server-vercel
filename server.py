@@ -4,7 +4,7 @@ import io
 
 # 🌐 Vercel 서버리스 및 Supabase PostgreSQL 환경 변수 감지
 IS_VERCEL = os.environ.get('VERCEL') == '1' or 'VERCEL' in os.environ
-DATABASE_URL = os.environ.get('DATABASE_URL')
+DATABASE_URL = os.environ.get('DATABASE_URL').strip() if os.environ.get('DATABASE_URL') else None
 IS_POSTGRES = bool(DATABASE_URL)
 
 # GUI 모드(console=False)에서 발생하는 모든 에러를 파일로 로깅하여 크래시 분석
