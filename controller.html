@@ -2771,6 +2771,10 @@
         async function initSSE() {
             updateConnectionStatus('connecting');
             loadVipList().catch(e => console.error("VIP list initial load failed:", e));
+            if (window.INITIAL_DATA) {
+                updateConnectionStatus('connected');
+                handleStreamData(window.INITIAL_DATA);
+            }
             try {
                 const res = await fetch('/api/data');
                 if (!res.ok) throw new Error('HTTP ' + res.status);

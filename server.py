@@ -179,10 +179,30 @@ def create_snapshot_record(label, state=None):
 
 def serve_html_file(filename):
     local_path = os.path.join(BASE_DIR, filename)
-    if os.path.exists(local_path):
-        res = make_response(send_from_directory(BASE_DIR, filename))
-    else:
-        res = make_response(send_from_directory(BUNDLE_DIR, filename))
+    target_dir = BASE_DIR if os.path.exists(local_path) else BUNDLE_DIR
+    
+    if filename.endswith('.html'):
+        full_path = os.path.join(target_dir, filename)
+        if os.path.exists(full_path):
+            try:
+                with open(full_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                data = load_data()
+                if isinstance(data, dict):
+                    data = data.copy()
+                    data['server_time'] = int(time.time() * 1000)
+                inject_script = f"<script>window.INITIAL_DATA = {json.dumps(data, ensure_ascii=False)};</script>\n<head>"
+                content = content.replace('<head>', inject_script, 1)
+                res = make_response(content)
+                res.headers['Content-Type'] = 'text/html; charset=utf-8'
+                res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+                res.headers['Pragma'] = 'no-cache'
+                res.headers['Expires'] = '0'
+                return res
+            except Exception as e:
+                print(f"[Initial Data Injection Warning] {e}")
+
+    res = make_response(send_from_directory(target_dir, filename))
     res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     res.headers['Pragma'] = 'no-cache'
     res.headers['Expires'] = '0'

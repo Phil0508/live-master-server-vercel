@@ -2867,6 +2867,9 @@
                 }
             }, 250);
         }
+        if (window.INITIAL_DATA) {
+            handleData(window.INITIAL_DATA);
+        }
         initPollingFallback();
         setInterval(loadVipsToCache, 10000);
 
