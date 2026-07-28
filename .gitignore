@@ -1,0 +1,13 @@
+*.db
+*.db-shm
+*.db-wal
+*.db.bak
+*.exe
+__pycache__/
+*.spec
+.vercel/
+server_error.log
+.env*
+node_modules/
+dist/
+build/

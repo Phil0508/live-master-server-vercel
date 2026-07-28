@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>돌려돌려 리모컨</title>
+    <!-- Bootstrap core CSS -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
+      crossorigin="anonymous"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div id="app">
+        <div class="card mt-1" style="width: 100%">
+          <div class="card-header text-center">리모컨</div>
+          <div class="card-body">
+            <div class="item-list">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="exampleRadios"
+                  id="exampleRadios1"
+                  value=""
+                  checked
+                  v-model="select_item"
+                  @click="check(-1)"
+                />
+                <label class="form-check-label" for="exampleRadios1"> 랜덤 </label>
+              </div>
+              <div class="form-check" v-for="(item,index) in items" :key="index">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="exampleRadios"
+                  id="exampleRadios1"
+                  :value="item.name"
+                  v-model="select_item"
+                  @click="check(index)"
+                  :disabled="items.length == index +1"
+                />
+                <label class="form-check-label" for="exampleRadios1"> {{ item.name }} <span v-show="items.length == index +1">(선택불가)</span> </label>
+                <!-- <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios1" :value="item.name" v-model="select_item" @click="check(index)" >
+              <label class="form-check-label" for="exampleRadios1">
+                {{ item.name }}
+              </label> -->
+              </div>
+            </div>
+
+            <div class="alert alert-primary" role="alert">선택 : {{select_item}}</div>
+          </div>
+        </div>
+        <div class="alert alert-secondary mt-3" role="alert">
+          - 정지버튼 클릭 전 선택 <br />
+          - 마지막 항목은 선택불가
+        </div>
+      </div>
+    </div>
+    <script>
+      var app = new Vue({
+        el: '#app',
+        data: {
+          items: '',
+          select_item: '',
+        },
+        mounted() {
+          setInterval(() => {
+            this.getLoacalStorage()
+          }, 1000 * 1)
+        },
+        methods: {
+          // 로컬스토리지에서 값 가져오기..
+          getLoacalStorage() {
+            let _items = localStorage.items
+            //console.log(_items)
+            this.items = JSON.parse(_items)
+            if (localStorage.selectIndex == -1) this.select_item = ''
+          },
+          // 선택된 값 로컬스토리지에 저장.
+          check(index) {
+            console.log('check', index)
+            localStorage.selectIndex = index
+          },
+        },
+      })
+    </script>
+    <style>
+      body {
+        background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      }
+      .container {
+        padding: 10px;
+      }
+      .card {
+        margin-top: 50px;
+      }
+    </style>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+Flask
+Flask-CORS
+pyotp
+psycopg2-binary
+Pillow
+websocket-client
