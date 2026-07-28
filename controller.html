@@ -1387,7 +1387,7 @@
         function renderUI() {
             if(document.activeElement.tagName === "INPUT" && !document.activeElement.id.startsWith("chk") && !document.activeElement.classList.contains("setup-player-input") || document.activeElement.tagName === "TEXTAREA") return;
             
-            let isActive = gd.broadcast_active || false;
+            let isActive = (gd.broadcast_active !== false) || (gd.bjs && gd.bjs.length > 0);
             document.getElementById('setup-broadcast-area').style.display = isActive ? 'none' : 'block';
             document.getElementById('active-broadcast-area').style.display = isActive ? 'block' : 'none';
             

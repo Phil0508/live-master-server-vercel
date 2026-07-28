@@ -1533,7 +1533,7 @@
             }
             globalData = d;
             
-            let isActive = d.broadcast_active || false;
+            let isActive = (d.broadcast_active !== false) || (d.bjs && d.bjs.length > 0);
             ['ranking', 'gauge', 'account', 'match', 'roulette', 'extra-ranking', 'home-race'].forEach(id => {
                 const el = document.getElementById(id + '-container');
                 if (el) el.style.display = isActive ? '' : 'none';

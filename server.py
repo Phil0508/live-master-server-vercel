@@ -231,7 +231,7 @@ DEFAULT_STATE = {
     "roulette_enabled": False,
     "home_race_enabled": False,
     "home_goals": {},
-    "broadcast_active": False,
+    "broadcast_active": True,
     "saved_colors": ['#ff0055', '#00e5ff', '#ff9100', '#d500f9', '#00ff00', '#ffff00', '#ff0000', '#0000ff', '#ffffff'],
     "version": 1,
     "roulette": {
