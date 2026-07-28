@@ -1002,6 +1002,11 @@ def serve_reactions():
 def serve_reaction_alert():
     return serve_html_file('reaction_alert.html')
 
+@app.route('/login')
+@app.route('/login.html')
+def serve_login():
+    return serve_html_file('login.html')
+
 @app.route('/upload')
 @app.route('/노래등록')
 def serve_upload():
@@ -1010,8 +1015,13 @@ def serve_upload():
 @app.route('/<path:filename>')
 def serve_dynamic_file(filename):
     for root in [BASE_DIR, BUNDLE_DIR]:
-        if os.path.exists(os.path.join(root, filename)):
+        fpath = os.path.join(root, filename)
+        if os.path.exists(fpath) and os.path.isfile(fpath):
             return send_from_directory(root, filename)
+        if not filename.endswith('.html'):
+            html_filename = filename + '.html'
+            if os.path.exists(os.path.join(root, html_filename)):
+                return serve_html_file(html_filename)
     return jsonify({"error": "File not found"}), 404
 
 # ==========================================
