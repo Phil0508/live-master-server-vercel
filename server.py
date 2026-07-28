@@ -229,11 +229,15 @@ DEFAULT_STATE = {
 }
 
 MEMORY_STATE = None
+INIT_DB_DONE = False
 
 # ==========================================
 # 🗄️ 데이터베이스 핵심 로직
 # ==========================================
 def init_db():
+    global INIT_DB_DONE
+    if INIT_DB_DONE:
+        return
     if not IS_POSTGRES:
         if not os.path.exists(DB_FILE) and os.path.exists(DB_FILE + '.bak'):
             try:
@@ -454,6 +458,7 @@ def init_db():
                     cursor.execute("ALTER TABLE snapshots ADD COLUMN summary TEXT")
             except Exception:
                 pass
+    INIT_DB_DONE = True
 
 def load_data():
     global MEMORY_STATE

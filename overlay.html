@@ -3498,9 +3498,6 @@
             if (fallbackInterval) clearInterval(fallbackInterval);
             fallbackInterval = setInterval(async () => {
                 try {
-                    // 👑 VIP Roster Cache 실시간 동기화 (상시 가동)
-                    loadVipsToCache();
-                    
                     // 📡 1초 간격 상시 데이터 연동 (SSE 연결 상태와 무관하게 100% 무조건 동기화 보장)
                     const streamUrl = (!window.location.protocol.startsWith('http')) ? 'http://localhost:5000/api/data' : '/api/data';
                     const res = await fetch(streamUrl);
@@ -3514,6 +3511,7 @@
             }, 1000);
         }
         initPollingFallback();
+        setInterval(loadVipsToCache, 10000);
 
         // 🖼️ 슬롯머신 실제 당첨 후보로 "선택된" 리액션 이미지만 릴에 표시하도록 수집
         window.slotReelImages = [];

@@ -1651,7 +1651,7 @@
             lastPushTime = Date.now();
             isPushing = true; gd.bjs.sort((a, b) => (b.contribution || 0) - (a.contribution || 0)); renderUI(); 
             try {
-                const res = await fetch('/api/data', { 
+                const res = await fetch('/api/data?force=1', { 
                     method: 'POST', 
                     headers:{'Content-Type':'application/json'}, 
                     body: JSON.stringify(gd) 
