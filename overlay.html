@@ -2865,7 +2865,7 @@
                 } catch (e) {
                     console.error("Polling sync error:", e);
                 }
-            }, 1000);
+            }, 250);
         }
         initPollingFallback();
         setInterval(loadVipsToCache, 10000);

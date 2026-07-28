@@ -414,11 +414,12 @@ def init_db():
                 pass
     INIT_DB_DONE = True
 
+LAST_LOAD_TIME = 0
+
 def load_data():
-    global MEMORY_STATE
-    # Vercel/Supabase에서는 여러 서버리스 인스턴스가 동시에 뜰 수 있으므로
-    # 메모리 캐시를 신뢰하면 오래된 초기 상태가 라이브 데이터를 덮어쓸 수 있습니다.
-    if MEMORY_STATE is not None and not IS_POSTGRES:
+    global MEMORY_STATE, LAST_LOAD_TIME
+    now = time.time()
+    if MEMORY_STATE is not None and (now - LAST_LOAD_TIME < 0.5):
         return MEMORY_STATE
     init_db()
     
@@ -468,6 +469,7 @@ def load_data():
         state['card_game'].setdefault('final_card_ids', [])
     
     MEMORY_STATE = state
+    LAST_LOAD_TIME = now
     return MEMORY_STATE
 
 
@@ -645,9 +647,10 @@ def check_goal_achievement_status(state):
         print(f"Goal check error: {e}")
 
 def save_data(new_data, is_initial=False):
-    global MEMORY_STATE
+    global MEMORY_STATE, LAST_LOAD_TIME
     check_goal_achievement_status(new_data)
     MEMORY_STATE = new_data
+    LAST_LOAD_TIME = time.time()
     
     # Vercel 서버리스 환경일 때는 백그라운드 큐를 거치지 않고 즉시 DB에 직접 저장합니다.
     if IS_VERCEL:
