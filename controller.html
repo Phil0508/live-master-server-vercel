@@ -431,42 +431,7 @@
             100% { transform: scale(0.95); opacity: 0.6; }
         }
         
-        /* 🟢 리액션 모드 진입 미니 알림 토스트 (조종실용) */
-        .reaction-toast {
-            position: fixed;
-            top: 25px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: rgba(10, 10, 15, 0.88);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 2px solid rgba(0, 255, 204, 0.5);
-            box-shadow: 0 0 25px rgba(0, 255, 204, 0.25), inset 0 10px 10px rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 12px 28px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 16px;
-            font-weight: 900;
-            color: #fff;
-            z-index: 110000;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            opacity: 0;
-            pointer-events: none;
-        }
-        .reaction-toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-        .reaction-toast-dot {
-            width: 8px;
-            height: 8px;
-            background: #00ffcc;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #00ffcc;
-            animation: pulseGreen 1.5s infinite;
-        }
+
 
         /* 탭 백그라운드 재생을 위한 visibility 기반 숨김 스타일 */
         .tab-content {
@@ -637,10 +602,7 @@
     </style>
 </head>
 <body>
-    <div id="reaction-toast" class="reaction-toast">
-        <div class="reaction-toast-dot"></div>
-        <span>🟢 화면내에서 리액션 모드로 진입했습니다.</span>
-    </div>
+
     <div class="header">
         <h1>
             <i class="fa-solid fa-layer-group"></i> 방송 제어 센터 V12
@@ -669,10 +631,7 @@
                 </div>
             </div>
 
-            <label class="toggle-row" id="lbl-reaction-wrapper" style="border-color: rgba(156, 39, 176, 0.4); background: rgba(156, 39, 176, 0.05); height: 42px; padding: 0 15px; box-sizing: border-box;"><span class="toggle-label" id="lbl-reaction" style="color:#fff; font-weight:bold; font-size: 14px;"><i class="fa-solid fa-eye"></i> 수동 리액션 모드</span><div class="apple-switch"><input type="checkbox" id="chk-reaction" onchange="toggleOption('reaction_mode')"><span class="apple-slider"></span></div></label>
             <button id="btn-editor" onclick="window.open('/admin', '_blank')" style="height: 42px; background: rgba(255,255,255,0.05); color: #fff; border-color: var(--border-light);"><i class="fa-solid fa-pen-ruler"></i> 에디터</button>
-            <button onclick="window.open('/reactions', '_blank')" style="height: 42px; background: rgba(255, 215, 0, 0.1); border-color: rgba(255, 215, 0, 0.3); color: #ffd700; font-weight: bold;"><i class="fa-solid fa-guitar"></i> 리액션 설정</button>
-            <button onclick="window.open('/reaction_alert', '_blank')" style="height: 42px; background: rgba(0, 229, 255, 0.1); border-color: rgba(0, 229, 255, 0.3); color: #00e5ff; font-weight: bold;"><i class="fa-solid fa-bell"></i> 리액션 알림창</button>
             <button onclick="window.location.href='/controller?mode=mobile'" style="height: 42px; background: rgba(0, 191, 255, 0.1); border-color: rgba(0, 191, 255, 0.3); color: #00bfff; font-weight: bold;"><i class="fa-solid fa-mobile-screen-button"></i> 모바일 버전</button>
             <button onclick="triggerServerLogout()" style="height: 42px; background: rgba(255, 69, 58, 0.1); border-color: rgba(255, 69, 58, 0.3); color: var(--danger); font-weight: bold;"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
         </div>
@@ -702,8 +661,7 @@
         <button class="tab-btn" onclick="openTab(event, 'tab-match')"><i class="fa-solid fa-gamepad"></i> 대결</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-neon')"><i class="fa-solid fa-wand-magic-sparkles"></i> 이펙트/전광판</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-youtube')"><i class="fa-brands fa-youtube"></i> BGM / 유튜브</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-reaction')"><i class="fa-solid fa-compact-disc"></i> 리액션</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-slot')" style="position:relative;"><i class="fa-solid fa-gamepad"></i> 종합게임<span id="slot-tab-badge" style="display:none; position:absolute; top:2px; right:2px; background:#ff453a; color:#fff; font-size:10px; font-weight:900; min-width:16px; height:16px; border-radius:8px; align-items:center; justify-content:center; padding:0 4px; box-shadow:0 0 6px rgba(255,69,58,0.8);"></span></button>
+
         <button class="tab-btn" onclick="openTab(event, 'tab-roulette')"><i class="fa-solid fa-circle-notch"></i> 룰렛</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-logs')"><i class="fa-solid fa-list-ul"></i> 로그</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-vip')"><i class="fa-solid fa-crown"></i> 특별 후원자</button>
@@ -960,193 +918,7 @@
         </div>
     </div>
 
-    <div id="tab-reaction" class="tab-content">
-        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; align-items: start;">
-            <!-- 좌측: 리액션 상태 제어 및 수동 후원, 대기열 -->
-            <div class="group-box" style="display: flex; flex-direction: column; gap: 15px;">
-                <div class="group-title"><i class="fa-solid fa-sliders" style="color: var(--accent);"></i> 리액션 제어 센터</div>
-                
-                <!-- 1. 리액션 오디오 볼륨 및 중단 -->
-                <div style="display: flex; flex-direction: column; gap: 10px; padding: 10px; background: rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 13px; font-weight: bold; color: #fff;"><i class="fa-solid fa-volume-high"></i> 리액션 볼륨</span>
-                        <span id="reaction-vol-text" style="font-size: 12px; font-weight: bold; color: var(--accent);">50%</span>
-                    </div>
-                    <input type="range" id="reaction-volume-slider" min="0" max="1" step="0.05" value="0.5" oninput="changeReactionVolume(this.value)" style="width: 100%; accent-color: var(--accent);">
-                    
-                    <button onclick="stopReaction()" class="danger" style="height: 38px; font-weight: bold; font-size: 13px; border-radius: 8px; justify-content: center; width: 100%; margin-top: 5px;">
-                        <i class="fa-solid fa-circle-stop"></i> 리액션 긴급 중단
-                    </button>
-                    <button id="skip-reaction-btn-main" onclick="skipCurrentReaction()" style="height: 38px; font-weight: bold; font-size: 13px; border-radius: 8px; justify-content: center; width: 100%; margin-top: 5px; background: #ff9500; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: opacity 0.2s;">
-                        <i class="fa-solid fa-forward-step"></i> 다음 후원 넘기기 (Skip)
-                    </button>
-                </div>
 
-                <!-- 2. 수동 후원 송출 (금액 입력 시 리액션 연동) -->
-                <div style="display: flex; flex-direction: column; gap: 10px; padding: 12px; background: rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
-                    <div style="font-size: 13px; font-weight: bold; color: #fff; margin-bottom: 2px;"><i class="fa-solid fa-coins" style="color: #ffd700;"></i> 수동 후원 (리액션 자동 매칭)</div>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="manual-donator" placeholder="후원자명" style="width: 40%; height: 34px; font-size: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: #fff; padding: 0 10px; box-sizing: border-box;">
-                        <input type="number" id="manual-amount" placeholder="후원금액" style="width: 60%; height: 34px; font-size: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: #fff; padding: 0 10px; box-sizing: border-box;">
-                    </div>
-                    <input type="text" id="manual-message" placeholder="후원 메시지 입력 (선택사항)" style="width: 100%; height: 34px; font-size: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: #fff; padding: 0 10px; box-sizing: border-box;">
-                    <button onclick="triggerManualDonation()" class="primary" style="height: 34px; font-weight: bold; font-size: 12px; border-radius: 8px; justify-content: center; width: 100%;">
-                        <i class="fa-solid fa-paper-plane"></i> 후원 리액션 즉시 송출
-                    </button>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <div style="font-size: 13px; font-weight: bold; color: #fff; display: flex; justify-content: space-between; align-items: center;">
-                        <span><i class="fa-solid fa-list-ol" style="color: var(--accent);"></i> 대기 중인 리액션 큐</span>
-                        <div style="display: flex; align-items: center; gap: 6px;">
-                            <button id="skip-reaction-btn" onclick="skipCurrentReaction()" style="font-size: 10px; background: rgba(255,149,0,0.15); color: #ff9500; border: 1px solid rgba(255,149,0,0.3); padding: 2px 8px; border-radius: 6px; cursor: pointer; font-weight: bold; display: none;" title="현재 재생 중인 후원을 건너뛰고 다음으로 넘깁니다">
-                                <i class="fa-solid fa-forward-step"></i> 넘기기
-                            </button>
-                            <span id="reaction-queue-count" style="font-size: 11px; background: rgba(0,255,204,0.15); color: var(--accent); padding: 2px 6px; border-radius: 10px; font-weight: bold;">0개</span>
-                        </div>
-                    </div>
-                    <div id="reaction-queue-container" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 2px;">
-                        <!-- 대기 목록이 스크립트로 렌더링됨 -->
-                    </div>
-                </div>
-
-                <!-- 4. 템퍼몽키 투네이션 연동 가이드 카드 -->
-                <div style="display: flex; flex-direction: column; gap: 10px; padding: 12px; background: rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
-                    <div style="font-size: 13px; font-weight: bold; color: #fff; margin-bottom: 2px;"><i class="fa-solid fa-plug" style="color: var(--accent);"></i> 투네이션 템퍼몽키 자동 연동</div>
-                    <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">
-                        투네이션 알림창 위젯과 실시간 연동되어 1천 원 이상의 후원 시 지정된 금액의 리액션이 자동 송출됩니다. (최저 금액 1,000원 적용 완료)
-                    </div>
-                    <div style="display: flex; gap: 8px; margin-top: 5px;">
-                        <a href="/toonation_tampermonkey.user.js" target="_blank" style="flex: 1; text-decoration: none;">
-                            <button class="primary" style="height: 32px; font-weight: bold; font-size: 11px; border-radius: 8px; justify-content: center; width: 100%; cursor: pointer;">
-                                <i class="fa-solid fa-download"></i> 스크립트 설치
-                            </button>
-                        </a>
-                        <button onclick="copyTampermonkeyCode()" class="secondary" style="flex: 1; height: 32px; font-weight: bold; font-size: 11px; border-radius: 8px; justify-content: center; cursor: pointer;">
-                            <i class="fa-solid fa-copy"></i> 코드 복사
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 우측: 등록된 리액션 리스트 -->
-            <div class="group-box" style="display: flex; flex-direction: column; gap: 15px; min-height: 500px;">
-                <div class="group-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <span><i class="fa-solid fa-compact-disc" style="color: var(--accent);"></i> 등록된 리액션 음원/사진 라이브러리</span>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: pointer; user-select: none; margin: 0;">
-                            <input type="checkbox" id="chk-select-all-reactions" onchange="selectAllReactions(this.checked)" style="width: 13px; height: 13px; margin: 0; cursor: pointer;"> 전체 선택
-                        </label>
-                        <button onclick="deleteSelectedReactions()" class="danger" style="height: 28px; font-size: 11px; padding: 0 10px; border-radius: 8px; display: inline-flex; align-items: center; gap: 4px; font-weight: bold; cursor: pointer;">
-                            <i class="fa-solid fa-trash-can"></i> 선택 삭제
-                        </button>
-                        <button onclick="loadReactionList()" class="secondary" style="height: 28px; font-size: 11px; padding: 0 10px; border-radius: 8px; display: inline-flex; align-items: center; gap: 4px; font-weight: bold; cursor: pointer;">
-                            <i class="fa-solid fa-rotate"></i> 새로고침
-                        </button>
-                    </div>
-                </div>
-                
-                <div id="reaction-list-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; max-height: 520px; overflow-y: auto; padding: 5px;">
-                    <!-- 리액션 카드 로딩 상태 -->
-                    <div style="color: #666; text-align: center; grid-column: 1 / -1; padding: 50px 0;">
-                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 28px; color: var(--accent); margin-bottom: 10px; display: block;"></i>
-                        불러오는 중...
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="tab-slot" class="tab-content">
-        <!-- 🎮 종합게임 내부 서브 탭 스위처 -->
-        <div style="display:flex; gap:10px; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
-            <button id="btn-subtab-slot" onclick="switchGameSubTab('slot')" style="height:36px; padding:0 18px; font-size:13px; font-weight:900; border-radius:8px; background:linear-gradient(135deg, #ffd700, #ffae00); color:#000; border:none; cursor:pointer;"><i class="fa-solid fa-dice"></i> 🎰 슬롯머신</button>
-            <button id="btn-subtab-card" onclick="switchGameSubTab('card')" style="height:36px; padding:0 18px; font-size:13px; font-weight:900; border-radius:8px; background:rgba(255,255,255,0.1); color:#aaa; border:1px solid rgba(255,255,255,0.15); cursor:pointer;"><i class="fa-solid fa-clone"></i> 🎴 카드 뒤집기</button>
-        </div>
-
-        <!-- 서브 탭 1: 슬롯머신 -->
-        <div id="game-sec-slot" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
-            <div class="group-box" style="display: flex; flex-direction: column; gap: 15px;">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                    <div class="group-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;"><i class="fa-solid fa-dice" style="color:#ffd700;"></i> 슬롯머신 이벤트 설정</div>
-                    <span id="slot-machine-status" style="font-size:12px; font-weight:900; color:#8e8e93;">꺼짐</span>
-                </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <label style="font-size:12px; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">발동 금액
-                        <input type="number" id="slot-trigger-amount" value="20000" style="height:36px; font-size:13px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; padding:0 10px;">
-                    </label>
-                    <label style="font-size:12px; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">진행 시간(분)
-                        <input type="number" id="slot-duration-minutes" value="20" style="height:36px; font-size:13px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; padding:0 10px;">
-                    </label>
-                </div>
-                <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted);">
-                    <span>남은 시간: <b id="slot-machine-remaining" style="color:#fff;">대기 중</b></span>
-                    <span>후보: <b id="slot-machine-selected-count" style="color:#ffd700;">0개 선택</b></span>
-                </div>
-                <div style="font-size:12px; color:#aaa; line-height:1.5; background:rgba(0,0,0,0.15); padding:10px; border-radius:8px;">
-                    리액션 탭 카드에서 <b style="color:#ffd700;">🎰 슬롯</b> 체크박스로 당첨 후보를 선택하세요. 발동 금액 후원이 들어오면 여기 대기열에 쌓이고, 직접 "돌리기"를 눌러야 실제로 회전 및 재생됩니다. 점수는 항상 +2, 기여도는 당첨 리액션 금액/1만원으로 반영되며 승인 후 최종 적용됩니다.
-                </div>
-                <div style="display:flex; gap:10px;">
-                    <button onclick="startSlotMachine()" class="primary" style="flex:1; height:38px; font-size:13px; font-weight:bold; border-radius:8px; justify-content:center;"><i class="fa-solid fa-play"></i> 시작</button>
-                    <button onclick="stopSlotMachine()" class="danger" style="flex:1; height:38px; font-size:13px; font-weight:bold; border-radius:8px; justify-content:center;"><i class="fa-solid fa-stop"></i> 종료</button>
-                </div>
-                <button onclick="spinSlotMachineNow()" style="width:100%; height:46px; font-size:14px; font-weight:900; border-radius:10px; justify-content:center; background:linear-gradient(135deg, #ffd700, #ffae00); color:#000; border:none; box-shadow:0 4px 15px rgba(255,215,0,0.35); cursor:pointer;"><i class="fa-solid fa-dice"></i> 🎰 지금 바로 돌리기 (후원 무관)</button>
-            </div>
-
-            <div class="group-box" style="display: flex; flex-direction: column; gap: 15px;">
-                <div style="display:flex; align-items:center; justify-content:space-between;">
-                    <div class="group-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;"><i class="fa-solid fa-hourglass-half" style="color:#ffd700;"></i> 슬롯 돌리기 대기열</div>
-                    <span id="slot-spin-queue-count" style="font-size:11px; background:rgba(255,215,0,0.15); color:#ffd700; padding:3px 8px; border-radius:10px; font-weight:bold;">0건 대기</span>
-                </div>
-                <div id="slot-spin-queue-container" style="max-height:420px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
-                    <div style="color: #666; font-size: 12px; text-align: center; padding: 40px 0;">대기 중인 슬롯 스핀이 없습니다.</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 서브 탭 2: 🎴 카드 뒤집기 -->
-        <div id="game-sec-card" style="display:none; flex-direction:column; gap:20px;">
-            <div class="group-box" style="display:flex; flex-direction:column; gap:15px;">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-                    <div class="group-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;"><i class="fa-solid fa-clone" style="color:#ffd700;"></i> 🎴 카드 뒤집기 방송 게임 제어</div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span id="card-game-status-badge" style="font-size:12px; font-weight:900; padding:4px 10px; border-radius:12px; background:rgba(255,255,255,0.1); color:#8e8e93;">꺼짐 🔴</span>
-                        <button onclick="toggleCardGameActive()" id="btn-toggle-card-game" style="height:36px; padding:0 16px; font-size:13px; font-weight:900; border-radius:10px; background:linear-gradient(135deg, #ffd700, #ff8c00); color:#000; border:none; cursor:pointer;"><i class="fa-solid fa-power-off"></i> 방송 화면 위젯 켜기</button>
-                    </div>
-                </div>
-
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:15px; flex-wrap:wrap; background:rgba(0,0,0,0.25); padding:12px 16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:13px; color:#aaa; font-weight:700;"><i class="fa-solid fa-stopwatch" style="color:#ffd700;"></i> 타이머:</span>
-                        <b id="card-game-timer-disp" style="font-size:18px; font-family:Consolas, monospace; color:#ffd700; font-weight:900; min-width:60px;">05:00</b>
-                        <button onclick="setCardGameTimer(3)" class="secondary" style="height:28px; padding:0 8px; font-size:11px; border-radius:6px; cursor:pointer;">3분</button>
-                        <button onclick="setCardGameTimer(5)" class="secondary" style="height:28px; padding:0 8px; font-size:11px; border-radius:6px; cursor:pointer;">5분</button>
-                        <button onclick="setCardGameTimer(10)" class="secondary" style="height:28px; padding:0 8px; font-size:11px; border-radius:6px; cursor:pointer;">10분</button>
-                        <button onclick="toggleCardGameTimer()" id="btn-card-timer-toggle" class="primary" style="height:28px; padding:0 12px; font-size:11px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-play"></i> 시작</button>
-                        <button onclick="resetCardGameTimer()" class="danger" style="height:28px; padding:0 10px; font-size:11px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-rotate-left"></i> 리셋</button>
-                    </div>
-
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <button onclick="openCardPickerModal()" style="height:34px; padding:0 12px; font-size:12px; font-weight:bold; border-radius:8px; background:rgba(0, 229, 255, 0.15); color:#00e5ff; border:1px solid #00e5ff; cursor:pointer;"><i class="fa-solid fa-list-check"></i> 📋 20장 직접 선택 피커</button>
-                        <button onclick="shuffleCardGameDeck()" style="height:34px; padding:0 12px; font-size:12px; font-weight:bold; border-radius:8px; background:rgba(255, 215, 0, 0.15); color:#ffd700; border:1px solid #ffd700; cursor:pointer;"><i class="fa-solid fa-shuffle"></i> 🎲 20장 무작위 셔플</button>
-                        <button onclick="shuffleCardGameOrder()" id="btn-shuffle-order-card-game" style="height:34px; padding:0 12px; font-size:12px; font-weight:bold; border-radius:8px; background:rgba(255,255,255,0.08); color:#fff; border:1px solid rgba(255,255,255,0.15); cursor:pointer;"><i class="fa-solid fa-arrows-spin"></i> 🔀 카드 순서 섞기</button>
-                        <button onclick="resetCardGame()" style="height:34px; padding:0 12px; font-size:12px; font-weight:bold; border-radius:8px; background:rgba(255,153,0,0.15); color:#ff9900; border:1px solid #ff9900; cursor:pointer;"><i class="fa-solid fa-rotate"></i> 🔄 게임 초기화</button>
-                        <button onclick="finalizeCardGame()" id="btn-finalize-card-game" style="display:none; height:34px; padding:0 12px; font-size:12px; font-weight:bold; border-radius:8px; background:rgba(52, 199, 89, 0.15); color:#34c759; border:1px solid #34c759; cursor:pointer;"><i class="fa-solid fa-lock"></i> 🏆 완료 카드 고정</button>
-                        <button onclick="unfinalizeCardGame()" id="btn-unfinalize-card-game" style="display:none; height:34px; padding:0 12px; font-size:12px; font-weight:bold; border-radius:8px; background:rgba(255,69,58,0.15); color:#ff453a; border:1px solid #ff453a; cursor:pointer;"><i class="fa-solid fa-rotate-left"></i> ↩️ 20장 전체 모드 복귀</button>
-                    </div>
-                </div>
-
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-top:5px;">
-                    <div style="font-size:13px; font-weight:bold; color:#fff;"><i class="fa-solid fa-th"></i> 20장 카드 상태 현황판</div>
-                    <div style="font-size:12px; color:#aaa;">진행 현황: <b id="card-game-pass-count" style="color:#00ffcc; font-size:14px;">0 / 5 PASS</b></div>
-                </div>
-
-                <div id="card-game-grid-admin" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:12px; max-height:480px; overflow-y:auto; padding:5px;">
-                    <div style="color:#666; font-size:12px; grid-column: 1 / -1; text-align:center; padding:40px 0;">등록된 카드가 없습니다. [20장 무작위 셔플] 버튼을 눌러주세요.</div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div id="tab-roulette" class="tab-content">
         <div id="roulette-grid-container" style="display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start;">
@@ -1486,21 +1258,9 @@
             return originalFetch(resource, init);
         };
 
-        function openTab(evt, tabId) { document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(tabId).classList.add('active'); evt.currentTarget.classList.add('active'); if (tabId === 'tab-system') { refreshSystemStatus(); } if (tabId === 'tab-logs') { loadManualLogs(1); } if (tabId === 'tab-reaction') { loadReactionList(); } if (tabId === 'tab-vip') { loadVipList(); } }
+        function openTab(evt, tabId) { document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(tabId).classList.add('active'); evt.currentTarget.classList.add('active'); if (tabId === 'tab-system') { refreshSystemStatus(); } if (tabId === 'tab-logs') { loadManualLogs(1); } if (tabId === 'tab-vip') { loadVipList(); } }
         let gd = null; let isPushing = false; let lastPushTime = 0;
-        let lastReactionToastTime = 0;
         let serverTimeOffset = 0;
-        function showReactionToast() {
-            if (Date.now() - lastReactionToastTime < 1000) return;
-            lastReactionToastTime = Date.now();
-            const toast = document.getElementById('reaction-toast');
-            if (toast) {
-                toast.classList.remove('show');
-                void toast.offsetWidth; // reflow trigger
-                toast.classList.add('show');
-                setTimeout(() => { toast.classList.remove('show'); }, 3000);
-            }
-        }
         let lastRHtml = ""; let lastMHtml = ""; let lastColorHtml = ""; let lastRankLogHtml = ""; let lastMatchLogHtml = ""; let lastPendingHtml = "";
         let ytWasPlaying = false;
 
@@ -1555,69 +1315,7 @@
             }
         }
 
-        // 💡 [통합 패치] 리액션 모드 상태에 따른 노래 일시정지/재개 및 대결 타이머 일시정지/재개 통합 제어기
-        function applyReactionModeEffects(isReactionOn) {
-            let audio = document.getElementById('bgm-audio');
-            let md = gd ? gd.match_data : null;
-            
-            // 사용자가 선택한 BGM 슬라이더 값이나 현재 오디오 플레이어 기본 음량 획득
-            const volSlider = document.querySelector('.ios-slider-volume');
-            const originalBgmVol = volSlider ? parseFloat(volSlider.value) : 0.5;
-            
-            if (isReactionOn) {
-                // 1. BGM 볼륨 0.05로 페이드아웃 (완전히 끄지 않고 잔잔히 유지)
-                if (audio) {
-                    if (audio.paused) {
-                        audio.dataset.wasPlaying = "false";
-                    } else {
-                        audio.dataset.wasPlaying = "true";
-                        fadeAudioVolume(audio, 0.05, 500); // 0.5초 동안 서서히 줄임
-                    }
-                }
-                // 2. 유튜브 볼륨 5%로 페이드아웃
-                try {
-                    if (ytPlayer && typeof ytPlayer.getPlayerState === 'function' && ytPlayer.getPlayerState() === 1) {
-                        ytWasPlaying = true;
-                        fadeYoutubeVolume(ytPlayer, 5, 500); // 5% 볼륨으로 페이드아웃
-                    } else {
-                        ytWasPlaying = false;
-                    }
-                } catch(ytErr) {
-                    console.error("ytPlayer pause error:", ytErr);
-                    ytWasPlaying = false;
-                }
-                // 3. 대결 타이머 일시정지 (시간 멈춤)
-                if (md && md.is_running) {
-                    md.time_left_ms = Math.max(0, md.end_time_ms - (Date.now() + serverTimeOffset));
-                    md.is_running = false;
-                    md.was_running_before_reaction = true;
-                }
-                showReactionToast();
-            } else {
-                // 4. BGM 원래 음량으로 페이드인 재개
-                if (audio && audio.dataset.wasPlaying === "true") {
-                    if (audio.paused) audio.play().catch(e=>{});
-                    fadeAudioVolume(audio, originalBgmVol, 800); // 0.8초 동안 원래 음량 복원
-                }
-                // 5. 유튜브 원래 음량(100% 혹은 기존 설정 볼륨 50%)으로 페이드인 재개
-                try {
-                    if (ytWasPlaying && ytPlayer) {
-                        if (typeof ytPlayer.playVideo === 'function') ytPlayer.playVideo();
-                        fadeYoutubeVolume(ytPlayer, 50, 800); // 50% 볼륨으로 페이드인 복원
-                        ytWasPlaying = false;
-                    }
-                } catch(ytErr) {
-                    console.error("ytPlayer play error:", ytErr);
-                }
-                // 6. 대결 타이머 재개
-                if (md && md.was_running_before_reaction) {
-                    if(md.time_left_ms <= 0) md.time_left_ms = md.paused_time_left || 180000;
-                    md.end_time_ms = (Date.now() + serverTimeOffset) + md.time_left_ms;
-                    md.is_running = true;
-                    md.was_running_before_reaction = false;
-                }
-            }
-        }
+
 
 
 
@@ -1631,11 +1329,7 @@
                 if (newData && newData.server_time) {
                     serverTimeOffset = newData.server_time - Date.now();
                 }
-                const oldReactionMode = gd ? gd.reaction_mode : false;
                 gd = newData;
-                if (oldReactionMode !== newData.reaction_mode) {
-                    applyReactionModeEffects(newData.reaction_mode);
-                }
                 if(!gd.bjs) { gd.bjs = []; }
                 else { gd.bjs.forEach(bj => { if(bj.contribution === undefined) bj.contribution = bj.score > 0 ? bj.score : 0; }); }
                 if(!gd.match_data) gd.match_data = { active: false, fire_effect: false, is_running: false, time_left_ms: 180000, end_time_ms: 0, players: [{name:'팀 A', score:0}, {name:'팀 B', score:0}] };
@@ -1650,6 +1344,9 @@
             if(!gd) return;
             lastPushTime = Date.now();
             isPushing = true; gd.bjs.sort((a, b) => (b.contribution || 0) - (a.contribution || 0)); renderUI(); 
+            
+
+
             try {
                 const res = await fetch('/api/data?force=1', { 
                     method: 'POST', 
@@ -1685,96 +1382,7 @@
             }
         }
 
-        function ensureSlotMachineState() {
-            if (!gd) return;
-            if (!gd.slot_machine || typeof gd.slot_machine !== 'object') gd.slot_machine = {};
-            const slot = gd.slot_machine;
-            if (typeof slot.active === 'undefined') slot.active = false;
-            if (!slot.started_at) slot.started_at = 0;
-            if (!slot.duration_ms) slot.duration_ms = 20 * 60 * 1000;
-            if (!slot.trigger_amount) slot.trigger_amount = 20000;
-            if (!Array.isArray(slot.selected_reaction_ids)) slot.selected_reaction_ids = [];
-            if (slot.active && slot.started_at && Date.now() - slot.started_at >= slot.duration_ms) {
-                slot.active = false;
-            }
-        }
 
-        function getSlotRemainingText() {
-            ensureSlotMachineState();
-            const slot = gd.slot_machine;
-            if (!slot.active || !slot.started_at) return '대기 중';
-            const remainMs = Math.max(0, slot.duration_ms - (Date.now() - slot.started_at));
-            const mins = Math.floor(remainMs / 60000);
-            const secs = Math.floor((remainMs % 60000) / 1000);
-            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-        }
-
-        function renderSlotMachinePanel() {
-            if (!gd) return;
-            ensureSlotMachineState();
-            const slot = gd.slot_machine;
-            const statusEl = document.getElementById('slot-machine-status');
-            const remainEl = document.getElementById('slot-machine-remaining');
-            const selectedEl = document.getElementById('slot-machine-selected-count');
-            const triggerEl = document.getElementById('slot-trigger-amount');
-            const durationEl = document.getElementById('slot-duration-minutes');
-
-            if (statusEl) {
-                statusEl.innerText = slot.active ? '진행 중' : '꺼짐';
-                statusEl.style.color = slot.active ? '#00ffcc' : '#8e8e93';
-            }
-            if (remainEl) remainEl.innerText = getSlotRemainingText();
-            if (selectedEl) selectedEl.innerText = `${slot.selected_reaction_ids.length}개 선택`;
-            if (triggerEl && document.activeElement !== triggerEl) triggerEl.value = slot.trigger_amount || 20000;
-            if (durationEl && document.activeElement !== durationEl) durationEl.value = Math.round((slot.duration_ms || 1200000) / 60000);
-
-            document.querySelectorAll('.chk-slot-reaction').forEach(chk => {
-                const id = parseInt(chk.dataset.id, 10);
-                chk.checked = slot.selected_reaction_ids.map(Number).includes(id);
-            });
-        }
-
-        async function startSlotMachine() {
-            ensureSlotMachineState();
-            const triggerInput = document.getElementById('slot-trigger-amount');
-            const durationInput = document.getElementById('slot-duration-minutes');
-            gd.slot_machine.trigger_amount = Math.max(1000, parseInt(triggerInput?.value || 20000, 10));
-            const durationMinutes = Math.max(1, parseInt(durationInput?.value || 20, 10));
-            gd.slot_machine.duration_ms = durationMinutes * 60 * 1000;
-
-            if (!gd.slot_machine.selected_reaction_ids.length) {
-                premiumAlert('슬롯 후보 리액션을 1개 이상 선택해주세요.', '슬롯머신 설정 필요', 'warning');
-                return;
-            }
-
-            gd.slot_machine.active = true;
-            gd.slot_machine.started_at = Date.now();
-            await pushAPI();
-            premiumAlert('슬롯머신 이벤트를 시작했습니다. 2만원 후원부터 슬롯이 작동합니다.', '슬롯머신 ON', 'success');
-        }
-
-        async function stopSlotMachine() {
-            ensureSlotMachineState();
-            gd.slot_machine.active = false;
-            gd.slot_machine.started_at = 0;
-            await pushAPI();
-            premiumAlert('슬롯머신 이벤트를 종료했습니다.', '슬롯머신 OFF', 'success');
-        }
-
-        function toggleSlotReaction(itemId, checked) {
-            ensureSlotMachineState();
-            const ids = gd.slot_machine.selected_reaction_ids.map(Number).filter(id => Number.isFinite(id));
-            const parsedId = parseInt(itemId, 10);
-            if (checked) {
-                if (!ids.includes(parsedId)) ids.push(parsedId);
-            } else {
-                const idx = ids.indexOf(parsedId);
-                if (idx !== -1) ids.splice(idx, 1);
-            }
-            gd.slot_machine.selected_reaction_ids = ids;
-            renderSlotMachinePanel();
-            pushAPI();
-        }
 
         function renderUI() {
             if(document.activeElement.tagName === "INPUT" && !document.activeElement.id.startsWith("chk") && !document.activeElement.classList.contains("setup-player-input") || document.activeElement.tagName === "TEXTAREA") return;
@@ -1785,9 +1393,7 @@
             document.getElementById('active-broadcast-area').style.display = isActive ? 'block' : 'none';
             
             document.getElementById('btn-end-broadcast').style.display = isActive ? 'inline-flex' : 'none';
-            if (document.getElementById('lbl-reaction-wrapper')) {
-                document.getElementById('lbl-reaction-wrapper').style.display = isActive ? 'flex' : 'none';
-            }
+
             if (document.getElementById('btn-editor')) {
                 document.getElementById('btn-editor').style.display = isActive ? 'inline-flex' : 'none';
             }
@@ -1807,10 +1413,7 @@
             setVal('in-goal', gd.target_goal);
             renderGoalAchievementNotice();
             
-            setChk('chk-reaction', gd.reaction_mode);
-            let reactLbl = gd.reaction_mode ? "<i class='fa-solid fa-eye-slash'></i> 위젯 숨김 (리액션 ON)" : "<i class='fa-solid fa-eye'></i> 수동 리액션 켜기";
-            setHtml('lbl-reaction', reactLbl);
-            document.getElementById('lbl-reaction').style.color = gd.reaction_mode ? "var(--danger)" : "var(--text-main)";
+
             
             setChk('chk-popup', gd.popup_enabled);
             setChk('chk-takeover', gd.takeover_enabled);
@@ -2044,16 +1647,7 @@
                 if (lastMatchLogHtml !== matchLogHtml) { document.getElementById('log-box-match').innerHTML = matchLogHtml; lastMatchLogHtml = matchLogHtml; }
             }
             
-            // 🎵 리액션 큐 및 슬라이더 렌더링
-            if (document.getElementById('reaction-volume-slider')) {
-                if (document.activeElement.id !== 'reaction-volume-slider') {
-                    document.getElementById('reaction-volume-slider').value = gd.reaction_volume !== undefined ? gd.reaction_volume : 0.5;
-                }
-                document.getElementById('reaction-vol-text').innerText = Math.round((gd.reaction_volume !== undefined ? gd.reaction_volume : 0.5) * 100) + '%';
-            }
-            renderReactionQueue();
-            renderSlotMachinePanel();
-            renderSlotSpinQueue();
+
 
             renderRouletteTab();
         }
@@ -2516,9 +2110,7 @@
         
         function toggleOption(key) { 
             gd[key] = !gd[key]; 
-            if (key === 'reaction_mode') {
-                applyReactionModeEffects(gd.reaction_mode);
-            }
+
             pushAPI(); 
         }
 
@@ -2619,11 +2211,7 @@
         function triggerNeon(color) {
             gd.effect_trigger = {time: Date.now(), color: color, infinite: true};
             if (color !== 'OFF') {
-                if (!gd.reaction_mode) {
-                    gd.reaction_mode = true;
-                    applyReactionModeEffects(true);
-                }
-                gd.reaction_enter_alert = { time: Date.now() };
+
             }
             pushAPI();
         }
@@ -2689,12 +2277,10 @@
             if(md.is_running) { 
                 md.time_left_ms = Math.max(0, md.end_time_ms - (Date.now() + serverTimeOffset)); 
                 md.is_running = false; 
-                md.was_running_before_reaction = false; 
             } else { 
                 if(md.time_left_ms <= 0) md.time_left_ms = md.paused_time_left; 
                 md.end_time_ms = (Date.now() + serverTimeOffset) + md.time_left_ms; 
                 md.is_running = true; 
-                md.was_running_before_reaction = false; 
             } 
             pushAPI(); 
         }
@@ -3104,33 +2690,10 @@
             }
         }
 
-        // 📋 20장 커스텀 피커 모달 관련 함수
-        let allReactionItemsForPicker = [];
-        let selectedPickerIds = new Set();
-
         async function openCardPickerModal() {
             const modal = document.getElementById('card-picker-modal');
             if (!modal) return;
             modal.style.display = 'flex';
-
-            selectedPickerIds.clear();
-            if (gd.card_game && gd.card_game.selected_reaction_ids) {
-                gd.card_game.selected_reaction_ids.forEach(id => selectedPickerIds.add(id));
-            }
-
-            try {
-                let res = await fetch('/api/reaction/list');
-                let data = await res.json();
-                if (Array.isArray(data)) {
-                    allReactionItemsForPicker = data;
-                    renderCardPickerItems();
-                } else if (data && (data.status === 'success' || data.items)) {
-                    allReactionItemsForPicker = data.items || [];
-                    renderCardPickerItems();
-                }
-            } catch (e) {
-                console.error("Error loading reactions for picker:", e);
-            }
         }
 
         function closeCardPickerModal() {
@@ -3140,61 +2703,8 @@
 
         function renderCardPickerItems() {
             const listEl = document.getElementById('card-picker-list');
-            const searchVal = (document.getElementById('card-picker-search')?.value || '').toLowerCase().trim();
-            const countEl = document.getElementById('card-picker-count');
-            if (countEl) countEl.innerText = selectedPickerIds.size;
-
             if (!listEl) return;
-            
-            let filtered = allReactionItemsForPicker.filter(item => {
-                if (!searchVal) return true;
-                
-                // 1. 제목 검색
-                const titleMatch = (item.title || '').toLowerCase().includes(searchVal);
-                
-                // 2. 금액 검색 (입력값 중 숫자만 추출하여 포함 여부 확인)
-                const queryNum = searchVal.replace(/[^\d]/g, '');
-                const amountStr = String(item.amount || 0);
-                const amountMatch = queryNum && amountStr.includes(queryNum);
-
-                // 3. 만원/천원 단위 한국어 지원 (예: '2만' -> 20000, '5천' -> 5000)
-                let unitMatch = false;
-                if (searchVal.includes('만') || searchVal.includes('천')) {
-                    let parsedVal = 0;
-                    const manMatch = searchVal.match(/^(\d+(?:\.\d+)?)\s*만/);
-                    const chunMatch = searchVal.match(/^(\d+(?:\.\d+)?)\s*천/);
-                    if (manMatch) {
-                        parsedVal = parseFloat(manMatch[1]) * 10000;
-                    } else if (chunMatch) {
-                        parsedVal = parseFloat(chunMatch[1]) * 1000;
-                    }
-                    if (parsedVal > 0 && item.amount === parsedVal) {
-                        unitMatch = true;
-                    }
-                }
-                
-                return titleMatch || amountMatch || unitMatch;
-            });
-
-            if (filtered.length === 0) {
-                listEl.innerHTML = '<div style="color:#666; font-size:12px; grid-column:1/-1; text-align:center; padding:30px 0;">검색 결과가 없습니다.</div>';
-                return;
-            }
-
-            let html = '';
-            filtered.forEach(item => {
-                let isChecked = selectedPickerIds.has(item.id);
-                html += `
-                    <label style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.05); padding:8px 10px; border-radius:8px; cursor:pointer; border:1px solid ${isChecked ? '#00e5ff' : 'transparent'};">
-                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="togglePickerItemId(${item.id}, this.checked)">
-                        <div style="flex:1; overflow:hidden;">
-                            <div style="font-size:12px; font-weight:bold; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(item.title)}</div>
-                            <div style="font-size:11px; color:#ffd700;">${(item.amount||0).toLocaleString()}원</div>
-                        </div>
-                    </label>
-                `;
-            });
-            listEl.innerHTML = html;
+            listEl.innerHTML = '<div style="color:#666; font-size:12px; grid-column:1/-1; text-align:center; padding:30px 0;">등록된 항목이 없습니다.</div>';
         }
 
         function togglePickerItemId(id, isChecked) {
@@ -3224,10 +2734,8 @@
             });
             let data = await res.json();
             if (data.status === 'success') {
-                if (typeof premiumAlert === 'function') premiumAlert(`선택하신 ${arr.length}개 리액션을 포함하여 20장 카드가 세팅되었습니다!`, "적용 완료", "success");
                 if (!gd.card_game) gd.card_game = {};
                 gd.card_game.cards = data.cards;
-                gd.card_game.selected_reaction_ids = arr;
                 renderCardGameUI();
                 closeCardPickerModal();
             }
@@ -3295,41 +2803,7 @@
             if (newData && newData.server_time) {
                 serverTimeOffset = newData.server_time - Date.now();
             }
-            if (gd && gd.reaction_mode !== newData.reaction_mode) {
-                let audio = document.getElementById('bgm-audio');
-                if (newData.reaction_mode) { 
-                    if (!audio.paused) { 
-                        audio.dataset.wasPlaying = "true"; 
-                        audio.pause(); 
-                    } else { 
-                        audio.dataset.wasPlaying = "false"; 
-                    } 
-                    try {
-                        if (ytPlayer && typeof ytPlayer.getPlayerState === 'function' && ytPlayer.getPlayerState() === 1) {
-                            ytWasPlaying = true;
-                            ytPlayer.pauseVideo();
-                        } else {
-                            ytWasPlaying = false;
-                        }
-                    } catch(ytErr) {
-                        console.error("handleStreamData ytPlayer pause error:", ytErr);
-                        ytWasPlaying = false;
-                    }
-                    showReactionToast();
-                } else { 
-                    if (audio.dataset.wasPlaying === "true") { 
-                        audio.play().catch(e=>{}); 
-                    } 
-                    try {
-                        if (ytWasPlaying && ytPlayer && typeof ytPlayer.playVideo === 'function') {
-                            ytPlayer.playVideo();
-                            ytWasPlaying = false;
-                        }
-                    } catch(ytErr) {
-                        console.error("handleStreamData ytPlayer play error:", ytErr);
-                    }
-                }
-            }
+
             // --- 신규 후원 도착 알림음 재생 ---
             if (gd && gd.pending_donations && newData.pending_donations) {
                 if (newData.pending_donations.length > gd.pending_donations.length) {
@@ -4078,88 +3552,8 @@
 
         initSSE();
         setInterval(updateControllerTimer, 100);
-        setInterval(() => {
-            if (gd && gd.slot_machine) renderSlotMachinePanel();
-        }, 1000);
 
-        // 🎰 [슬롯 스핀 대기열] 트리거 금액 후원 발생 시 대기 큐 렌더링 및 팝업 알림
-        let lastSlotSpinIds = new Set();
-        function renderSlotSpinQueue() {
-            if (!gd) return;
-            const spins = gd.pending_slot_spins || [];
-            const container = document.getElementById('slot-spin-queue-container');
-            const countEl = document.getElementById('slot-spin-queue-count');
-            if (countEl) countEl.innerText = `${spins.length}건 대기`;
 
-            // 아이폰 스타일 탭 배지 갱신
-            const tabBadge = document.getElementById('slot-tab-badge');
-            if (tabBadge) {
-                if (spins.length > 0) {
-                    tabBadge.innerText = spins.length > 99 ? '99+' : spins.length;
-                    tabBadge.style.display = 'flex';
-                } else {
-                    tabBadge.style.display = 'none';
-                }
-            }
-            if (container) {
-                if (spins.length === 0) {
-                    container.innerHTML = `<div style="color: #666; font-size: 11px; text-align: center; padding: 25px 0;">대기 중인 슬롯 스핀이 없습니다.</div>`;
-                } else {
-                    container.innerHTML = spins.map(s => `
-                        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.3); border-radius:10px; padding:10px 14px;">
-                            <div style="font-size:13px; color:#fff;"><b>${escapeHTML(s.name)}</b>님이 <span style="color:#ffd700; font-weight:900;">${(s.amount||0).toLocaleString()}원</span> 후원! [${s.time}]</div>
-                            <div style="display:flex; gap:6px;">
-                                <button onclick="doSlotSpin('${s.id}')" style="background:#ffd700; color:#000; border:none; padding:6px 14px; border-radius:8px; font-weight:900; font-size:12px; cursor:pointer;"><i class="fa-solid fa-dice"></i> 돌리기</button>
-                                <button onclick="cancelSlotSpin('${s.id}')" style="background:rgba(255,69,58,0.15); color:#ff453a; border:1px solid rgba(255,69,58,0.3); padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            }
-
-            // 신규 스핀 발생 시 팝업 알림
-            const currentIds = new Set(spins.map(s => s.id));
-            spins.forEach(s => {
-                if (!lastSlotSpinIds.has(s.id)) {
-                    premiumAlert(`${s.name}님이 ${(s.amount||0).toLocaleString()}원 후원! 슬롯머신을 돌려주세요.`, '🎰 슬롯머신 돌리기', 'success');
-                }
-            });
-            lastSlotSpinIds = currentIds;
-        }
-
-        async function spinSlotMachineNow() {
-            try {
-                const res = await fetch('/api/slot/spin_now', { method: 'POST' });
-                const data = await res.json();
-                if (data.status === 'success') {
-                    premiumAlert('슬롯머신을 돌렸습니다! 승인 대기함에서 결과를 확인해주세요.', '🎰 슬롯머신 돌리기 완료', 'success');
-                } else {
-                    premiumAlert(data.message || '슬롯머신 회전 실패', '오류', 'warning');
-                }
-            } catch(e) {
-                premiumAlert('서버 통신 실패: ' + e.message, '오류', 'warning');
-            }
-        }
-
-        async function doSlotSpin(spinId) {
-            try {
-                const res = await fetch(`/api/slot/spin/${spinId}`, { method: 'POST' });
-                const data = await res.json();
-                if (data.status !== 'success') {
-                    premiumAlert(data.message || '슬롯머신 회전 실패', '오류', 'warning');
-                }
-            } catch(e) {
-                premiumAlert('서버 통신 실패: ' + e.message, '오류', 'warning');
-            }
-        }
-
-        async function cancelSlotSpin(spinId) {
-            try {
-                await fetch(`/api/slot/spin/${spinId}/cancel`, { method: 'POST' });
-            } catch(e) {
-                console.error(e);
-            }
-        }
 
         document.addEventListener('mousedown', function(event) {
             let popover = document.getElementById('contrib-popover');
@@ -4498,480 +3892,7 @@
             }
         }
 
-        // ==========================================
-        // 🎵 커스텀 리액션 플레이어 제어 스크립트
-        // ==========================================
-        function updateUploadLabel(inputId, labelId) {
-            const input = document.getElementById(inputId);
-            const label = document.getElementById(labelId);
-            if (input && input.files && input.files[0]) {
-                label.innerText = input.files[0].name;
-                label.style.color = 'var(--accent)';
-            } else {
-                label.innerText = "파일 선택 또는 드래그";
-                label.style.color = '#999';
-            }
-        }
 
-        async function handleReactionSubmit(event) {
-            event.preventDefault();
-            const title = document.getElementById('reaction-title').value.trim();
-            const amount = document.getElementById('reaction-amount').value || 0;
-            const audioFile = document.getElementById('reaction-audio-file').files[0];
-            const imageFile = document.getElementById('reaction-image-file').files[0];
-
-            if (!title) {
-                premiumAlert("제목을 입력해주세요.", "입력 오류", "warning");
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('amount', amount);
-            if (audioFile) formData.append('audio', audioFile);
-            if (imageFile) formData.append('image', imageFile);
-
-            try {
-                const submitBtn = event.target.querySelector('button[type="submit"]');
-                const origHtml = submitBtn.innerHTML;
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 업로드 중...';
-
-                let res = await fetch('/api/reaction/add', {
-                    method: 'POST',
-                    body: formData
-                });
-                let data = await res.json();
-                
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = origHtml;
-
-                if (data.status === 'success') {
-                    premiumAlert(data.message, "성공", "success");
-                    document.getElementById('reaction-upload-form').reset();
-                    document.getElementById('reaction-audio-label').innerText = "음원 파일 선택 또는 드래그";
-                    document.getElementById('reaction-audio-label').style.color = '#999';
-                    document.getElementById('reaction-image-label').innerText = "이미지 파일 선택 또는 드래그";
-                    document.getElementById('reaction-image-label').style.color = '#999';
-                    loadReactionList();
-                } else {
-                    premiumAlert("등록 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("서버 전송 실패: " + e.message, "통신 오류", "warning");
-            }
-        }
-
-        async function loadReactionList() {
-            const container = document.getElementById('reaction-list-container');
-            if (!container) return;
-
-            try {
-                let res = await fetch('/api/reaction/list');
-                let list = await res.json();
-                
-                if (list.status === 'error') {
-                    container.innerHTML = `<div style="color: var(--danger); text-align: center; grid-column: 1 / -1; padding: 50px 0;">목록 로드 실패: ${list.message}</div>`;
-                    return;
-                }
-
-                if (list.length === 0) {
-                    container.innerHTML = `
-                        <div style="color: #666; text-align: center; grid-column: 1 / -1; padding: 80px 0;">
-                            <i class="fa-solid fa-music" style="font-size: 36px; color: #333; margin-bottom: 10px; display: block;"></i>
-                            등록된 리액션이 없습니다. 좌측 폼에서 음원과 사진을 등록해 주세요!
-                        </div>
-                    `;
-                    return;
-                }
-
-                container.innerHTML = list.map(item => {
-                    const amountText = item.amount > 0 ? `${item.amount.toLocaleString()}원` : "수동 발동 전용";
-                    const thumbnail = item.image_url ? 
-                        `<img src="${item.image_url}" loading="lazy" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: block;" alt="${escapeHTML(item.title)}">` :
-                        `<div style="width: 100%; height: 110px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
-                            <i class="fa-solid fa-image" style="font-size: 24px; color: #444;"></i>
-                            <span style="font-size: 11px; color: #666;">이미지 없음</span>
-                         </div>`;
-
-                    return `
-                        <div class="reaction-card" style="position: relative; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.2); ${!item.is_enabled ? 'opacity: 0.65; filter: grayscale(40%);' : ''}">
-                            <!-- Select Checkbox -->
-                            <input type="checkbox" class="chk-select-reaction" data-id="${item.id}" onchange="updateSelectAllState()" style="position: absolute; top: 10px; left: 10px; z-index: 10; width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: var(--accent);">
-                            <label style="position:absolute; left:34px; top:8px; z-index:10; display:flex; align-items:center; gap:4px; background:rgba(0,0,0,0.72); border:1px solid rgba(255,215,0,0.35); color:#ffd700; border-radius:999px; padding:3px 7px; font-size:10px; font-weight:900; cursor:pointer;">
-                                <input type="checkbox" class="chk-slot-reaction" data-id="${item.id}" onchange="toggleSlotReaction(${item.id}, this.checked)" style="width:12px; height:12px; margin:0; accent-color:#ffd700;"> 슬롯
-                            </label>
-                            
-                            <!-- Toggle switch -->
-                            <div style="position: absolute; top: 8px; right: 8px; z-index: 10; display: flex; align-items: center; gap: 4px; background: rgba(10,10,12,0.75); backdrop-filter: blur(4px); padding: 3px 6px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
-                                <span style="font-size: 8px; font-weight: 800; color: ${item.is_enabled ? 'var(--accent)' : '#8e8e93'};">${item.is_enabled ? 'ON' : 'OFF'}</span>
-                                <label class="mini-switch">
-                                    <input type="checkbox" ${item.is_enabled ? 'checked' : ''} onchange="toggleReactionEnabled(${item.id}, this.checked)">
-                                    <span class="mini-slider"></span>
-                                </label>
-                            </div>
-                            
-                            ${thumbnail}
-                            <div style="flex: 1; min-width: 0; margin-top: 2px;">
-                                <div style="font-weight: 800; font-size: 13.5px; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${escapeHTML(item.title)}">${escapeHTML(item.title)}</div>
-                                <div style="font-size: 11.5px; color: var(--accent); font-weight: 700; margin-top: 3px;">
-                                    <i class="fa-solid fa-coins"></i> ${amountText}
-                                </div>
-                            </div>
-                            <div style="display: flex; gap: 6px; margin-top: 5px; z-index: 2;">
-                                <button class="primary" onclick="playReaction(${item.id})" style="flex: 1; height: 30px; font-size: 11px; font-weight: bold; border-radius: 8px; justify-content: center; padding: 0;">
-                                    <i class="fa-solid fa-play"></i> 방송 송출
-                                <button class="secondary" onclick="openEditReactionModalById(${item.id})" style="width: 30px; height: 30px; border-radius: 8px; justify-content: center; padding: 0; flex-shrink: 0; background: rgba(0, 255, 204, 0.05); border-color: rgba(0, 255, 204, 0.15); color: var(--accent);">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </button>
-                                <button class="danger" onclick="deleteReactionById(${item.id})" style="width: 30px; height: 30px; border-radius: 8px; justify-content: center; padding: 0; flex-shrink: 0;">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                renderSlotMachinePanel();
-            } catch (e) {
-                container.innerHTML = `<div style="color: var(--danger); text-align: center; grid-column: 1 / -1; padding: 50px 0;">통신 실패: ${e.message}</div>`;
-            }
-        }
-
-        async function playReaction(itemId) {
-            try {
-                let res = await fetch(`/api/reaction/play/${itemId}`, { method: 'POST' });
-                let data = await res.json();
-                if (data.status === 'success') {
-                    showReactionToast();
-                } else {
-                    premiumAlert("송출 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("송출 실패: " + e.message, "통신 오류", "warning");
-            }
-        }
-
-        function openEditReactionModalById(itemId) {
-            fetch('/api/reaction/list').then(r => r.json()).then(list => {
-                let item = list.find(x => x.id === itemId);
-                if (item) {
-                    openEditReactionModal(item.id, item.title, item.amount);
-                }
-            });
-        }
-
-        function deleteReactionById(itemId) {
-            fetch('/api/reaction/list').then(r => r.json()).then(list => {
-                let item = list.find(x => x.id === itemId);
-                if (item) {
-                    deleteReaction(item.id, item.title);
-                }
-            });
-        }
-
-        async function deleteReaction(itemId, title) {
-            let confirm = await premiumConfirm(`'${title}' 리액션을 정말로 삭제하시겠습니까?\n서버 DB 및 저장된 음원/사진 파일이 완전히 삭제됩니다.`, "리액션 삭제 확인", "danger");
-            if (!confirm) return;
-
-            try {
-                let res = await fetch(`/api/reaction/delete/${itemId}`, { method: 'POST' });
-                let data = await res.json();
-                if (data.status === 'success') {
-                    premiumAlert("리액션이 삭제되었습니다.", "삭제 성공", "success");
-                    loadReactionList();
-                } else {
-                    premiumAlert("삭제 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("삭제 실패: " + e.message, "통신 오류", "warning");
-            }
-        }
-
-        // ==========================================
-        // 🎵 리액션 큐 제어 스크립트
-        // ==========================================
-        function renderReactionQueue() {
-            const queue = gd.reaction_queue || [];
-            const container = document.getElementById('reaction-queue-container');
-            const countEl = document.getElementById('reaction-queue-count');
-            
-            if (!container || !countEl) return;
-            
-            countEl.innerText = queue.length + '개';
-            
-            // 넘기기 버튼: 큐에 재생 중인 아이템이 있을 때만 표시
-            const skipBtn = document.getElementById('skip-reaction-btn');
-            if (skipBtn) skipBtn.style.display = queue.length > 0 ? 'inline-flex' : 'none';
-            
-            const skipBtnMain = document.getElementById('skip-reaction-btn-main');
-            if (skipBtnMain) {
-                if (queue.length > 0) {
-                    skipBtnMain.disabled = false;
-                    skipBtnMain.style.opacity = '1';
-                    skipBtnMain.style.cursor = 'pointer';
-                } else {
-                    skipBtnMain.disabled = true;
-                    skipBtnMain.style.opacity = '0.4';
-                    skipBtnMain.style.cursor = 'not-allowed';
-                }
-            }
-            
-            if (queue.length === 0) {
-                container.innerHTML = `
-                    <div style="color: #666; font-size: 11px; text-align: center; padding: 25px 0;">
-                        대기 중인 리액션이 없습니다.
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = queue.map((item, idx) => {
-                const isPlaying = (idx === 0);
-                const borderStyle = isPlaying ? 'border: 1px solid var(--accent); background: rgba(0, 255, 204, 0.05);' : 'border: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.15);';
-                const badge = isPlaying ? '<span style="font-size:9px; background:var(--accent); color:#000; padding:1px 4px; border-radius:4px; font-weight:bold; margin-right:5px; vertical-align:middle;">재생중</span>' : `<span style="font-size:9px; background:#444; color:#ccc; padding:1px 4px; border-radius:4px; font-weight:bold; margin-right:5px; vertical-align:middle;">대기 ${idx}</span>`;
-                
-                return `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 8px; ${borderStyle}">
-                        <div style="flex: 1; min-width: 0; font-size: 12px; color: #fff;">
-                            ${badge}<span style="font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; display:inline-block; max-width:110px; vertical-align:middle;">${escapeHTML(item.title)}</span>
-                        </div>
-                        <button onclick="removeFromQueue('${item.id}')" style="background:none; border:none; color:#ff3b30; cursor:pointer; font-size:12px; padding: 0 4px; flex-shrink: 0; display: inline-flex; align-items: center;">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        async function changeReactionVolume(val) {
-            const vol = parseFloat(val);
-            const textEl = document.getElementById('reaction-vol-text');
-            if (textEl) textEl.innerText = Math.round(vol * 100) + '%';
-            gd.reaction_volume = vol;
-            pushAPI();
-        }
-
-        async function skipCurrentReaction() {
-            try {
-                let res = await fetch('/api/reaction/next', { method: 'POST' });
-                let data = await res.json();
-                if (data.status === 'success') {
-                    premiumAlert("다음 후원으로 넘겼습니다!", "넘기기 성공", "success");
-                } else {
-                    premiumAlert("넘기기 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("통신 실패: " + e.message, "오류", "warning");
-            }
-        }
-
-        async function stopReaction() {
-            try {
-                let res = await fetch('/api/reaction/stop', { method: 'POST' });
-                let data = await res.json();
-                if (data.status === 'success') {
-                    if (gd) {
-                        gd.reaction_mode = false;
-                        gd.reaction_queue = [];
-                        applyReactionModeEffects(false);
-                        renderUI();
-                    }
-                    await fetchAPI(); // 💡 [개선] 즉시 최신 상태를 강제 갱신하여 UI 동기화
-                } else {
-                    premiumAlert("리액션 중단 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("통신 실패: " + e.message, "오류", "warning");
-            }
-        }
-
-        async function removeFromQueue(rqId) {
-            try {
-                let res = await fetch(`/api/reaction/queue/remove/${rqId}`, { method: 'POST' });
-                let data = await res.json();
-                if (data.status !== 'success') {
-                    premiumAlert("삭제 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("통신 실패: " + e.message, "오류", "warning");
-            }
-        }
-
-        async function triggerManualDonation() {
-            const name = document.getElementById('manual-donator').value.trim() || "수동후원";
-            const amountInput = document.getElementById('manual-amount');
-            const amount = parseInt(amountInput.value) || 0;
-            const messageInput = document.getElementById('manual-message');
-            const message = messageInput.value.trim() || "수동 후원 송출";
-
-            if (amount <= 0) {
-                premiumAlert("후원 금액을 입력해주세요.", "입력 오류", "warning");
-                return;
-            }
-
-            try {
-                let res = await fetch('/api/donation', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        name: name,
-                        amount: amount,
-                        message: message,
-                        tx_id: "manual_" + Date.now()
-                    })
-                });
-                let data = await res.json();
-                if (data.status === 'success') {
-                    amountInput.value = "";
-                    document.getElementById('manual-donator').value = "";
-                    messageInput.value = "";
-                } else {
-                    premiumAlert("송출 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("통신 실패: " + e.message, "오류", "warning");
-            }
-        }
-
-        async function toggleReactionEnabled(itemId, isChecked) {
-            try {
-                let res = await fetch(`/api/reaction/toggle/${itemId}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ is_enabled: isChecked })
-                });
-                let data = await res.json();
-                if (data.status === 'success') {
-                    loadReactionList();
-                } else {
-                    premiumAlert("상태 변경 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("상태 변경 실패: " + e.message, "통신 오류", "warning");
-            }
-        }
-
-        function selectAllReactions(isChecked) {
-            const checkboxes = document.querySelectorAll('.chk-select-reaction');
-            checkboxes.forEach(cb => cb.checked = isChecked);
-        }
-
-        function updateSelectAllState() {
-            const checkboxes = document.querySelectorAll('.chk-select-reaction');
-            const checkedCount = document.querySelectorAll('.chk-select-reaction:checked').length;
-            const selectAllCheckbox = document.getElementById('chk-select-all-reactions');
-            if (selectAllCheckbox) {
-                selectAllCheckbox.checked = checkboxes.length > 0 && checkboxes.length === checkedCount;
-            }
-        }
-
-        async function deleteSelectedReactions() {
-            const checkedBoxes = document.querySelectorAll('.chk-select-reaction:checked');
-            if (checkedBoxes.length === 0) {
-                premiumAlert("삭제할 리액션을 선택해주세요.", "선택 없음", "warning");
-                return;
-            }
-
-            let confirm = await premiumConfirm(`선택한 ${checkedBoxes.length}개의 리액션을 정말로 삭제하시겠습니까?\n삭제된 리액션 파일은 데이터베이스에서 영구히 삭제됩니다.`, "선택 삭제 확인", "danger");
-            if (!confirm) return;
-
-            const itemIds = Array.from(checkedBoxes).map(cb => parseInt(cb.dataset.id));
-            try {
-                let res = await fetch('/api/reaction/delete_batch', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ item_ids: itemIds })
-                });
-                let data = await res.json();
-                if (data.status === 'success') {
-                    premiumAlert(data.message, "삭제 완료", "success");
-                    const selectAllCheckbox = document.getElementById('chk-select-all-reactions');
-                    if (selectAllCheckbox) selectAllCheckbox.checked = false;
-                    loadReactionList();
-                } else {
-                    premiumAlert("삭제 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("삭제 실패: " + e.message, "통신 오류", "warning");
-            }
-        }
-
-        function openEditReactionModal(itemId, title, amount) {
-            document.getElementById('edit-reaction-id').value = itemId;
-            document.getElementById('edit-reaction-title').value = title;
-            document.getElementById('edit-reaction-amount').value = amount;
-            
-            document.getElementById('edit-reaction-audio-file').value = "";
-            document.getElementById('edit-reaction-image-file').value = "";
-            document.getElementById('edit-reaction-audio-label').innerText = "변경할 음원 선택 (선택사항)";
-            document.getElementById('edit-reaction-audio-label').style.color = '#8e8e93';
-            document.getElementById('edit-reaction-image-label').innerText = "변경할 이미지 선택 (선택사항)";
-            document.getElementById('edit-reaction-image-label').style.color = '#8e8e93';
-            
-            document.getElementById('reaction-edit-modal').style.display = 'flex';
-        }
-
-        function closeEditReactionModal() {
-            document.getElementById('reaction-edit-modal').style.display = 'none';
-        }
-
-        function updateEditUploadLabel(inputId, labelId) {
-            const input = document.getElementById(inputId);
-            const label = document.getElementById(labelId);
-            if (input && input.files && input.files[0]) {
-                label.innerText = input.files[0].name;
-                label.style.color = 'var(--accent)';
-            } else {
-                label.innerText = "변경할 파일 선택 (선택사항)";
-                label.style.color = '#8e8e93';
-            }
-        }
-
-        async function submitEditReaction(event) {
-            event.preventDefault();
-            const itemId = document.getElementById('edit-reaction-id').value;
-            const title = document.getElementById('edit-reaction-title').value.trim();
-            const amount = document.getElementById('edit-reaction-amount').value || 0;
-            const audioFile = document.getElementById('edit-reaction-audio-file').files[0];
-            const imageFile = document.getElementById('edit-reaction-image-file').files[0];
-
-            if (!title) {
-                premiumAlert("제목을 입력해주세요.", "입력 오류", "warning");
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('amount', amount);
-            if (audioFile) formData.append('audio', audioFile);
-            if (imageFile) formData.append('image', imageFile);
-
-            try {
-                const saveBtn = event.target.querySelector('button[type="submit"]');
-                const origHtml = saveBtn.innerHTML;
-                saveBtn.disabled = true;
-                saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장 중...';
-
-                let res = await fetch(`/api/reaction/edit/${itemId}`, {
-                    method: 'POST',
-                    body: formData
-                });
-                let data = await res.json();
-                
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = origHtml;
-
-                if (data.status === 'success') {
-                    premiumAlert(data.message, "수정 성공", "success");
-                    closeEditReactionModal();
-                    loadReactionList();
-                } else {
-                    premiumAlert("수정 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("서버 전송 실패: " + e.message, "통신 오류", "warning");
-            }
-        }
 
         async function copyTampermonkeyCode() {
             try {
@@ -5200,60 +4121,7 @@
         </div>
     </div>
 
-    <!-- 🎵 리액션 시그 수정 모달 -->
-    <div id="reaction-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 12, 0.6); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); z-index: 9999; align-items: center; justify-content: center; animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);">
-        <div style="background: rgba(24, 24, 27, 0.85); border: 1px solid rgba(0, 255, 204, 0.3); border-radius: 24px; width: 450px; max-width: 95%; max-height: 90%; display: flex; flex-direction: column; overflow-y: auto; box-shadow: inset 0 8px 16px rgba(0, 255, 204, 0.08), inset 0 -6px 12px rgba(0,0,0,0.5), 0 25px 50px rgba(0,0,0,0.8); position: relative; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
-            <div style="position: absolute; top: 0; left: 0; right: 0; height: 30%; background: linear-gradient(to bottom, rgba(0,255,204,0.15) 0%, rgba(0,255,204,0.01) 100%); pointer-events: none; border-radius: 24px 24px 0 0; z-index: 1;"></div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid rgba(0, 255, 204, 0.25); z-index: 2;">
-                <span style="font-weight: 800; font-size: 16px; color: var(--accent); display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-pen-to-square"></i> 리액션 시그니처 편집 센터
-                </span>
-                <button onclick="closeEditReactionModal()" style="background: transparent; border: none; color: #8e8e93; font-size: 18px; cursor: pointer; padding: 0; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; transition: all 0.2s;" onmouseover="this.style.color='#fff'; this.style.background='rgba(255,255,255,0.05)';" onmouseout="this.style.color='#8e8e93'; this.style.background='transparent';">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            
-            <form onsubmit="submitEditReaction(event)" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; z-index: 2; box-sizing: border-box;">
-                <input type="hidden" id="edit-reaction-id">
-                
-                <div class="control-group" style="flex-direction: column; align-items: flex-start; gap: 6px; width: 100%; box-sizing: border-box;">
-                    <label style="color:var(--text-muted); font-size: 12px; font-weight: bold;"><i class="fa-solid fa-signature"></i> 리액션 제목</label>
-                    <input type="text" id="edit-reaction-title" placeholder="예: 코카인, 제로투" style="width: 100%; height: 38px; box-sizing: border-box; background: rgba(0,0,0,0.4); border: 1px solid rgba(0, 255, 204, 0.2); border-radius: 8px; color: #fff; padding: 0 12px; font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" required>
-                </div>
-                
-                <div class="control-group" style="flex-direction: column; align-items: flex-start; gap: 6px; width: 100%; box-sizing: border-box;">
-                    <label style="color:var(--text-muted); font-size: 12px; font-weight: bold;"><i class="fa-solid fa-coins"></i> 자동 발동 후원금액 (원)</label>
-                    <input type="number" id="edit-reaction-amount" placeholder="예: 30000" style="width: 100%; height: 38px; box-sizing: border-box; background: rgba(0,0,0,0.4); border: 1px solid rgba(0, 255, 204, 0.2); border-radius: 8px; color: #fff; padding: 0 12px; font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'">
-                </div>
-                
-                <div class="control-group" style="flex-direction: column; align-items: flex-start; gap: 6px; width: 100%; box-sizing: border-box;">
-                    <label style="color:var(--text-muted); font-size: 12px; font-weight: bold;"><i class="fa-solid fa-file-audio"></i> 음원 파일 교체 (MP3, WAV)</label>
-                    <div style="position: relative; width: 100%; border: 1px dashed rgba(0, 255, 204, 0.3); border-radius: 8px; padding: 12px; background: rgba(0, 0, 0, 0.25); text-align: center; cursor: pointer; box-sizing: border-box;" onclick="document.getElementById('edit-reaction-audio-file').click()" onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='rgba(0, 255, 204, 0.3)';">
-                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 16px; color: var(--accent); margin-bottom: 4px; display: block;"></i>
-                        <span id="edit-reaction-audio-label" style="font-size: 11px; color: #8e8e93; word-break: break-all;">변경할 음원 선택 (선택사항)</span>
-                        <input type="file" id="edit-reaction-audio-file" accept="audio/*" style="display: none;" onchange="updateEditUploadLabel('edit-reaction-audio-file', 'edit-reaction-audio-label')">
-                    </div>
-                </div>
-                
-                <div class="control-group" style="flex-direction: column; align-items: flex-start; gap: 6px; width: 100%; box-sizing: border-box;">
-                    <label style="color:var(--text-muted); font-size: 12px; font-weight: bold;"><i class="fa-solid fa-image"></i> 이미지 파일 교체 (GIF, PNG, JPG)</label>
-                    <div style="position: relative; width: 100%; border: 1px dashed rgba(0, 255, 204, 0.3); border-radius: 8px; padding: 12px; background: rgba(0, 0, 0, 0.25); text-align: center; cursor: pointer; box-sizing: border-box;" onclick="document.getElementById('edit-reaction-image-file').click()" onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='rgba(0, 255, 204, 0.3)';">
-                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 16px; color: #ff0055; margin-bottom: 4px; display: block;"></i>
-                        <span id="edit-reaction-image-label" style="font-size: 11px; color: #8e8e93; word-break: break-all;">변경할 이미지 선택 (선택사항)</span>
-                        <input type="file" id="edit-reaction-image-file" accept="image/*" style="display: none;" onchange="updateEditUploadLabel('edit-reaction-image-file', 'edit-reaction-image-label')">
-                    </div>
-                </div>
-                
-                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
-                    <button type="button" onclick="closeEditReactionModal()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;">취소</button>
-                    <button type="submit" style="background: var(--accent); border: 1px solid var(--accent); color: #000; padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-check"></i> 저장하기
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+
 
     <div id="premium-dialog-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 12, 0.6); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); z-index: 100000; align-items: center; justify-content: center; animation: fadeIn 0.2s ease;">
         <div style="background: rgba(24, 24, 27, 0.85); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px; width: 420px; max-width: 90%; padding: 25px; display: flex; flex-direction: column; gap: 18px; box-shadow: inset 0 8px 16px rgba(255,255,255,0.06), inset 0 -6px 12px rgba(0,0,0,0.4), 0 20px 45px rgba(0,0,0,0.8); position: relative; animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);">

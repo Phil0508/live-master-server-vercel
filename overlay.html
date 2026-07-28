@@ -505,91 +505,7 @@
         @keyframes explodeTimer { 0% { transform: scale(1.3); opacity: 1; filter: drop-shadow(0 0 20px #ff0000); color: #ff0000; background: rgba(255,0,0,0.5); } 20% { transform: scale(1.6); opacity: 1; filter: drop-shadow(0 0 50px #ff5500); color: #fff; background: #ff0000; border-color: #fff; } 100% { transform: scale(0); opacity: 0; filter: drop-shadow(0 0 100px #ffff00); } }
         .timer-explode { animation: explodeTimer 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
         .score-pop { position: absolute; right: -20px; top: -15px; color: var(--theme-neon); font-weight: 900; font-size: 22px; text-shadow: 0 0 10px var(--theme-neon); animation: fu 1s ease-out forwards; z-index:100; pointer-events:none; } @keyframes fu { 0%{opacity:1; transform:translateY(0) scale(1)} 50%{transform:translateY(-15px) scale(1.2)} 100%{opacity:0; transform:translateY(-30px) scale(1)} }
-        
-        .slot-machine-overlay {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle at center, rgba(255, 0, 85, 0.25), rgba(0, 0, 0, 0.72));
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.25s ease, visibility 0.25s ease;
-            z-index: 100020;
-            pointer-events: none;
-        }
-        .slot-machine-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-        .slot-machine-box {
-            min-width: 720px;
-            padding: 34px 42px;
-            border-radius: 24px;
-            border: 4px solid #ffd700;
-            background: linear-gradient(180deg, rgba(24, 20, 32, 0.98), rgba(8, 8, 14, 0.98));
-            box-shadow: 0 0 40px rgba(255, 215, 0, 0.65), inset 0 0 28px rgba(255, 0, 85, 0.28);
-            text-align: center;
-        }
-        .slot-title {
-            font-size: 34px;
-            font-weight: 1000;
-            color: #fff;
-            margin-bottom: 22px;
-            text-shadow: 0 0 18px #ff0055;
-            letter-spacing: 2px;
-        }
-        .slot-reels {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 18px;
-            margin-bottom: 20px;
-        }
-        .slot-reel {
-            height: 118px;
-            position: relative;
-            border-radius: 18px;
-            border: 2px solid rgba(255, 255, 255, 0.18);
-            background: rgba(255, 255, 255, 0.08);
-            overflow: hidden;
-        }
-        /* 세로 스트립: 여러 이미지를 위아래로 나열하고 translateY로 스크롤 */
-        .slot-strip {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        .slot-strip-item {
-            height: 118px;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .slot-strip-item img {
-            width: 88%;
-            height: 88%;
-            object-fit: contain;
-        }
-        .slot-reel.spinning .slot-strip {
-            animation: slotScrollUp 0.35s linear infinite;
-        }
-        @keyframes slotScrollUp {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-118px); }
-        }
-        .slot-result {
-            font-size: 28px;
-            font-weight: 1000;
-            color: #00ffcc;
-            text-shadow: 0 0 16px rgba(0, 255, 204, 0.8);
-            min-height: 38px;
-        }
+
         
         .center-popup-content { background: rgba(0, 0, 0, 0.9); border: 4px solid var(--text-secondary); border-radius: 50px; padding: 15px 60px; font-size: 36px; font-weight: 900; color: white; white-space: nowrap; box-shadow: 0 15px 35px rgba(0,0,0,0.8), inset 0 0 25px var(--text-secondary); display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.4s; transform: translateY(30px) scale(0.8); } 
         .center-popup-content.show { opacity: 1; transform: translateY(0) scale(1); }
@@ -602,8 +518,6 @@
         /* 대결 컨테이너: 기본 숨김, .match-visible 클래스로만 표시 */
         #match-container { transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out; }
         /* 리액션 모드: 모든 위젯 강제 숨김 */
-        body.reaction-mode #ui-layer,
-        body.reaction-mode #match-container { opacity: 0 !important; visibility: hidden !important; }
 
         /* 🎬 위젯 시네마틱 바깥 퍼짐 (Spread Out) 이펙트 */
         .widget-container {
@@ -654,11 +568,7 @@
             transform: translateY(-250px) scale(0.9) !important;
             opacity: 0.15 !important;
         }
-        /* 🚫 [리액션 모드] 수동 리액션 재생 중에는 카드위젯(20장/5장 모드 모두) 완전히 숨김 */
-        body.reaction-mode #card-game-container {
-            opacity: 0 !important;
-            visibility: hidden !important;
-        }
+
         /* 🏆 [Finalized 모드] 최종 5장만 점수판 바로 아래 작게 표시되는 모드 */
         #card-game-container.cg-finalized {
             width: 694px;
@@ -939,35 +849,7 @@
         .donation-amount { font-size: 70px; font-weight: 900; color: #FFD700; text-shadow: 0 0 20px #FFD700, 0 0 40px #ffaa00; margin: 15px 0; letter-spacing: -2px; }
         .donation-message { background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 12px; padding: 15px 35px; font-size: 28px; font-weight: 700; color: #ffffff; max-width: 700px; word-break: keep-all; overflow-wrap: break-word; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
 
-        /* 🎵 리액션 음원/사진 송출 화면 오버레이 스타일 */
-        .reaction-screen-overlay {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.8);
-            width: 700px;
-            background: transparent;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 100010;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        .reaction-screen-overlay.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translate(-50%, -50%) scale(1);
-        }
-        .reaction-screen-overlay.show.minimize {
-            left: 240px;
-            top: 600px;
-            transform: translate(-50%, -50%) scale(0.6);
-        }
+
         /* 🎯 목표치 달성 1.5초 기여도 위젯 (하단 ↔ 화면 정중앙 이동 60fps 대칭 연출 스타일) */
         #gauge-container {
             transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), filter 0.55s ease !important;
@@ -1012,41 +894,7 @@
             100% { transform: translateX(-50%) scale(1.1); filter: drop-shadow(0 0 25px #ff9800); }
         }
 
-        .reaction-screen-overlay img {
-            max-width: 100%;
-            max-height: 500px;
-            object-fit: contain;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-        }
-        .reaction-text-donator {
-            margin-top: 20px;
-            font-size: 48px;
-            font-weight: 900;
-            color: #ffffff;
-            text-shadow: 2.5px 2.5px 0 #000, -2.5px 2.5px 0 #000, 2.5px -2.5px 0 #000, -2.5px -2.5px 0 #000, 0 4px 15px rgba(0,0,0,0.9);
-            font-family: 'Pretendard', sans-serif;
-            text-align: center;
-            letter-spacing: -0.5px;
-        }
-        .reaction-text-message {
-            margin-top: 15px;
-            font-size: 26px;
-            font-weight: 700;
-            color: #ffffff;
-            background: rgba(10, 10, 15, 0.85);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            padding: 12px 30px;
-            border-radius: 16px;
-            text-shadow: 1.5px 1.5px 3px rgba(0,0,0,0.8);
-            font-family: 'Pretendard', sans-serif;
-            text-align: center;
-            max-width: 520px;
-            word-break: break-all;
-            line-height: 1.45;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
-            display: inline-block;
-        }
+
         @keyframes pulse {
             0% { transform: translateX(-50%) scale(1); }
             50% { transform: translateX(-50%) scale(1.03); }
@@ -1140,13 +988,7 @@
     
 
     
-    <!-- 🎵 리액션 음원/사진 송출 전광판 및 오디오 객체 -->
-    <div id="reaction-screen-overlay" class="reaction-screen-overlay">
-        <img id="reaction-screen-image" crossorigin="anonymous" src="" alt="Reaction Image">
-        <div id="reaction-donator-info" class="reaction-text-donator"></div>
-        <div id="reaction-message-info" class="reaction-text-message"></div>
-    </div>
-    <audio id="reaction-audio" style="display:none;"></audio>
+
     
     <div id="audi-overlay" class="audi-layer">
         <div class="audi-container left">
@@ -1340,7 +1182,7 @@
         // ==========================================
         let previousScores = {}; let previousContribs = {}; let prevMatchScores = {}; let flashed = false; let lastTickerState = ""; let lastUpTriggerTime = 0; let upMessageTimer = null; let lastTakeoverTime = 0;
         
-        let lastReactionEnterAlertTime = 0;
+
         let lastPopupTime = 0;    
         let lastDonationTime = 0; 
         const shownDonationPopupIds = new Set(); // 💡 [버그 수정] 동일 후원 ID로 팝업이 중복 표시되는 것을 방지
@@ -1563,11 +1405,9 @@
             // 🏆 finalized 모드면 final_card_ids에 해당하는 카드만 표시 (값이 비어있을 때는 아무것도 안 보여줌으로써 20장 압착 현상 방지)
             let cards = allCards;
             if (cg.finalized) {
-                const reactionIdSet = new Set(Array.isArray(cg.final_reaction_ids) ? cg.final_reaction_ids.map(String) : []);
                 const idSet = new Set(Array.isArray(cg.final_card_ids) ? cg.final_card_ids.map(String) : []);
                 cards = allCards.filter(c => {
-                    const reactionKey = c.reaction_id !== undefined && c.reaction_id !== null ? String(c.reaction_id) : null;
-                    return (reactionKey && reactionIdSet.has(reactionKey)) || idSet.has(String(c.id));
+                    return idSet.has(String(c.id));
                 });
             }
 
@@ -1588,30 +1428,30 @@
                 cgClearCelebrated = false;
             }
 
-            // 💡 [이미지 재로딩 버그 수정 + 위치 이동 애니메이션] reaction_id 기준으로 기존 DOM을 재사용하고,
+            // 💡 [이미지 재로딩 버그 수정 + 위치 이동 애니메이션] id 기준으로 기존 DOM을 재사용하고,
             // 카드 순서가 바뀌면 FLIP 기법으로 부드럽게 자리 이동시킵니다. (이미지는 절대 재생성하지 않음)
             const existingNodes = {};
             Array.from(gridEl.children).forEach(node => {
-                const rid = node.dataset.reactionId;
-                if (rid !== undefined) existingNodes[rid] = node;
+                const cid = node.dataset.cardId;
+                if (cid !== undefined) existingNodes[cid] = node;
             });
 
             // FLIP 애니메이션을 위해 기존 위치 기록
             const firstRects = {};
-            Object.keys(existingNodes).forEach(rid => {
-                firstRects[rid] = existingNodes[rid].getBoundingClientRect();
+            Object.keys(existingNodes).forEach(cid => {
+                firstRects[cid] = existingNodes[cid].getBoundingClientRect();
             });
 
             cards.forEach((c, idx) => {
                 let isFlipped = c.is_flipped || (c.step > 0);
                 let isPassed = c.is_passed || (c.step === 2);
-                const ridKey = String(c.reaction_id !== undefined ? c.reaction_id : c.id);
+                const cidKey = String(c.id);
 
-                let slotNode = existingNodes[ridKey];
+                let slotNode = existingNodes[cidKey];
                 if (!slotNode) {
                     slotNode = document.createElement('div');
                     slotNode.className = 'cg-card-slot';
-                    slotNode.dataset.reactionId = ridKey;
+                    slotNode.dataset.cardId = cidKey;
                     slotNode.innerHTML = `
                         <div class="cg-card-inner">
                             <div class="cg-card-face cg-card-back">
@@ -1657,20 +1497,20 @@
             });
 
             // 더 이상 존재하지 않는 카드 DOM 제거 (finalized 모드에서 숨겨진 카드 등)
-            const currentRids = new Set(cards.map(c => String(c.reaction_id !== undefined ? c.reaction_id : c.id)));
-            Object.keys(existingNodes).forEach(rid => {
-                if (!currentRids.has(rid)) {
-                    existingNodes[rid].remove();
+            const currentCids = new Set(cards.map(c => String(c.id)));
+            Object.keys(existingNodes).forEach(cid => {
+                if (!currentCids.has(cid)) {
+                    existingNodes[cid].remove();
                 }
             });
 
             // FLIP 애니메이션 실행: 새 위치와 이전 위치 차이만큼 역이동한 뒤 transition으로 되돌림
             requestAnimationFrame(() => {
                 cards.forEach((c) => {
-                    const ridKey = String(c.reaction_id !== undefined ? c.reaction_id : c.id);
-                    const node = gridEl.querySelector(`[data-reaction-id="${ridKey}"]`);
+                    const cidKey = String(c.id);
+                    const node = gridEl.querySelector(`[data-card-id="${cidKey}"]`);
                     if (!node) return;
-                    const first = firstRects[ridKey];
+                    const first = firstRects[cidKey];
                     if (!first) return; // 새로 생성된 카드는 애니메이션 불필요
                     const last = node.getBoundingClientRect();
                     const dx = first.left - last.left;
@@ -1765,11 +1605,7 @@
                 document.documentElement.style.setProperty('--neon-speed', `${neonSpeedSec}s`);
                 document.documentElement.style.setProperty('--audi-speed', `${neonSpeedSec * 0.56}s`);
 
-                // 💡 [실시간 리액션 볼륨 연동]
-                if (d.reaction_volume !== undefined) {
-                    const audio = document.getElementById('reaction-audio');
-                    if (audio) audio.volume = d.reaction_volume;
-                }
+
 
                 // 💡 [번외 게임 & 퇴근게임 활성화 상태 동적 체킹 및 메인 랭킹판 슬라이딩 치우기 트리거]
                 let extraActive = Boolean(d.extra_game_active || d.off_work_active || d.offwork_active || d.home_race_active);
@@ -1869,7 +1705,7 @@
                 }
 
                 // 💡 아우디 라이트
-                let shouldAudiShow = globalAudi && d.reaction_mode;
+                let shouldAudiShow = globalAudi;
                 let audiEl = document.getElementById('audi-overlay');
                 
                 if (shouldAudiShow) {
@@ -1886,7 +1722,7 @@
                 }
 
                 // 네온 라이트
-                let shouldNeonShow = (globalNeon !== 'OFF') && d.reaction_mode;
+                let shouldNeonShow = (globalNeon !== 'OFF');
                 let neonEl = document.getElementById('neon-overlay');
                 if (neonEl) {
                     neonEl.className = 'neon-layer'; 
@@ -1904,7 +1740,6 @@
                     }
                 }
 
-                if (d.reaction_mode) document.body.classList.add('reaction-mode'); else document.body.classList.remove('reaction-mode');
                 let md = d.match_data || {active: false, players: [], fire_effect: false}; if (md.active && md.fire_effect) document.body.classList.add('match-fire-on'); else document.body.classList.remove('match-fire-on');
 
                 const accBox = document.getElementById('account-box-ui');
@@ -1937,23 +1772,10 @@
                 // 🎁 투네이션 팝업
                 if (d.latest_donation && d.latest_donation.time !== lastDonationTime && d.popup_enabled) { 
                     lastDonationTime = d.latest_donation.time;
-                    
-                    // 리액션 대기열에 포함된 후원인지 검사 (고유 id 우선 매칭, 없으면 이름+금액 폴백)
                     const donId = d.latest_donation.id;
-                    const hasReaction = d.reaction_queue && d.reaction_queue.some(item => {
-                        if (donId && item.donation_id) return item.donation_id === donId;
-                        return item.donator === d.latest_donation.name && 
-                               item.amount === d.latest_donation.amount;
-                    });
-                    
-                    if (hasReaction) {
-                        console.log("Donation has matching reaction. Delaying popup to playReaction.");
-                    } else if (!donId || !shownDonationPopupIds.has(donId)) {
-                        // 일반 후원(리액션 없는 후원)인 경우 즉시 노출 (동일 id로 중복 노출 방지)
+                    if (!donId || !shownDonationPopupIds.has(donId)) {
                         if (donId) shownDonationPopupIds.add(donId);
-                        showToonPopup(d.latest_donation, () => {
-                            checkReactionQueue();
-                        });
+                        showToonPopup(d.latest_donation, () => {});
                     }
                 }
 
@@ -2169,12 +1991,12 @@
                     }
                 }
 
-                let curTick = d.ticker_text + "_" + d.ticker_speed + "_" + d.ticker_enabled + "_" + d.reaction_mode;
+                let curTick = d.ticker_text + "_" + d.ticker_speed + "_" + d.ticker_enabled;
                 if (lastTickerState !== curTick) { 
                     lastTickerState = curTick; 
                     ['ticker_top', 'ticker_bottom'].forEach(id => { 
                         let c = document.getElementById(id + '-container'); 
-                        if (d.ticker_enabled && d.reaction_mode) { 
+                        if (d.ticker_enabled) { 
                             c.style.opacity = '1'; 
                             c.style.visibility = 'visible';
                             let t = document.getElementById(id + '-text'); 
@@ -2197,7 +2019,7 @@
                     handleRouletteState(d);
                 }
                 
-                checkReactionQueue();
+                
             } catch(e) { console.error("⚠️ handleData Error:", e); }
         }
 
@@ -2754,415 +2576,7 @@
         // 초기화
         RouletteWidget.init();
 
-        // 🎵 리액션 음원/사진 즉시 재생 기능 및 타이머
-        let reactionTimeout = null;
-        let reactionMinimizeTimeout = null;
-        let reactionImgClearTimeout = null;
-        let audioSafetyTimeout = null;
-        let currentPlayingId = null;
-        let originalSavedNeon = null; // 💡 [추가] 리액션 시작 전 기존 네온 조명 상태 임시 보관함
 
-
-        window.isReactionCurrentlyActive = false;
-
-        function checkReactionQueue() {
-            if (isDonationPopupShowing) return;
-            if (window.isReactionCurrentlyActive) return;
-            
-            // 💡 [개조] 리액션 모드(reaction_mode)가 꺼져있거나 대기열이 비었으면 리액션 화면을 즉시 내립니다.
-            if (!globalData || !globalData.reaction_mode || !globalData.reaction_queue || globalData.reaction_queue.length === 0) {
-                if (currentPlayingId !== null) {
-                    console.log('checkReactionQueue: Reaction mode OFF or queue empty. Stopping visuals.');
-                    currentPlayingId = null;
-                    stopReactionVisuals();
-                }
-                return;
-            }
-            
-            const firstItem = globalData.reaction_queue[0];
-            if (currentPlayingId !== firstItem.id) {
-                currentPlayingId = firstItem.id;
-                playReaction(firstItem);
-            }
-        }
-
-        function stopReactionVisuals() {
-            const overlay = document.getElementById('reaction-screen-overlay');
-            const img = document.getElementById('reaction-screen-image');
-            const audio = document.getElementById('reaction-audio');
-
-            // 💡 [추가] 리액션 종료 시 오리지널 네온 조명 상태로 원복
-            if (originalSavedNeon !== null) {
-                globalNeon = originalSavedNeon;
-                originalSavedNeon = null;
-                
-                // 기존 네온 레이어 클래스 원복 적용
-                const neonEl = document.getElementById('neon-overlay');
-                if (neonEl) {
-                    neonEl.classList.remove('neon-chroma-wave');
-                    
-                    // 기존 네온 상태 적용 (applyNeonState 헬퍼 함수가 있다면 호출하고, 
-                    // 없는 경우 기존 네온 속성에 맞추어 클래스 재배열)
-                    if (typeof applyNeonState === 'function') {
-                        applyNeonState(globalNeon);
-                    } else {
-                        neonEl.classList.remove('neon-single', 'neon-rainbow');
-                        if (globalNeon === 'RAINBOW') {
-                            neonEl.classList.add('neon-rainbow');
-                        } else if (globalNeon !== 'OFF') {
-                            neonEl.classList.add('neon-single');
-                            neonEl.style.setProperty('--glow-color', globalNeon);
-                        }
-                    }
-                }
-            }
-
-            if (overlay) {
-                overlay.classList.remove('show');
-                overlay.classList.remove('minimize');
-            }
-            if (audio) {
-                audio.onended = null;
-                audio.onerror = null;
-                audio.onloadedmetadata = null;
-                audio.pause();
-                audio.src = '';
-            }
-            if (reactionTimeout) {
-                clearTimeout(reactionTimeout);
-                reactionTimeout = null;
-            }
-            if (reactionMinimizeTimeout) {
-                clearTimeout(reactionMinimizeTimeout);
-                reactionMinimizeTimeout = null;
-            }
-            if (audioSafetyTimeout) {
-                clearTimeout(audioSafetyTimeout);
-                audioSafetyTimeout = null;
-            }
-            
-            // 💡 [추가] 리액션 취소 시 투네이션 팝업 강제 종료 및 타이머 제거
-            const toonPopup = document.getElementById('toon-popup');
-            if (toonPopup) toonPopup.classList.remove('show');
-            if (toonPopupTimer) {
-                clearTimeout(toonPopupTimer);
-                toonPopupTimer = null;
-            }
-            isDonationPopupShowing = false;
-            
-            // 이미지 초기화를 취소 가능한 타이머로 변경 (다음 playReaction에서 취소 가능)
-            if (reactionImgClearTimeout) clearTimeout(reactionImgClearTimeout);
-            reactionImgClearTimeout = setTimeout(() => { if (img) img.src = ""; }, 500);
-            
-            window.isReactionCurrentlyActive = false;
-        }
-
-        // 🎨 [지능형 색감 분석] RGB ➡️ HSL ➡️ RGB 변환을 활용한 채도/명도 증폭 네온 컬러 생성 함수
-        function rgbToHsl(r, g, b) {
-            r /= 255; g /= 255; b /= 255;
-            const max = Math.max(r, g, b), min = Math.min(r, g, b);
-            let h, s, l = (max + min) / 2;
-
-            if (max === min) {
-                h = s = 0; // achromatic
-            } else {
-                const d = max - min;
-                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-                switch (max) {
-                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                    case g: h = (b - r) / d + 2; break;
-                    case b: h = (r - g) / d + 4; break;
-                }
-                h /= 6;
-            }
-            return [h * 360, s * 100, l * 100];
-        }
-
-        function hslToRgb(h, s, l) {
-            h /= 360; s /= 100; l /= 100;
-            let r, g, b;
-
-            if (s === 0) {
-                r = g = b = l; // achromatic
-            } else {
-                const hue2rgb = (p, q, t) => {
-                    if (t < 0) t += 1;
-                    if (t > 1) t -= 1;
-                    if (t < 1/6) return p + (q - p) * 6 * t;
-                    if (t < 1/2) return q;
-                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-                    return p;
-                };
-                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-                const p = 2 * l - q;
-                r = hue2rgb(p, q, h + 1/3);
-                g = hue2rgb(p, q, h);
-                b = hue2rgb(p, q, h - 1/3);
-            }
-            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-        }
-
-        function getDominantNeonColor(imgEl) {
-            try {
-                // 1. 메모리 캔버스 생성 (1x1 크기로 극단 축소하여 평균 색감 추출)
-                const canvas = document.createElement('canvas');
-                canvas.width = 1;
-                canvas.height = 1;
-                const ctx = canvas.getContext('2d');
-                if (!ctx) return '#ff0055'; // 실패 시 기본 핑크네온
-
-                // 2. 이미지 드로잉 및 픽셀 RGB 추출
-                ctx.drawImage(imgEl, 0, 0, 1, 1);
-                const pixel = ctx.getImageData(0, 0, 1, 1).data;
-                
-                // 투명도가 있는 이미지라면 알파값 보정
-                if (pixel[3] < 30) return '#ff0055'; 
-
-                let [h, s, l] = rgbToHsl(pixel[0], pixel[1], pixel[2]);
-
-                // 3. 💡 [네온 보정 알고리즘] 회색/어두운 조명을 방지하고 화려한 네온이 뜨도록 강제 증폭
-                s = Math.max(85, s); // 채도는 최소 85% 이상 (원색에 가깝게)
-                l = 50;              // 명도는 50%로 최적 고정 (가장 눈부시게 빛나는 휘도)
-
-                const [r, g, b] = hslToRgb(h, s, l);
-
-                // 4. HEX 문자열 변환 및 반환
-                const toHex = c => c.toString(16).padStart(2, '0');
-                return '#' + toHex(r) + toHex(g) + toHex(b);
-            } catch (err) {
-                console.error("Dominant color extraction failed:", err);
-                return '#ff0055';
-            }
-        }
-
-        function playReaction(data) {
-            console.log('Playing reaction:', data);
-            window.isReactionCurrentlyActive = true;
-            
-            const overlay = document.getElementById('reaction-screen-overlay');
-            const img = document.getElementById('reaction-screen-image');
-            const donatorEl = document.getElementById('reaction-donator-info');
-            const messageEl = document.getElementById('reaction-message-info');
-            const audio = document.getElementById('reaction-audio');
-            
-            if (!overlay || !img || !audio) return;
-            
-            // 1. 기존 진행 중인 리액션 및 오디오 강제 중지
-            isEndingReaction = false; // 새로운 리액션 시작 시 락 리셋
-            img.onload = null; // 이전 로드 핸들러 초기화
-            if (reactionTimeout) clearTimeout(reactionTimeout);
-            if (reactionMinimizeTimeout) clearTimeout(reactionMinimizeTimeout);
-            // ⚠️ 이전 stopReactionVisuals의 지연된 img.src="" 타이머를 반드시 취소!
-            // 안 하면 500ms 후에 새 리액션의 사진이 지워져 버립니다.
-            if (reactionImgClearTimeout) { clearTimeout(reactionImgClearTimeout); reactionImgClearTimeout = null; }
-            if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-            audio.onended = null;
-            audio.onerror = null;
-            audio.onloadedmetadata = null;
-            audio.pause();
-            audio.src = '';
-            
-            // 💡 [개조] 리액션 재생 전 후원 팝업을 먼저 보여줍니다. (단, 후원과 무관한 즉시 슬롯 스핀은 팝업 생략)
-            const startReactionFlow = () => {
-                // 팝업이 끝나고 난 뒤 실제 리액션 시작!
-                const proceedToReaction = () => {
-                    // 💡 [추가] 리액션 시작 직전 원래 켜져 있던 네온 상태 백업
-                    if (originalSavedNeon === null) {
-                        originalSavedNeon = globalNeon;
-                    }
-
-                    // 2. 새로운 리액션 데이터 입력 (후원자명 + 금액 / 메시지)
-                    let donatorName = data.donator;
-                    if (!donatorName || donatorName === '익명' || data.slot_machine) {
-                        donatorName = data.slot_machine ? '🎰 슬롯머신' : (data.donator || '슬롯머신');
-                    }
-                    let donationAmount = data.amount ? formatNum(data.amount) + '원' : '';
-                    
-                    // 💡 [추가] 정적 싱글 네온 조명 활성화 (렉 방지용 최적화)
-                    const neonEl = document.getElementById('neon-overlay');
-                    if (neonEl) {
-                        neonEl.classList.remove('neon-rainbow');
-                        neonEl.classList.add('neon-single');
-                    }
-                    
-                    if (donatorEl) {
-                        donatorEl.innerText = donatorName + (donationAmount ? ' · ' + donationAmount : '');
-                    }
-                    let msgText = data.message || '';
-                    if (messageEl) {
-                        if (msgText && msgText !== '수동 후원 송출') {
-                            messageEl.innerText = msgText;
-                            messageEl.style.display = 'block';
-                        } else {
-                            messageEl.innerText = '';
-                            messageEl.style.display = 'none';
-                        }
-                    }
-                    
-                    if (data.image_url) {
-                        img.src = data.image_url;
-                        img.style.display = 'block';
-                        
-                        // 💡 [지능형 색감 분석] 사진 로드 성공 시 색감 분석 리스너 트리거
-                        img.onload = function() {
-                            try {
-                                const extractedColor = getDominantNeonColor(img);
-                                console.log("🎨 [지능형 색감 분석] 분석된 네온 색상 코드:", extractedColor);
-                                
-                                globalNeon = extractedColor;
-                                const neonEl = document.getElementById('neon-overlay');
-                                if (neonEl) {
-                                    neonEl.classList.remove('neon-rainbow');
-                                    neonEl.classList.add('neon-single');
-                                    neonEl.style.setProperty('--glow-color', extractedColor);
-                                }
-                                
-                                // 서버에도 이펙트 상태를 푸시하여 조종실 화면 동기화
-                                fetch(`/api/streamdeck/neon?color=${encodeURIComponent(extractedColor.replace('#', ''))}`)
-                                    .catch(e => console.error("Server sync error for neon color:", e));
-                            } catch (loadErr) {
-                                console.warn("Neon extraction load error:", loadErr);
-                            }
-                        };
-                    } else {
-                        img.src = '';
-                        img.style.display = 'none';
-                    }
-                    
-                    // 3. 카드 노출 (페이드인 & 스케일 바운스) - 중앙에 크게
-                    overlay.classList.remove('minimize');
-                    overlay.classList.add('show');
-                    
-                    // 4. 2.5초 후 좌측으로 부드럽게 이동/축소 (BJ 가림 방지)
-                    reactionMinimizeTimeout = setTimeout(() => {
-                        overlay.classList.add('minimize');
-                    }, 2500);
-                    
-                    // 5. 음원 재생 및 종료 콜백 설정
-                    if (data.audio_url) {
-                        // Add a cache buster parameter to bypass OBS/browser caching of previously broken streams
-                        audio.src = data.audio_url + '?t=' + (data.id || Date.now());
-                        
-                        audio.onended = function() {
-                            console.log('Audio play ended naturally.');
-                            if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-                            onReactionEnded();
-                        };
-                        
-                        audio.onerror = function(err) {
-                            console.error('Audio error event fired:', err);
-                            if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-                            onReactionEnded();
-                        };
-                        
-                        const setupSafetyTimer = () => {
-                            if (audioSafetyTimeout) clearTimeout(audioSafetyTimeout);
-                            const duration = audio.duration;
-                            const safetyDuration = (isFinite(duration) && duration > 0) ? (duration * 1000 + 2000) : 30000;
-                            console.log(`Setting audio safety timeout for ${safetyDuration}ms (audio duration: ${duration}s)`);
-                            audioSafetyTimeout = setTimeout(() => {
-                                console.warn('Audio safety timeout reached! Forcing onReactionEnded.');
-                                onReactionEnded();
-                            }, safetyDuration);
-                        };
-
-                        if (audio.readyState >= 1) { // HAVE_METADATA or higher
-                            setupSafetyTimer();
-                        } else {
-                            audio.onloadedmetadata = setupSafetyTimer;
-                        }
-                        
-                        audio.play().then(() => {
-                            console.log('Audio playback started successfully.');
-                        }).catch(err => {
-                            // ❌ 재생 실패 (autoplay 차단 등)
-                            console.error('Audio autoplay blocked. Local cleanup only:', err);
-                            audio.onended = null;
-                            audio.onerror = null;
-                            audio.onloadedmetadata = null;
-                            if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-                            // 로컬 화면만 5초 후 닫기
-                            reactionTimeout = setTimeout(() => {
-                                stopReactionVisuals();
-                            }, 5000);
-                        });
-                    } else {
-                        // 음원 파일이 없는 경우, 5초 동안만 이미지를 보여주고 종료
-                        reactionTimeout = setTimeout(() => {
-                            onReactionEnded();
-                        }, 5000);
-                    }
-                };
-
-        // 🔓 브라우저 소리 잠금 전역 자동 해제 헬퍼
-        function unlockAudioContext() {
-            const banner = document.getElementById('autoplay-warning-banner');
-            if (banner) banner.style.display = 'none';
-            const audio = document.getElementById('reaction-audio');
-            if (audio) {
-                audio.play().then(() => audio.pause()).catch(() => {});
-            }
-        }
-        window.addEventListener('click', unlockAudioContext, { once: true });
-        window.addEventListener('keydown', unlockAudioContext, { once: true });
-        window.addEventListener('touchstart', unlockAudioContext, { once: true });
-
-                // 슬롯머신 후원인 경우 스핀 연출 후 리액션 재생 진행
-                if (data.slot_machine) {
-                    runSlotMachineAnimation(data, proceedToReaction);
-                } else {
-                    proceedToReaction();
-                }
-            };
-
-            // 💡 후원과 무관한 즉시 슬롯 스핀(skip_donation_popup)인 경우 후원 팝업 없이 바로 리액션/슬롯 진행
-            if (data.skip_donation_popup) {
-                isDonationPopupShowing = false;
-                startReactionFlow();
-            } else {
-                showToonPopup({
-                    name: data.donator || '익명',
-                    amount: data.amount || 0,
-                    message: data.message || ''
-                }, startReactionFlow);
-            }
-        }
-
-        let isEndingReaction = false; // [버그 수정] 리액션 중복 팝 요청 방어 락
-
-        function onReactionEnded() {
-            if (isEndingReaction) {
-                console.warn("⚠️ onReactionEnded is already running. Ignoring duplicate call.");
-                return;
-            }
-            isEndingReaction = true;
-            
-            // 💡 [버그 수정] 리액션 종료 시 화면 비주얼 요소들을 숨김 처리
-            stopReactionVisuals();
-            
-            const popId = currentPlayingId;
-            currentPlayingId = null;
-            
-            // 서버에 현재 아이템 ID를 보내서 정확히 해당 아이템만 pop (이중 pop 방지)
-            fetch('/api/reaction/next', { 
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({id: popId})
-            }).then(res => res.json()).then(() => {
-                // SSE 업데이트가 늦을 수 있으므로, 직접 최신 상태를 가져와서 다음 후원 즉시 재생
-                return fetch('/api/data');
-            }).then(res => res.json()).then(data => {
-                globalData = data;
-                isEndingReaction = false; // 완료 후 락 해제
-                checkReactionQueue();
-            }).catch(err => {
-                console.error("Failed to advance reaction queue:", err);
-                isEndingReaction = false; // 실패 시에도 락 해제
-            });
-        }
-
-        function showAutoplayWarning() {}
-        function hideAutoplayWarning() {}
 
         // 🎁 후원 알림 공통 팝업 노출 함수
         function showToonPopup(donation, callback) {
@@ -3375,34 +2789,7 @@
             }, 2000);
         };
 
-        // 💡 [버그 수정] 화면 클릭(상호작용) 발생 시 브라우저 자동재생 정책을 해제하기 위한
-        // 오디오 컨텍스트 unlock 전용 처리. 과거에는 클릭할 때마다 재생 중인 리액션을
-        // 다시 트리거해서 "클릭할 때마다 후원이 반복 재생"되는 버그가 있었습니다.
-        // 이제는 오디오 unlock만 수행하고, 이미 재생 중이거나 재생된 적 있는 아이템은
-        // 절대 다시 트리거하지 않습니다.
-        window.addEventListener('click', () => {
-            hideAutoplayWarning();
-            try {
-                const audio = document.getElementById('reaction-audio');
-                if (audio) {
-                    // 무음으로 짧게 재생을 시도해 브라우저에 오디오 재생 권한을 확보(unlock)만 합니다.
-                    if (audio.paused && !audio.src) {
-                        const wasMuted = audio.muted;
-                        audio.muted = true;
-                        audio.play().then(() => {
-                            audio.pause();
-                            audio.muted = wasMuted;
-                        }).catch(() => { audio.muted = wasMuted; });
-                    } else if (audio.paused && audio.src && currentPlayingId) {
-                        // 현재 재생 중이어야 할 리액션이 브라우저 자동재생 차단으로 실제로는
-                        // 멈춰 있는 경우에만(재생된 적 없는 최초 1회) 다시 재생을 시도합니다.
-                        audio.play().catch(() => {});
-                    }
-                }
-            } catch(e) {
-                console.warn("Audio unlock attempt failed:", e);
-            }
-        }, { once: true });
+
 
         let sseSource = null;
         function initSSE() {
@@ -3426,44 +2813,14 @@
                 applyLayout(layoutData);
             });
 
-            sseSource.addEventListener('reaction_stop', function(e) {
-                try {
-                    const data = e.data ? JSON.parse(e.data) : {};
-                    if (data.id && data.id !== currentPlayingId) {
-                        console.log(`Ignoring reaction_stop for ID ${data.id} (current playing: ${currentPlayingId})`);
-                        return;
-                    }
-                    console.log("Stopping reaction visuals via SSE reaction_stop event.");
-                    currentPlayingId = null;
-                    isEndingReaction = false; // 💡 [추가] 긴급 중단 시 종료 락 완전 해제
-                    stopReactionVisuals();
-                } catch(err) {
-                    console.error("Error parsing reaction_stop data:", err);
-                    currentPlayingId = null;
-                    isEndingReaction = false; // 💡 [추가] 에러 시에도 락 해제
-                    stopReactionVisuals();
-                }
-            });
+
 
             sseSource.addEventListener('vips_updated', function(e) {
                 console.log("👑 [VIP 변경 신호 감지] SSE 캐시 리프레시를 작동합니다.");
                 loadVipsToCache();
             });
 
-            sseSource.addEventListener('reaction_skip', function(e) {
-                console.log("⏩ [리액션 스킵 명령 수신] 현재 미디어 즉시 중단 및 다음 순번 처리");
-                currentPlayingId = null;
-                isEndingReaction = false;
-                if (audioSafetyTimeout) { clearTimeout(audioSafetyTimeout); audioSafetyTimeout = null; }
-                const audio = document.getElementById('reaction-audio');
-                if (audio) { 
-                    audio.pause(); 
-                    audio.src = ''; 
-                    audio.onended = null;
-                    audio.onerror = null;
-                }
-                onReactionEnded();
-            });
+
 
             sseSource.addEventListener('goal_celebration', function(e) {
                 console.log("🎯 [목표 100% 달성 이벤트 신호 수신]");
@@ -3513,195 +2870,12 @@
         initPollingFallback();
         setInterval(loadVipsToCache, 10000);
 
-        // 🖼️ 슬롯머신 실제 당첨 후보로 "선택된" 리액션 이미지만 릴에 표시하도록 수집
-        window.slotReelImages = [];
-        async function loadSlotReelImages() {
-            try {
-                const res = await fetch('/api/reaction/list');
-                if (res.ok) {
-                    const list = await res.json();
-                    // 💡 슬롯 후보로 실제 선택된(체크된) 리액션 id 목록만 필터링
-                    const selectedIds = (globalData && globalData.slot_machine && Array.isArray(globalData.slot_machine.selected_reaction_ids))
-                        ? globalData.slot_machine.selected_reaction_ids.map(Number)
-                        : [];
-                    let filtered = list.filter(item => item.image_url && item.is_enabled && selectedIds.includes(Number(item.id)));
-                    // 선택된 후보가 없으면 활성화된 전체 리액션으로 폴백
-                    if (filtered.length === 0) {
-                        filtered = list.filter(item => item.image_url && item.is_enabled);
-                    }
-                    const urls = filtered.map(item => item.image_url);
-                    if (urls.length > 0) {
-                        window.slotReelImages = urls;
-                        console.log("🎰 [슬롯 썸네일 수집 성공] 실제 당첨 후보 이미지 수:", urls.length);
-                        return;
-                    }
-                }
-            } catch(e) {
-                console.warn("Failed to fetch slot reel images, using fallback default list:", e);
-            }
-            
-            // 등록된 이미지가 전혀 없을 때를 대비한 기본 백업
-            window.slotReelImages = ["/money.png"];
-        }
-        loadSlotReelImages();
-        // 슬롯 후보(체크박스) 변경이 서버에 반영될 때마다 릴 이미지 목록도 함께 갱신
-        setInterval(loadSlotReelImages, 5000);
 
-        // 🎰 슬롯머신 실감나는 사운드 효과 및 세로 스트립 스크롤(아래→위) 3-Reel 애니메이션 연출 제어장치
-        function buildSlotStrip(reelId, targetImage) {
-            const reel = document.getElementById(reelId);
-            if (!reel) return null;
-            reel.innerHTML = '';
-            const strip = document.createElement('div');
-            strip.className = 'slot-strip';
 
-            const imgList = window.slotReelImages.length > 0 ? window.slotReelImages : ["/money.png"];
-            // 랜덤 이미지 여러 장을 세로로 나열 (스크롤 애니메이션용, 최소 8장)
-            const itemCount = 8;
-            for (let i = 0; i < itemCount; i++) {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'slot-strip-item';
-                const imgEl = document.createElement('img');
-                imgEl.src = imgList[Math.floor(Math.random() * imgList.length)];
-                itemDiv.appendChild(imgEl);
-                strip.appendChild(itemDiv);
-            }
-            // 마지막에 당첨 이미지를 미리 하나 추가해두고, 정지 시 여기로 스냅되도록 구성
-            const winItemDiv = document.createElement('div');
-            winItemDiv.className = 'slot-strip-item';
-            const winImgEl = document.createElement('img');
-            winImgEl.src = targetImage;
-            winItemDiv.appendChild(winImgEl);
-            strip.appendChild(winItemDiv);
 
-            reel.appendChild(strip);
-            return strip;
-        }
-
-        function runSlotMachineAnimation(data, callback) {
-            const slotOverlay = document.getElementById('slot-machine-overlay');
-            const reel1 = document.getElementById('slot-reel-1');
-            const reel2 = document.getElementById('slot-reel-2');
-            const reel3 = document.getElementById('slot-reel-3');
-            const resultEl = document.getElementById('slot-machine-result');
-
-            if (!slotOverlay || !reel1 || !reel2 || !reel3 || !resultEl) {
-                callback();
-                return;
-            }
-
-            resultEl.innerText = "";
-
-            const targetTitle = data.title || "당첨";
-            const targetImage = data.image_url || "/money.png";
-
-            // 각 릴마다 세로 스트립 재구성 (마지막 아이템이 당첨 이미지)
-            const strip1 = buildSlotStrip('slot-reel-1', targetImage);
-            const strip2 = buildSlotStrip('slot-reel-2', targetImage);
-            const strip3 = buildSlotStrip('slot-reel-3', targetImage);
-
-            reel1.classList.add('spinning');
-            reel2.classList.add('spinning');
-            reel3.classList.add('spinning');
-            slotOverlay.classList.add('show');
-
-            // 신디사이저 릴 회전 비프음 (Web Audio API)
-            const playBeep = (freq, duration, type="sine") => {
-                try {
-                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = type;
-                    osc.frequency.value = freq;
-                    gain.gain.setValueAtTime(0.08, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start();
-                    osc.stop(ctx.currentTime + duration);
-                } catch(e){}
-            };
-
-            // 회전 시 주기적 사운드 효과
-            let soundTimer = setInterval(() => {
-                playBeep(880, 0.05, "triangle");
-            }, 180);
-
-            // 릴 정지: 세로 스크롤 애니메이션 클래스 제거 후, 마지막(당첨) 아이템 위치로 부드럽게 스냅
-            const stopReel = (reel, strip) => {
-                reel.classList.remove('spinning');
-                if (strip) {
-                    const itemCount = strip.children.length;
-                    strip.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-                    strip.style.transform = `translateY(-${(itemCount - 1) * 118}px)`;
-                }
-                playBeep(440, 0.2, "square"); // 탁- 정지음 타격감
-            };
-
-            // 2.2초 후 1번 릴 정지
-            setTimeout(() => {
-                stopReel(reel1, strip1);
-            }, 2200);
-
-            // 2.8초 후 2번 릴 정지
-            setTimeout(() => {
-                stopReel(reel2, strip2);
-            }, 2800);
-
-            // 3.4초 후 3번 릴 정지 및 최종 완성 (당첨 썸네일 일렬 정렬 잭팟)
-            setTimeout(() => {
-                clearInterval(soundTimer);
-                
-                stopReel(reel3, strip3);
-                
-                resultEl.innerText = `🎉 잭팟! [${targetTitle}] 당첨! (+2점 적립)`;
-                
-                // 잭팟 팡파레 효과음 재생
-                for (let i = 0; i < 4; i++) {
-                    setTimeout(() => {
-                        playBeep(523.25 * (1 + i * 0.25), 0.35, "sine");
-                    }, i * 120);
-                }
-
-                // 화려한 화이어웍스 효과 폭죽 발포
-                try {
-                    if (typeof confetti === 'function') {
-                        confetti({ particleCount: 150, spread: 80, origin: { y: 0.65 }, zIndex: 100005 });
-                    }
-                } catch(e){}
-
-                // 2.5초 간 결과를 보여준 후 슬롯창을 닫고 리액션으로 진입
-                setTimeout(() => {
-                    slotOverlay.classList.remove('show');
-                    setTimeout(() => {
-                        callback();
-                    }, 300);
-                }, 2500);
-            }, 3400);
-        }
         initPollingFallback();
     </script>
     
-    <!-- 🎰 슬롯머신 게임 화면 오버레이 영역 -->
-    <div id="slot-machine-overlay" class="slot-machine-overlay">
-        <div class="slot-machine-box">
-            <div class="slot-title">SLOT MACHINE</div>
-            <div class="slot-reels">
-                <div class="slot-reel" id="slot-reel-1">
-                    <img id="slot-reel-img-1" src="" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px; display: none;">
-                    <span id="slot-reel-txt-1">🎰</span>
-                </div>
-                <div class="slot-reel" id="slot-reel-2">
-                    <img id="slot-reel-img-2" src="" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px; display: none;">
-                    <span id="slot-reel-txt-2">🎰</span>
-                </div>
-                <div class="slot-reel" id="slot-reel-3">
-                    <img id="slot-reel-img-3" src="" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px; display: none;">
-                    <span id="slot-reel-txt-3">🎰</span>
-                </div>
-            </div>
-            <div class="slot-result" id="slot-machine-result"></div>
-        </div>
-    </div>
+
 </body>
 </html>

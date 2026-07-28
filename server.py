@@ -42,12 +42,7 @@ import urllib.request
 import urllib.parse
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MEDIA_CACHE_DIR = os.path.join(BASE_DIR, 'media_cache')
-if not os.path.exists(MEDIA_CACHE_DIR):
-    try:
-        os.makedirs(MEDIA_CACHE_DIR, exist_ok=True)
-    except Exception:
-        pass
+
 
 def db_query(query):
     if IS_POSTGRES:
@@ -177,9 +172,7 @@ DEFAULT_STATE = {
     "goal_event_pending": False,
     "goal_event_approved": False,
     "theme": "default",
-    "reaction_mode": False,
-    "reaction_queue": [],
-    "reaction_volume": 0.5,
+
     "popup_enabled": True,
     "takeover_enabled": True,
     "ticker_enabled": True,
@@ -189,14 +182,7 @@ DEFAULT_STATE = {
     "account": {"bank": "기업은행", "acc_num": "464-068673-04-016", "name": "드래곤엔터"},
     "pending_donations": [],
     "latest_donation": {"name": "", "amount": 0, "message": "", "time": 0},
-    "slot_machine": {
-        "active": False,
-        "started_at": 0,
-        "duration_ms": 1200000,
-        "trigger_amount": 20000,
-        "selected_reaction_ids": []
-    },
-    "pending_slot_spins": [],
+
     "extra_game_active": False,
     "extra_bjs": [],
     "roulette_enabled": False,
@@ -220,11 +206,9 @@ DEFAULT_STATE = {
         "active": True,
         "is_running": False,
         "time_left_ms": 300000,
-        "selected_reaction_ids": [],
         "cards": [],
         "finalized": False,
-        "final_card_ids": [],
-        "final_reaction_ids": []
+        "final_card_ids": []
     }
 }
 
@@ -326,46 +310,7 @@ def init_db():
                 )
             """)
         
-        # 리액션 파일 및 아이템 테이블 생성 (PostgreSQL/SQLite 공용)
-        if IS_POSTGRES:
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS reaction_files (
-                    id TEXT PRIMARY KEY,
-                    filename TEXT,
-                    content_type TEXT,
-                    file_data BYTEA
-                )
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS reaction_items (
-                    id SERIAL PRIMARY KEY,
-                    title TEXT,
-                    amount INTEGER DEFAULT 0,
-                    audio_file_id TEXT,
-                    image_file_id TEXT,
-                    is_enabled BOOLEAN DEFAULT TRUE
-                )
-            """)
-        else:
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS reaction_files (
-                    id TEXT PRIMARY KEY,
-                    filename TEXT,
-                    content_type TEXT,
-                    file_data BLOB
-                )
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS reaction_items (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    title TEXT,
-                    amount INTEGER DEFAULT 0,
-                    audio_file_id TEXT,
-                    image_file_id TEXT,
-                    is_enabled INTEGER DEFAULT 1
-                )
-            """)
-        
+
         # 💡 [추가] 특별 후원자(VIP) 테이블 생성 (PostgreSQL / SQLite 공용)
         if IS_POSTGRES:
             cursor.execute("""
@@ -397,10 +342,7 @@ def init_db():
                 cursor.execute("ALTER TABLE donation_history ADD COLUMN tx_id TEXT")
             except Exception:
                 pass
-            try:
-                cursor.execute("ALTER TABLE reaction_items ADD COLUMN is_enabled BOOLEAN DEFAULT TRUE")
-            except Exception:
-                pass
+
         else:
             # PostgreSQL/Supabase 전용: 운영 데이터 보존을 최우선으로 두고 누락 컬럼만 추가합니다.
             # 절대 테이블을 DROP하지 않습니다. Supabase에서 created_at 같은 추가 컬럼이 있어도 정상입니다.
@@ -409,18 +351,7 @@ def init_db():
                     'score': 'INTEGER DEFAULT 0',
                     'contribution': 'INTEGER DEFAULT 0',
                 },
-                'reaction_files': {
-                    'filename': 'TEXT',
-                    'content_type': 'TEXT',
-                    'file_data': 'BYTEA',
-                },
-                'reaction_items': {
-                    'title': 'TEXT',
-                    'amount': 'INTEGER DEFAULT 0',
-                    'audio_file_id': 'TEXT',
-                    'image_file_id': 'TEXT',
-                    'is_enabled': 'BOOLEAN DEFAULT TRUE',
-                },
+
             }
 
             for table_name, optional_columns in pg_column_defaults.items():
@@ -508,84 +439,15 @@ def load_data():
     
     # 🎴 [카드 뒤집기] 카드 데이터 키 보정 (자동으로 무작위 채우지 않음 - 운영자가 명시적으로 채워야 함)
     if 'card_game' not in state or not isinstance(state.get('card_game'), dict):
-        state['card_game'] = {"active": False, "is_running": False, "time_left_ms": 300000, "selected_reaction_ids": [], "cards": [], "finalized": False, "final_card_ids": []}
+        state['card_game'] = {"active": False, "is_running": False, "time_left_ms": 300000, "cards": [], "finalized": False, "final_card_ids": []}
     else:
         state['card_game'].setdefault('finalized', False)
         state['card_game'].setdefault('final_card_ids', [])
-        state['card_game'].setdefault('final_reaction_ids', [])
     
     MEMORY_STATE = state
     return MEMORY_STATE
 
-def normalize_slot_machine_state(state):
-    slot = state.get('slot_machine')
-    if not isinstance(slot, dict):
-        slot = DEFAULT_STATE['slot_machine'].copy()
-        state['slot_machine'] = slot
 
-    slot.setdefault('active', False)
-    slot.setdefault('started_at', 0)
-    slot.setdefault('duration_ms', 1200000)
-    slot.setdefault('trigger_amount', 20000)
-    slot.setdefault('selected_reaction_ids', [])
-
-    if slot.get('active'):
-        started_at = int(slot.get('started_at') or 0)
-        duration_ms = int(slot.get('duration_ms') or 1200000)
-        if started_at and int(time.time() * 1000) - started_at >= duration_ms:
-            slot['active'] = False
-    return slot
-
-def get_slot_reaction_candidate(selected_ids):
-    if not selected_ids:
-        return None
-
-    ids = []
-    for item_id in selected_ids:
-        try:
-            parsed_id = int(item_id)
-        except (TypeError, ValueError):
-            continue
-        if parsed_id not in ids:
-            ids.append(parsed_id)
-
-    if not ids:
-        return None
-
-    placeholders = ','.join(['?'] * len(ids))
-    query = f"""
-        SELECT id, title, audio_file_id, image_file_id, amount
-        FROM reaction_items
-        WHERE is_enabled = TRUE AND id IN ({placeholders})
-    """
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute(db_query(query), tuple(ids))
-        rows = cursor.fetchall()
-
-    if not rows:
-        return None
-
-    import random
-    row = random.choice(rows)
-    return {
-        'id': row[0],
-        'title': row[1],
-        'audio_file_id': row[2],
-        'image_file_id': row[3],
-        'amount': int(row[4] or 0)
-    }
-
-def apply_slot_score(state, target_list_key, player_name, score_delta, contribution_delta):
-    target_list = state.get(target_list_key, [])
-    for bj in target_list:
-        if bj.get('name') == player_name:
-            bj['score'] = int(bj.get('score') or 0) + score_delta
-            bj['contribution'] = int(bj.get('contribution') or 0) + contribution_delta
-            target_list.sort(key=lambda a: int(a.get('contribution') or 0), reverse=True)
-            state[target_list_key] = target_list
-            return bj
-    return None
 
 db_write_queue = queue.Queue()
 
@@ -998,25 +860,14 @@ def serve_mobile():
 def serve_admin():
     return serve_html_file('admin.html')
 
-@app.route('/reactions')
-@app.route('/reactions.html')
-def serve_reactions():
-    return serve_html_file('reactions.html')
 
-@app.route('/reaction_alert')
-@app.route('/reaction_alert.html')
-def serve_reaction_alert():
-    return serve_html_file('reaction_alert.html')
 
 @app.route('/login')
 @app.route('/login.html')
 def serve_login():
     return serve_html_file('login.html')
 
-@app.route('/upload')
-@app.route('/노래등록')
-def serve_upload():
-    return serve_html_file('upload.html')
+
 
 @app.route('/<path:filename>')
 def serve_dynamic_file(filename):
@@ -1085,7 +936,7 @@ def receive_donation():
                 'time': time.strftime('%H:%M:%S')
             }
             state['pending_donations'].append(parsed_don_entry)
-            state['reaction_mode'] = True
+
             
             # BJ 점수판 업데이트
             current_total = amount
@@ -1094,36 +945,13 @@ def receive_donation():
             if target_list_key == 'extra_bjs' and not state.get('extra_bjs'):
                 state['extra_bjs'] = [{"name": bj['name'], "score": 0, "contribution": 0} for bj in state.get('bjs', [])]
 
-            slot_result = None
-            slot = normalize_slot_machine_state(state)
-            if amount == int(slot.get('trigger_amount') or 20000) and slot.get('active'):
-                # 💡 [개편] 트리거 금액 후원이 들어와도 슬롯머신을 즉시 자동 회전시키지 않고,
-                # 운영자가 "슬롯" 탭에서 직접 확인 후 "돌리기" 버튼을 눌러야 실제로 회전/당첨 처리되도록 대기열에만 등록합니다.
-                # ⚠️ [버그 수정] 슬롯 대기열로 넘어가는 후원은 latest_donation을 갱신하지 않아
-                # 오버레이에 "후원하셨습니다" 팝업이 먼저 뜨는 것을 방지합니다. (돌리기를 누를 때만 1회 노출)
-                slot_result = True  # 아래 근사치 매칭 자동 리액션 블록 진입을 막기 위한 플래그
-                if 'pending_slot_spins' not in state or not isinstance(state.get('pending_slot_spins'), list):
-                    state['pending_slot_spins'] = []
-                spin_id = f"spin_{uuid.uuid4().hex}"
-                state['pending_slot_spins'].append({
-                    "id": spin_id,
-                    "don_id": don_id,
-                    "name": parsed_name,
-                    "amount": amount,
-                    "message": cleaned_msg,
-                    "time": time.strftime('%H:%M:%S'),
-                    "target_list_key": target_list_key
-                })
-                print(f"  🎰 [슬롯머신 대기 등록] {parsed_name} {amount}원 -> 슬롯 탭에서 수동으로 돌려주세요. (spin_id={spin_id})")
-            else:
-                # 슬롯 대기열로 넘어가지 않는 일반 후원인 경우에만 오버레이 팝업을 즉시 노출
-                state['latest_donation'] = {
-                    'id': don_id,
-                    'name': parsed_name,
-                    'amount': amount,
-                    'message': cleaned_msg,
-                    'time': time.time()
-                }
+            state['latest_donation'] = {
+                'id': don_id,
+                'name': parsed_name,
+                'amount': amount,
+                'message': cleaned_msg,
+                'time': time.time()
+            }
             # [비활성화] 닉네임 직접 매칭 자동 점수 가산 기능 해제 (모든 후원이 승인 대기함으로 모이도록 설정)
             # for bj in state.get(target_list_key, []):
             #     if bj['name'] == parsed_name:
@@ -1142,56 +970,7 @@ def receive_donation():
             except Exception as dbe:
                 print(f"[장부 기록 오류] {dbe}")
                 
-            # 🎵 자동 리액션 송 연동 감지 (근사치 매칭: 후원금액 이하 중 가장 가까운 리액션)
-            # 💡 10,300원 미만 후원은 리액션 재생 대상에서 제외
-            if amount >= 10300 and not slot_result:
-                try:
-                    with get_db_connection() as conn:
-                        cursor = conn.cursor()
-                        cursor.execute(db_query("""
-                            SELECT i.id, i.title, fa.filename as audio_filename, fi.filename as image_filename, i.amount 
-                            FROM reaction_items i
-                            LEFT JOIN reaction_files fa ON i.audio_file_id = fa.id
-                            LEFT JOIN reaction_files fi ON i.image_file_id = fi.id
-                            WHERE i.is_enabled = TRUE AND i.amount <= ? 
-                            ORDER BY i.amount DESC LIMIT 1
-                        """), (amount,))
-                        row = cursor.fetchone()
-                        if row:
-                            r_id, r_title, r_audio_fname, r_image_fname, r_amount = row
-                            
-                            # 실물 파일명 100% 스마트 매칭
-                            final_audio_fname = r_audio_fname
-                            final_image_fname = r_image_fname
 
-                            # media_cache/ 내의 실물 파일명 직접 찾기 fallback
-                            if os.path.exists(MEDIA_CACHE_DIR):
-                                for f in os.listdir(MEDIA_CACHE_DIR):
-                                    f_ext = os.path.splitext(f)[1].lower()
-                                    if f.startswith(f"{r_title}_{r_amount}") or f.startswith(f"{r_amount}_{r_amount}"):
-                                        if f_ext in ('.mp3', '.wav', '.mp4', '.m4a') and not final_audio_fname:
-                                            final_audio_fname = f
-                                        elif f_ext in ('.png', '.jpg', '.jpeg', '.webp', '.gif') and not final_image_fname:
-                                            final_image_fname = f
-
-                            audio_url = f"/api/reaction/file/{final_audio_fname}" if final_audio_fname else ""
-                            image_url = f"/api/reaction/file/{final_image_fname}" if final_image_fname else ""
-                            
-                            reaction_uuid = f"rq_{uuid.uuid4().hex}"
-                            state['reaction_queue'].append({
-                                "id": reaction_uuid,
-                                "item_id": r_id,
-                                "title": r_title,
-                                "audio_url": audio_url,
-                                "image_url": image_url,
-                                "amount": amount,
-                                "donator": parsed_name,
-                                "message": cleaned_msg
-                            })
-                            state['reaction_mode'] = True
-                            print(f"  🎵 [자동 리액션 발동 성공] 후원금액 {amount}원 → 매칭 '{r_title}' ({r_amount}원) ➡️ 음원({audio_url}), 사진({image_url}) 큐 추가 완료")
-                except Exception as e:
-                    print(f"⚠️ [자동 리액션 감지 오류] {e}")
                 
             save_data(state)
             broadcast_event('update', state)
@@ -1257,11 +1036,7 @@ def api_data():
                 state = request.json or {}
                 force_write = request.args.get('force') == '1' or state.pop('_force', False)
                 
-                # [버그 패치] 조종실에서 수동 리액션 스위치를 끌 때(False) 
-                # 큐에 대기열이 차 있으면 동기화 루프로 인해 즉시 다시 켜지는 현상을 원천 방지
-                if 'reaction_mode' in state and state['reaction_mode'] is False:
-                    state['reaction_queue'] = []
-                    
+
                 current_state = load_data()
                 
                 client_version = state.get('version', 0)
@@ -1648,7 +1423,6 @@ def end_broadcast():
             state['broadcast_active'] = False
             state['bjs'] = []
             state['bottom_fixed']['score'] = 0
-            state['reaction_mode'] = False
             state['match_data'] = {"active": False, "players": [], "time_left_ms": 180000, "is_running": False}
             state['pending_donations'] = []
             state['latest_donation'] = {"name": "", "amount": 0, "message": "", "time": 0}
@@ -1703,7 +1477,6 @@ def start_broadcast():
             state['broadcast_active'] = True
             state['bjs'] = [{"name": name.strip(), "score": 0, "contribution": 0} for name in names if name.strip()]
             state['bottom_fixed']['score'] = 0
-            state['reaction_mode'] = False
             state['match_data'] = {"active": False, "players": [], "time_left_ms": 180000, "is_running": False}
             state['pending_donations'] = []
             state['latest_donation'] = {"name": "", "amount": 0, "message": "", "time": 0}
@@ -1965,10 +1738,7 @@ def sd_neon():
                 'time': int(time.time() * 1000),
                 'color': color
             }
-            if color != 'OFF':
-                state['reaction_mode'] = True
-            else:
-                state['reaction_mode'] = False
+
                 
             save_data(state)
             broadcast_event('update', state)
@@ -1977,712 +1747,11 @@ def sd_neon():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# ==========================================
-# 🎵 커스텀 리액션 플랫폼 API (영구 보존형)
-# ==========================================
-import uuid
-
-@app.route('/api/reaction/file/<path:file_id>', methods=['GET'])
-def get_reaction_file(file_id):
-    try:
-        cache_dir = os.path.join(app.root_path, 'media_cache')
-        os.makedirs(cache_dir, exist_ok=True)
-        target = str(file_id)
-
-        import mimetypes
-
-        def _guess_mime(fname):
-            mime, _ = mimetypes.guess_type(fname)
-            if not mime:
-                low = fname.lower()
-                if low.endswith('.png'): mime = 'image/png'
-                elif low.endswith(('.jpg', '.jpeg')): mime = 'image/jpeg'
-                elif low.endswith('.gif'): mime = 'image/gif'
-                elif low.endswith('.webp'): mime = 'image/webp'
-                elif low.endswith('.mp3'): mime = 'audio/mpeg'
-                elif low.endswith('.mp4'): mime = 'video/mp4'
-                elif low.endswith('.wav'): mime = 'audio/wav'
-                else: mime = 'application/octet-stream'
-            return mime
-
-        def _serve_file(fpath, content_type=None):
-            mime = content_type or _guess_mime(fpath)
-            response = send_file(fpath, mimetype=mime, as_attachment=False, conditional=True)
-            response.headers.set('Access-Control-Allow-Origin', '*')
-            return response
-
-        # 0. DB에서 이 file_id(또는 filename)에 해당하는 실제 id, filename, content_type 조회
-        db_id = None
-        db_filename = None
-        db_content_type = None
-        try:
-            with get_db_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute(db_query("SELECT id, filename, content_type FROM reaction_files WHERE id = ? OR filename = ?"), (target, target))
-                row = cursor.fetchone()
-                if row:
-                    db_id = row[0]
-                    db_filename = row[1]
-                    db_content_type = row[2]
-        except Exception as db_err:
-            print(f"DB lookup error for reaction file {file_id}: {db_err}")
-
-        # 1. media_cache 폴더 안에서 실물 파일 탐색 (직접 경로 조합으로 빠르게 우선 시도)
-        candidates = []
-        for cand in (target, db_filename):
-            if cand and cand not in candidates:
-                candidates.append(cand)
-        if db_id and db_filename:
-            combo = f"{db_id}_{db_filename}"
-            if combo not in candidates:
-                candidates.append(combo)
-        if db_id and db_id not in candidates:
-            candidates.append(db_id)
-
-        best_match = None
-
-        # 1-1. 직접 경로 존재 여부로 빠르게 확인 (listdir 없이)
-        for cand in candidates:
-            direct_path = os.path.join(cache_dir, cand)
-            if os.path.isfile(direct_path) and os.path.getsize(direct_path) > 0:
-                best_match = cand
-                break
-
-        # 1-2. 직접 매칭 실패 시에만 폴더 전체 스캔 (느리지만 최후 수단)
-        if not best_match:
-            try:
-                all_files = os.listdir(cache_dir)
-            except Exception:
-                all_files = []
-
-            for fname in all_files:
-                fpath = os.path.join(cache_dir, fname)
-                if not (os.path.isfile(fpath) and os.path.getsize(fpath) > 0):
-                    continue
-
-                matched = False
-                for cand in candidates:
-                    if not cand:
-                        continue
-                    if (fname == cand
-                            or fname.startswith(f"{cand}_")
-                            or fname.endswith(f"_{cand}")
-                            or os.path.splitext(fname)[0] == cand):
-                        matched = True
-                        break
-                if matched:
-                    best_match = fname
-                    break
-
-        if best_match:
-            fpath = os.path.join(cache_dir, best_match)
-            return _serve_file(fpath, db_content_type)
-
-        # 2. media_cache에 실물이 전혀 없을 경우 DB의 file_data(BLOB)로 최후 서빙 + 디스크 캐싱
-        if db_id:
-            try:
-                with get_db_connection() as conn:
-                    cursor = conn.cursor()
-                    cursor.execute(db_query("SELECT filename, content_type, file_data FROM reaction_files WHERE id = ?"), (db_id,))
-                    row = cursor.fetchone()
-                    if row and row[2] is not None:
-                        fname = row[0] or db_id
-                        content_type = row[1]
-                        raw_data = row[2]
-                        if isinstance(raw_data, memoryview):
-                            raw_data = raw_data.tobytes()
-                        elif not isinstance(raw_data, (bytes, bytearray)):
-                            raw_data = bytes(raw_data)
-
-                        cache_fname = f"{db_id}_{fname}"
-                        cache_fpath = os.path.join(cache_dir, cache_fname)
-                        try:
-                            with open(cache_fpath, 'wb') as f:
-                                f.write(raw_data)
-                        except Exception as write_err:
-                            print(f"Failed to write disk cache for {cache_fname}: {write_err}")
-
-                        import io as _io
-                        response = send_file(_io.BytesIO(raw_data), mimetype=content_type or _guess_mime(fname), as_attachment=False, conditional=False, download_name=fname)
-                        response.headers.set('Access-Control-Allow-Origin', '*')
-                        return response
-            except Exception as blob_err:
-                print(f"Error serving reaction file from DB blob {file_id}: {blob_err}")
-
-        return jsonify({"status": "error", "message": "File not found"}), 404
-    except Exception as e:
-        print(f"Error serving reaction file {file_id}: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
 
 
-@app.route('/api/reaction/list', methods=['GET'])
-def get_reactions_list():
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            query = """
-                SELECT 
-                    i.id, 
-                    i.title, 
-                    i.amount, 
-                    i.audio_file_id, 
-                    i.image_file_id, 
-                    i.is_enabled,
-                    fa.filename as audio_filename,
-                    fi.filename as image_filename
-                FROM reaction_items i
-                LEFT JOIN reaction_files fa ON i.audio_file_id = fa.id
-                LEFT JOIN reaction_files fi ON i.image_file_id = fi.id
-                ORDER BY i.amount ASC, i.id ASC
-            """
-            cursor.execute(db_query(query))
-            rows = cursor.fetchall()
-            reactions = []
-            for r in rows:
-                audio_id = r[3]
-                image_id = r[4]
-                audio_fname = r[6]
-                image_fname = r[7]
-                
-                img_url = f"/api/reaction/file/{image_fname or image_id}" if (image_fname or image_id) else ""
-                aud_url = f"/api/reaction/file/{audio_fname or audio_id}" if (audio_fname or audio_id) else ""
 
-                reactions.append({
-                    "id": r[0],
-                    "title": str(r[1]) if r[1] else (f"리액션 ({r[2]:,}원)" if r[2] else "리액션"),
-                    "amount": r[2] or 0,
-                    "audio_url": aud_url,
-                    "image_url": img_url,
-                    "audio_file_id": audio_id,
-                    "image_file_id": image_id,
-                    "is_enabled": bool(r[5]) if r[5] is not None else True
-                })
-            return jsonify(reactions)
-    except Exception as e:
-        print(f"Error listing reactions: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
 
-def optimize_uploaded_image(file_stream, filename):
-    try:
-        from PIL import Image
-        import io
-        
-        file_stream.seek(0)
-        img = Image.open(file_stream)
-        
-        if img.mode in ('RGBA', 'LA', 'P'):
-            pass
-        else:
-            img = img.convert('RGB')
-            
-        MAX_DIM = 400
-        w, h = img.size
-        if max(w, h) > MAX_DIM:
-            if w > h:
-                new_w = MAX_DIM
-                new_h = int(h * (MAX_DIM / w))
-            else:
-                new_h = MAX_DIM
-                new_w = int(w * (MAX_DIM / h))
-            img = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
-            
-        out_buf = io.BytesIO()
-        img.save(out_buf, format='WEBP', quality=65)
-        webp_data = out_buf.getvalue()
-        
-        base_name = os.path.splitext(filename)[0]
-        webp_filename = f"{base_name}.webp"
-        
-        return webp_data, webp_filename, 'image/webp'
-    except Exception as e:
-        print(f"Error optimizing image in server: {e}")
-        file_stream.seek(0)
-        return file_stream.read(), filename, None
 
-@app.route('/api/reaction/add', methods=['POST'])
-def add_reaction():
-    try:
-        title = request.form.get('title', '').strip()
-        amount = int(request.form.get('amount', 0))
-        
-        if not title:
-            return jsonify({"status": "error", "message": "제목을 입력해주세요."}), 400
-            
-        audio_file = request.files.get('audio')
-        image_file = request.files.get('image')
-        
-        audio_file_id = None
-        image_file_id = None
-        
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            
-            if audio_file and audio_file.filename:
-                audio_file_id = f"aud_{uuid.uuid4().hex}"
-                audio_data = audio_file.read()
-                cursor.execute(
-                    db_query("INSERT INTO reaction_files (id, filename, content_type, file_data) VALUES (?, ?, ?, ?)"),
-                    (audio_file_id, audio_file.filename, audio_file.content_type, _pg_binary(audio_data))
-                )
-                
-            if image_file and image_file.filename:
-                image_file_id = f"img_{uuid.uuid4().hex}"
-                image_data, opt_filename, opt_content_type = optimize_uploaded_image(image_file, image_file.filename)
-                content_type = opt_content_type or image_file.content_type
-                filename = opt_filename or image_file.filename
-                cursor.execute(
-                    db_query("INSERT INTO reaction_files (id, filename, content_type, file_data) VALUES (?, ?, ?, ?)"),
-                    (image_file_id, filename, content_type, _pg_binary(image_data))
-                )
-                
-            cursor.execute(
-                db_query("INSERT INTO reaction_items (title, amount, audio_file_id, image_file_id) VALUES (?, ?, ?, ?)"),
-                (title, amount, audio_file_id, image_file_id)
-            )
-            conn.commit()
-            
-        return jsonify({"status": "success", "message": "리액션 곡 등록 완료!"})
-    except Exception as e:
-        print(f"Error adding reaction: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/api/reaction/delete/<int:item_id>', methods=['POST', 'DELETE'])
-def delete_reaction(item_id):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(db_query("SELECT audio_file_id, image_file_id FROM reaction_items WHERE id = ?"), (item_id,))
-            row = cursor.fetchone()
-            if not row:
-                return jsonify({"status": "error", "message": "Reaction item not found"}), 404
-                
-            audio_file_id, image_file_id = row
-            
-            cursor.execute(db_query("DELETE FROM reaction_items WHERE id = ?"), (item_id,))
-            
-            if audio_file_id:
-                cursor.execute(db_query("DELETE FROM reaction_files WHERE id = ?"), (audio_file_id,))
-            if image_file_id:
-                cursor.execute(db_query("DELETE FROM reaction_files WHERE id = ?"), (image_file_id,))
-                
-            conn.commit()
-            
-        return jsonify({"status": "success", "message": "리액션 곡 삭제 완료!"})
-    except Exception as e:
-        print(f"Error deleting reaction: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/api/reaction/edit/<int:item_id>', methods=['POST'])
-def edit_reaction(item_id):
-    try:
-        title = request.form.get('title', '').strip()
-        amount = int(request.form.get('amount', 0))
-        
-        if not title:
-            return jsonify({"status": "error", "message": "제목을 입력해주세요."}), 400
-            
-        audio_file = request.files.get('audio')
-        image_file = request.files.get('image')
-        
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            
-            cursor.execute(db_query("SELECT audio_file_id, image_file_id FROM reaction_items WHERE id = ?"), (item_id,))
-            row = cursor.fetchone()
-            if not row:
-                return jsonify({"status": "error", "message": "Reaction item not found"}), 404
-                
-            old_audio_id, old_image_id = row
-            audio_file_id = old_audio_id
-            image_file_id = old_image_id
-            
-            if audio_file and audio_file.filename:
-                audio_file_id = f"aud_{uuid.uuid4().hex}"
-                audio_data = audio_file.read()
-                cursor.execute(
-                    db_query("INSERT INTO reaction_files (id, filename, content_type, file_data) VALUES (?, ?, ?, ?)"),
-                    (audio_file_id, audio_file.filename, audio_file.content_type, _pg_binary(audio_data))
-                )
-                if old_audio_id:
-                    cursor.execute(db_query("DELETE FROM reaction_files WHERE id = ?"), (old_audio_id,))
-                
-            if image_file and image_file.filename:
-                image_file_id = f"img_{uuid.uuid4().hex}"
-                image_data, opt_filename, opt_content_type = optimize_uploaded_image(image_file, image_file.filename)
-                content_type = opt_content_type or image_file.content_type
-                filename = opt_filename or image_file.filename
-                cursor.execute(
-                    db_query("INSERT INTO reaction_files (id, filename, content_type, file_data) VALUES (?, ?, ?, ?)"),
-                    (image_file_id, filename, content_type, _pg_binary(image_data))
-                )
-                if old_image_id:
-                    cursor.execute(db_query("DELETE FROM reaction_files WHERE id = ?"), (old_image_id,))
-                    
-            cursor.execute(
-                db_query("UPDATE reaction_items SET title = ?, amount = ?, audio_file_id = ?, image_file_id = ? WHERE id = ?"),
-                (title, amount, audio_file_id, image_file_id, item_id)
-            )
-            conn.commit()
-            
-        return jsonify({"status": "success", "message": "리액션 곡 수정 완료!"})
-    except Exception as e:
-        print(f"Error editing reaction: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/api/reaction/toggle/<int:item_id>', methods=['POST'])
-def toggle_reaction(item_id):
-    try:
-        data = request.json or {}
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(db_query("SELECT is_enabled FROM reaction_items WHERE id = ?"), (item_id,))
-            row = cursor.fetchone()
-            if not row:
-                return jsonify({"status": "error", "message": "Reaction item not found"}), 404
-                
-            if 'is_enabled' in data:
-                new_state = bool(data['is_enabled'])
-            else:
-                new_state = not (bool(row[0]) if row[0] is not None else True)
-                
-            cursor.execute(db_query("UPDATE reaction_items SET is_enabled = ? WHERE id = ?"), (new_state, item_id))
-            conn.commit()
-            
-        return jsonify({"status": "success", "is_enabled": new_state, "message": "리액션 활성화 상태 변경 완료!"})
-    except Exception as e:
-        print(f"Error toggling reaction: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/api/reaction/delete_batch', methods=['POST'])
-def delete_reactions_batch():
-    try:
-        data = request.json or {}
-        item_ids = data.get('item_ids', [])
-        if not item_ids:
-            return jsonify({"status": "error", "message": "삭제할 리액션이 선택되지 않았습니다."}), 400
-            
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            
-            placeholders = ",".join(["?"] * len(item_ids))
-            query = f"SELECT audio_file_id, image_file_id FROM reaction_items WHERE id IN ({placeholders})"
-            cursor.execute(db_query(query), tuple(item_ids))
-            rows = cursor.fetchall()
-            
-            file_ids_to_delete = []
-            for r in rows:
-                if r[0]: file_ids_to_delete.append(r[0])
-                if r[1]: file_ids_to_delete.append(r[1])
-                
-            del_query = f"DELETE FROM reaction_items WHERE id IN ({placeholders})"
-            cursor.execute(db_query(del_query), tuple(item_ids))
-            
-            if file_ids_to_delete:
-                cursor.execute(db_query("SELECT audio_file_id, image_file_id FROM reaction_items"))
-                remaining = set()
-                for rem in cursor.fetchall():
-                    if rem[0]: remaining.add(rem[0])
-                    if rem[1]: remaining.add(rem[1])
-                    
-                orphaned = [fid for fid in file_ids_to_delete if fid not in remaining]
-                if orphaned:
-                    file_placeholders = ",".join(["?"] * len(orphaned))
-                    file_del_query = f"DELETE FROM reaction_files WHERE id IN ({file_placeholders})"
-                    cursor.execute(db_query(file_del_query), tuple(orphaned))
-                    
-            conn.commit()
-            
-        return jsonify({"status": "success", "message": f"{len(item_ids)}개의 리액션 삭제 완료!"})
-    except Exception as e:
-        print(f"Error batch deleting reactions: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/api/reaction/play/<int:item_id>', methods=['POST'])
-def play_reaction(item_id):
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            query = """
-                SELECT 
-                    i.title, 
-                    i.amount,
-                    fa.filename as audio_filename,
-                    fi.filename as image_filename
-                FROM reaction_items i
-                LEFT JOIN reaction_files fa ON i.audio_file_id = fa.id
-                LEFT JOIN reaction_files fi ON i.image_file_id = fi.id
-                WHERE i.id = ?
-            """
-            cursor.execute(db_query(query), (item_id,))
-            row = cursor.fetchone()
-            if not row:
-                return jsonify({"status": "error", "message": "Reaction item not found"}), 404
-                
-            title, r_amount, audio_fname, image_fname = row
-            
-            final_audio_fname = audio_fname
-            final_image_fname = image_fname
-
-            # media_cache/ 내의 실물 파일명 직접 찾기 fallback
-            if os.path.exists(MEDIA_CACHE_DIR):
-                for f in os.listdir(MEDIA_CACHE_DIR):
-                    f_ext = os.path.splitext(f)[1].lower()
-                    if f.startswith(f"{title}_{r_amount}") or f.startswith(f"{r_amount}_{r_amount}"):
-                        if f_ext in ('.mp3', '.wav', '.mp4', '.m4a') and not final_audio_fname:
-                            final_audio_fname = f
-                        elif f_ext in ('.png', '.jpg', '.jpeg', '.webp', '.gif') and not final_image_fname:
-                            final_image_fname = f
-
-            audio_url = f"/api/reaction/file/{final_audio_fname}" if final_audio_fname else ""
-            image_url = f"/api/reaction/file/{final_image_fname}" if final_image_fname else ""
-            
-            with file_lock:
-                state = load_data()
-                reaction_uuid = f"rq_{uuid.uuid4().hex}"
-                state['reaction_queue'].append({
-                    "id": reaction_uuid,
-                    "item_id": item_id,
-                    "title": title or "리액션",
-                    "audio_url": audio_url,
-                    "image_url": image_url,
-                    "donator": "수동송출",
-                    "message": ""
-                })
-                state['reaction_mode'] = True
-
-                # 🎴 [카드 뒤집기 게임] 뒤집혀 있고 통과 안 된 카드와 매칭 시 자동 PASS 처리
-                cg = state.get('card_game', {})
-                if cg.get('active') and cg.get('cards'):
-                    for card in cg['cards']:
-                        if card.get('is_flipped') and not card.get('is_passed'):
-                            if (item_id and card.get('reaction_id') == item_id) or (title and card.get('title') == title):
-                                card['is_passed'] = True
-                                print(f"  🎴 [카드 뒤집기 PASS!] {card.get('title')} 리액션 미션 통과 완료!")
-                                break
-                save_data(state)
-                broadcast_event('update', state)
-                
-        return jsonify({"status": "success", "message": "방송 송출 완료!"})
-    except Exception as e:
-        print(f"Error playing reaction: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/api/reaction/next', methods=['POST'])
-def next_reaction():
-    try:
-        data = request.get_json(silent=True) or {}
-        pop_id = data.get('id')
-        
-        with file_lock:
-            state = load_data()
-            queue = state.get('reaction_queue', [])
-            
-            if queue:
-                # ID가 지정된 경우: 첫 번째 아이템의 ID가 일치할 때만 pop (이중 pop 방지)
-                # ID가 없는 경우: 기존 방식대로 무조건 pop (하위 호환)
-                if not pop_id or queue[0].get('id') == pop_id:
-                    queue.pop(0)
-                
-            if not queue:
-                state['reaction_mode'] = False
-                
-            save_data(state)
-            broadcast_event('update', state)
-            broadcast_event('reaction_skip', {})
-        return jsonify({"status": "success", "message": "Popped reaction"})
-    except Exception as e:
-        print(f"Error in next_reaction: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/api/reaction/stop', methods=['POST'])
-def stop_reaction():
-    try:
-        with file_lock:
-            state = load_data()
-            state['reaction_queue'] = []
-            state['reaction_mode'] = False
-            save_data(state)
-            broadcast_event('update', state)
-            broadcast_event('reaction_stop', {})
-        return jsonify({"status": "success", "message": "All reactions stopped"})
-    except Exception as e:
-        print(f"Error in stop_reaction: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/api/slot/spin/<string:spin_id>', methods=['POST'])
-def spin_slot_machine(spin_id):
-    """운영자가 컨트롤러의 '슬롯' 탭에서 직접 '돌리기' 버튼을 눌렀을 때 호출.
-    실제 당첨 리액션을 뽑아 오버레이 슬롯 애니메이션을 재생시키고,
-    점수/기여도는 즉시 반영하지 않고 '후원 결재 대기함'에 슬롯 결과 카드로 추가하여
-    운영자가 승인해야 최종 반영되도록 처리합니다."""
-    try:
-        with file_lock:
-            state = load_data()
-            pending_spins = state.get('pending_slot_spins', [])
-            spin_idx = next((i for i, s in enumerate(pending_spins) if s.get('id') == spin_id), -1)
-            if spin_idx == -1:
-                return jsonify({"status": "error", "message": "대기 중인 슬롯 스핀을 찾을 수 없습니다."}), 404
-
-            spin_entry = pending_spins.pop(spin_idx)
-            state['pending_slot_spins'] = pending_spins
-
-            slot = normalize_slot_machine_state(state)
-            candidate = get_slot_reaction_candidate(slot.get('selected_reaction_ids') or [])
-            if not candidate:
-                # 후보가 없으면 대기열에서 제거만 하고 실패 응답
-                save_data(state)
-                broadcast_event('update', state)
-                return jsonify({"status": "error", "message": "선택된 슬롯 후보 리액션이 없습니다."}), 400
-
-            result_amount = int(candidate.get('amount') or 0)
-            score_delta = 2
-            contribution_delta = max(0, int(result_amount / 10000 + 0.5))
-
-            aud_target = candidate.get('audio_file_id')
-            img_target = candidate.get('image_file_id')
-            audio_url = f"/api/reaction/file/{aud_target}" if aud_target else ""
-            image_url = f"/api/reaction/file/{img_target}" if img_target else ""
-
-            parsed_name = spin_entry.get('name')
-            if not parsed_name or parsed_name.strip() == '' or parsed_name.strip() == '익명':
-                parsed_name = '슬롯머신'
-
-            amount = spin_entry.get('amount', 0)
-            cleaned_msg = spin_entry.get('message', '')
-            don_id = spin_entry.get('don_id')
-
-            # 💡 오버레이 슬롯 애니메이션 + 리액션 재생을 위해 reaction_queue에 추가
-            reaction_uuid = f"rq_{uuid.uuid4().hex}"
-            state['reaction_queue'].append({
-                "id": reaction_uuid,
-                "item_id": candidate['id'],
-                "title": candidate['title'],
-                "audio_url": audio_url,
-                "image_url": image_url,
-                "amount": amount,
-                "donator": parsed_name,
-                "message": cleaned_msg,
-                "slot_machine": True,
-                "slot_result_amount": result_amount,
-                "slot_score_delta": score_delta,
-                "slot_contribution_delta": contribution_delta
-            })
-            state['reaction_mode'] = True
-
-            # 💡 승인 대기함(pending_donations)에 슬롯 결과 카드로 추가 (승인 눌러야 실제 반영)
-            slot_result = {
-                "item_id": candidate['id'],
-                "title": candidate['title'],
-                "result_amount": result_amount,
-                "score_delta": score_delta,
-                "contribution_delta": contribution_delta,
-                "audio_url": audio_url,
-                "image_url": image_url
-            }
-            if 'pending_donations' not in state or not isinstance(state.get('pending_donations'), list):
-                state['pending_donations'] = []
-            state['pending_donations'].append({
-                'id': don_id or f"don_slot_{int(time.time() * 1000)}",
-                'name': parsed_name,
-                'amount': amount,
-                'message': cleaned_msg,
-                'time': time.strftime('%H:%M:%S'),
-                'slot_result': slot_result
-            })
-
-            save_data(state)
-            broadcast_event('update', state)
-            print(f"  🎰 [슬롯머신 회전 확정] {parsed_name} -> '{candidate['title']}' / 점수 +{score_delta}, 기여도 +{contribution_delta} (승인 대기)")
-
-        return jsonify({"status": "success", "message": "슬롯머신을 돌렸습니다! 승인 대기함에서 결과를 확인해주세요."})
-    except Exception as e:
-        print(f"Error spinning slot machine: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/api/slot/spin_now', methods=['POST'])
-def spin_slot_machine_now():
-    """운영자가 후원과 무관하게 '지금 바로 돌리기' 버튼을 눌렀을 때 호출됩니다.
-    후보로 선택된 리액션 중 하나를 랜덤으로 뽑아 오버레이 슬롯 애니메이션을 재생시키고,
-    점수는 +2점 고정, 기여도는 당첨 리액션 금액에 비례하여 승인 대기함에 이름 없이 등록합니다."""
-    try:
-        with file_lock:
-            state = load_data()
-            slot = normalize_slot_machine_state(state)
-            candidate = get_slot_reaction_candidate(slot.get('selected_reaction_ids') or [])
-            if not candidate:
-                return jsonify({"status": "error", "message": "선택된 슬롯 후보 리액션이 없습니다. 리액션 탭에서 🎰 슬롯 후보를 먼저 선택해주세요."}), 400
-
-            result_amount = int(candidate.get('amount') or 0)
-            score_delta = 2
-            contribution_delta = max(0, int(result_amount / 10000 + 0.5))
-
-            aud_target = candidate.get('audio_file_id')
-            img_target = candidate.get('image_file_id')
-            audio_url = f"/api/reaction/file/{aud_target}" if aud_target else ""
-            image_url = f"/api/reaction/file/{img_target}" if img_target else ""
-
-            # 💡 오버레이 슬롯 애니메이션 + 리액션 재생을 위해 reaction_queue에 추가 (후원자 이름 없음)
-            reaction_uuid = f"rq_{uuid.uuid4().hex}"
-            state['reaction_queue'].append({
-                "id": reaction_uuid,
-                "item_id": candidate['id'],
-                "title": candidate['title'],
-                "audio_url": audio_url,
-                "image_url": image_url,
-                "amount": 0,
-                "donator": "",
-                "message": "",
-                "slot_machine": True,
-                "skip_donation_popup": True,
-                "slot_result_amount": result_amount,
-                "slot_score_delta": score_delta,
-                "slot_contribution_delta": contribution_delta
-            })
-            state['reaction_mode'] = True
-
-            # 💡 승인 대기함(pending_donations)에 슬롯 결과 카드로 이름 없이 추가 (승인 눌러야 실제 반영)
-            slot_result = {
-                "item_id": candidate['id'],
-                "title": candidate['title'],
-                "result_amount": result_amount,
-                "score_delta": score_delta,
-                "contribution_delta": contribution_delta,
-                "audio_url": audio_url,
-                "image_url": image_url
-            }
-            if 'pending_donations' not in state or not isinstance(state.get('pending_donations'), list):
-                state['pending_donations'] = []
-            state['pending_donations'].append({
-                'id': f"don_slot_{int(time.time() * 1000)}",
-                'name': '슬롯머신',
-                'amount': 0,
-                'message': '',
-                'time': time.strftime('%H:%M:%S'),
-                'slot_result': slot_result
-            })
-
-            save_data(state)
-            broadcast_event('update', state)
-            print(f"  🎰 [슬롯머신 즉시 회전] '{candidate['title']}' 당첨 / 점수 +{score_delta}, 기여도 +{contribution_delta} (승인 대기)")
-
-        return jsonify({"status": "success", "message": "슬롯머신을 돌렸습니다! 승인 대기함에서 결과를 확인해주세요."})
-    except Exception as e:
-        print(f"Error spinning slot machine now: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/api/slot/spin/<string:spin_id>/cancel', methods=['POST'])
-def cancel_slot_spin(spin_id):
-    """대기 중인 슬롯 스핀을 취소(무시)합니다."""
-    try:
-        with file_lock:
-            state = load_data()
-            pending_spins = state.get('pending_slot_spins', [])
-            state['pending_slot_spins'] = [s for s in pending_spins if s.get('id') != spin_id]
-            save_data(state)
-            broadcast_event('update', state)
-        return jsonify({"status": "success", "message": "슬롯 스핀 대기가 취소되었습니다."})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/api/vips', methods=['GET'])
 def get_vips():
@@ -2771,28 +1840,7 @@ def delete_vip():
         print(f"Error in delete_vip: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@app.route('/api/reaction/queue/remove/<string:rq_id>', methods=['POST'])
-def remove_from_queue(rq_id):
-    try:
-        with file_lock:
-            state = load_data()
-            queue = state.get('reaction_queue', [])
-            if queue:
-                is_currently_playing = (queue[0]['id'] == rq_id)
-                state['reaction_queue'] = [item for item in queue if item['id'] != rq_id]
-                
-                if is_currently_playing:
-                    broadcast_event('reaction_stop', {'id': rq_id})
-                    
-                if not state['reaction_queue']:
-                    state['reaction_mode'] = False
-                    
-                save_data(state)
-                broadcast_event('update', state)
-        return jsonify({"status": "success", "message": "Removed from queue"})
-    except Exception as e:
-        print(f"Error in remove_from_queue: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+
 
 # ==========================================
 # 🖥️ GUI 관리자 창 (로그인 없이 바로 표시)
@@ -2870,59 +1918,7 @@ def broadcast_offwork():
 # ==========================================
 
 def build_card_deck_from_db(selected_ids=None):
-    import random
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        query = """
-            SELECT 
-                i.id, i.title, i.amount, 
-                fa.filename as audio_fname, 
-                fi.filename as image_fname
-            FROM reaction_items i
-            LEFT JOIN reaction_files fa ON i.audio_file_id = fa.id
-            LEFT JOIN reaction_files fi ON i.image_file_id = fi.id
-            WHERE i.is_enabled = TRUE
-        """
-        cursor.execute(db_query(query))
-        all_reactions = cursor.fetchall()
-        
-    if not all_reactions:
-        return []
-        
-    items_map = {r[0]: r for r in all_reactions}
-    chosen = []
-    
-    if selected_ids and isinstance(selected_ids, list) and len(selected_ids) > 0:
-        for sid in selected_ids:
-            if sid in items_map:
-                chosen.append(items_map[sid])
-                
-    if len(chosen) < 20:
-        remaining = [r for r in all_reactions if r not in chosen]
-        random.shuffle(remaining)
-        needed = 20 - len(chosen)
-        chosen.extend(remaining[:needed])
-        
-    random.shuffle(chosen)
-    chosen = chosen[:20]
-    
-    cards = []
-    for idx, r in enumerate(chosen):
-        r_id, title, amount, aud_fname, img_fname = r
-        img_url = f"/api/reaction/file/{img_fname}" if img_fname else ""
-        aud_url = f"/api/reaction/file/{aud_fname}" if aud_fname else ""
-        cards.append({
-            "id": idx,
-            "reaction_id": r_id,
-            "title": title,
-            "amount": amount,
-            "image_url": img_url,
-            "audio_url": aud_url,
-            "step": 0,
-            "is_flipped": False,
-            "is_passed": False
-        })
-    return cards
+    return []
 
 @app.route('/api/card_game/toggle', methods=['POST'])
 def toggle_card_game():
@@ -2931,7 +1927,7 @@ def toggle_card_game():
         with file_lock:
             state = load_data()
             if 'card_game' not in state:
-                state['card_game'] = {"active": False, "is_running": False, "time_left_ms": 300000, "selected_reaction_ids": [], "cards": []}
+                state['card_game'] = {"active": False, "is_running": False, "time_left_ms": 300000, "cards": []}
             
             new_active = data.get('active')
             if new_active is None:
@@ -2957,15 +1953,11 @@ def shuffle_card_game():
         with file_lock:
             state = load_data()
             if 'card_game' not in state:
-                state['card_game'] = {"active": True, "is_running": False, "time_left_ms": 300000, "selected_reaction_ids": [], "cards": [], "finalized": False, "final_card_ids": [], "final_reaction_ids": []}
+                state['card_game'] = {"active": True, "is_running": False, "time_left_ms": 300000, "cards": [], "finalized": False, "final_card_ids": []}
             
-            if selected_ids is not None:
-                state['card_game']['selected_reaction_ids'] = selected_ids
-                
-            state['card_game']['cards'] = build_card_deck_from_db(state['card_game'].get('selected_reaction_ids'))
+            state['card_game']['cards'] = build_card_deck_from_db()
             state['card_game']['finalized'] = False
             state['card_game']['final_card_ids'] = []
-            state['card_game']['final_reaction_ids'] = []
             state['version'] = state.get('version', 0) + 1
             save_data(state)
             broadcast_event('update', state)
@@ -2976,9 +1968,7 @@ def shuffle_card_game():
 
 @app.route('/api/card_game/shuffle_order', methods=['POST'])
 def shuffle_card_game_order():
-    """💡 [신규] 기존 20장 리액션 구성은 그대로 유지하고, 카드 배열 순서(위치)만 무작위로 섞습니다.
-    모든 카드의 상태(뒤집힘/PASS)는 초기화됩니다. 오버레이에서는 reaction_id를 key로 하는
-    카드 DOM을 그대로 재사용하면서 위치만 이동하는 FLIP 애니메이션으로 자연스럽게 표현됩니다."""
+    """카드 배열 순서(위치)만 무작위로 섞습니다. 모든 카드의 상태(뒤집힘/PASS)는 초기화됩니다."""
     try:
         import random
         with file_lock:
@@ -2993,7 +1983,7 @@ def shuffle_card_game_order():
             cg['cards'] = cards
             cg['finalized'] = False
             cg['final_card_ids'] = []
-            cg['final_reaction_ids'] = []
+
             state['card_game'] = cg
             state['version'] = state.get('version', 0) + 1
             save_data(state)
@@ -3019,7 +2009,7 @@ def finalize_card_game():
 
             cg['finalized'] = True
             cg['final_card_ids'] = [c.get('id') for c in passed_cards]
-            cg['final_reaction_ids'] = [c.get('reaction_id') for c in passed_cards if c.get('reaction_id') is not None]
+
             state['card_game'] = cg
             state['version'] = state.get('version', 0) + 1
             save_data(state)
@@ -3038,7 +2028,7 @@ def unfinalize_card_game():
             cg = state.get('card_game', {})
             cg['finalized'] = False
             cg['final_card_ids'] = []
-            cg['final_reaction_ids'] = []
+
             state['card_game'] = cg
             state['version'] = state.get('version', 0) + 1
             save_data(state)
@@ -3070,7 +2060,7 @@ def reset_card_game():
             # 고정 상태 초기화
             cg['finalized'] = False
             cg['final_card_ids'] = []
-            cg['final_reaction_ids'] = []
+
             
             cg['cards'] = cards
             state['card_game'] = cg
@@ -3186,7 +2176,7 @@ def timer_card_game():
         with file_lock:
             state = load_data()
             if 'card_game' not in state:
-                state['card_game'] = {"active": True, "is_running": False, "time_left_ms": 300000, "end_time_ms": 0, "selected_reaction_ids": [], "cards": []}
+                state['card_game'] = {"active": True, "is_running": False, "time_left_ms": 300000, "end_time_ms": 0, "cards": []}
             cg = state['card_game']
 
             now_ms = int(time.time() * 1000)
