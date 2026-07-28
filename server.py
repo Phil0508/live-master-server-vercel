@@ -58,19 +58,42 @@ def _pg_binary(data):
             return data
     return data
 
+_PG_CONN = None
+
 @contextmanager
 def get_db_connection():
+    global _PG_CONN
     if IS_POSTGRES and DATABASE_URL:
         import psycopg2
-        conn = psycopg2.connect(DATABASE_URL)
+        conn = None
+        if _PG_CONN is not None:
+            try:
+                if _PG_CONN.closed == 0:
+                    with _PG_CONN.cursor() as cur:
+                        cur.execute("SELECT 1")
+                    conn = _PG_CONN
+                else:
+                    _PG_CONN = None
+            except Exception:
+                try:
+                    _PG_CONN.close()
+                except Exception:
+                    pass
+                _PG_CONN = None
+
+        if conn is None:
+            _PG_CONN = psycopg2.connect(DATABASE_URL)
+            conn = _PG_CONN
+
         try:
             yield conn
             conn.commit()
         except Exception:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             raise
-        finally:
-            conn.close()
     else:
         conn = sqlite3.connect(DB_FILE)
         try:
@@ -1037,7 +1060,7 @@ def api_data():
                 force_write = request.args.get('force') == '1' or state.pop('_force', False)
                 
 
-                current_state = load_data()
+                current_state = MEMORY_STATE if MEMORY_STATE is not None else load_data()
                 
                 client_version = state.get('version', 0)
                 server_version = current_state.get('version', 1)
