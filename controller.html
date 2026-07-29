@@ -2313,11 +2313,27 @@
         }
 
         function addRankPlayer() {
-            if (gd.bjs.length >= 10) {
-                premiumAlert("플레이어는 최대 10명까지만 추가할 수 있습니다.", "추가 불가", "warning");
+            let isExtra = gd.extra_game_active || false;
+            let listKey = isExtra ? 'extra_bjs' : 'bjs';
+            if (!gd[listKey]) gd[listKey] = [];
+
+            if (gd[listKey].length >= 50) {
+                premiumAlert("플레이어는 최대 50명까지만 추가할 수 있습니다.", "추가 불가", "warning");
                 return;
             }
-            gd.bjs.push({name:"New", score:0, contribution:0});
+
+            // 중복 방지 고유 이름 생성 (선수 1, 선수 2...)
+            let existingNames = new Set(gd[listKey].map(b => b.name));
+            let newNum = 1;
+            let newName = `선수 ${newNum}`;
+            while (existingNames.has(newName)) {
+                newNum++;
+                newName = `선수 ${newNum}`;
+            }
+
+            gd[listKey].push({name: newName, score: 0, contribution: 0});
+            lastRHtml = "";
+            renderUI();
             pushAPI();
         }
         function triggerNeon(color) {
@@ -2481,13 +2497,13 @@
             if (names.length === 0) return;
             
             let targetLength = overwrite ? names.length : (gd.bjs.length + names.length);
-            if (targetLength > 10) {
-                let allowed = 10 - (overwrite ? 0 : gd.bjs.length);
+            if (targetLength > 50) {
+                let allowed = 50 - (overwrite ? 0 : gd.bjs.length);
                 if (allowed <= 0) {
-                    await premiumAlert("이미 플레이어가 10명 등록되어 있어 추가할 수 없습니다.", "인원 초과", "warning");
+                    await premiumAlert("이미 플레이어가 50명 등록되어 있어 추가할 수 없습니다.", "인원 초과", "warning");
                     return;
                 }
-                await premiumAlert(`플레이어는 최대 10명까지만 등록할 수 있습니다. 입력된 BJ 중 ${allowed}명만 잘라서 등록합니다.`, "인원 초과 경고", "warning");
+                await premiumAlert(`플레이어는 최대 50명까지만 등록할 수 있습니다. 입력된 BJ 중 ${allowed}명만 잘라서 등록합니다.`, "인원 초과 경고", "warning");
                 names = names.slice(0, allowed);
             }
             
@@ -2499,6 +2515,8 @@
                 });
                 let data = await res.json();
                 if (data.status === 'success') {
+                    lastRHtml = "";
+                    await fetchAPI();
                     await premiumAlert(`성공적으로 ${data.count}명의 BJ가 등록되었습니다.`, "등록 완료", "success");
                 } else {
                     await premiumAlert("오류 발생: " + data.message, "오류", "warning");
