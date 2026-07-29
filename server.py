@@ -457,10 +457,11 @@ def init_db():
                         WHERE table_schema = 'public' AND table_name = %s
                     """, (table_name,))
                     existing_cols = {row[0] for row in cursor.fetchall()}
-                    for col_name, col_def in optional_columns.items():
-                        if col_name not in existing_cols:
-                            print(f"⚠️ [PostgreSQL 스키마 보정] {table_name}.{col_name} 컬럼 추가")
-                            cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_def}")
+                    if existing_cols:
+                        for col_name, col_def in optional_columns.items():
+                            if col_name not in existing_cols:
+                                print(f"⚠️ [PostgreSQL 스키마 보정] {table_name}.{col_name} 컬럼 추가")
+                                cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_def}")
                 except Exception as e:
                     print(f"⚠️ [PostgreSQL 스키마 보정] {table_name} 보정 실패: {e}")
             
