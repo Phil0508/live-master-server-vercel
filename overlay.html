@@ -940,6 +940,16 @@
             if (ly) lastLayoutData = ly;
             let isExtra = (currentExtraActiveState === true);
             
+            ['ranking', 'gauge', 'account', 'match', 'popup', 'takeover', 'ticker_top', 'ticker_bottom', 'roulette', 'home-race'].forEach(id => { 
+                const el = document.getElementById(id + '-container'); 
+                if(ly && el) { 
+                    let coord = ly[id];
+                    if (coord) {
+                        el.style.top = (coord.y_px !== undefined ? coord.y_px : 0) + 'px'; 
+                        if (id === 'ranking') {
+                            el.style.left = isExtra ? '-650px' : ((coord.x_px || 0) + 'px');
+                        } else {
+                            el.style.left = (coord.x_px || 0) + 'px'; 
                         }
                         
                         if (id === 'roulette') {
@@ -2207,8 +2217,6 @@
                 const layoutData = JSON.parse(e.data);
                 applyLayout(layoutData);
             });
-
-            sseSource.addEventListener('reaction_stop', function(e) {
 
             sseSource.addEventListener('vips_updated', function(e) {
                 console.log("👑 [VIP 변경 신호 감지] SSE 캐시 리프레시를 작동합니다.");
