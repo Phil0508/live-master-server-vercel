@@ -1395,7 +1395,7 @@
                         let firstReached = null;
                         bjs.forEach(b => {
                             let goalAmt = homeGoals[b.name] || 0;
-                            let curAmt = b.contribution || 0;
+                            let curAmt = b.score || 0;
                             let pct = goalAmt > 0 ? Math.min(100, (curAmt / goalAmt) * 100) : 0;
                             let reached = goalAmt > 0 && curAmt >= goalAmt;
                             if (reached && !firstReached) firstReached = b.name;
@@ -2356,9 +2356,6 @@
             }
         });
         setInterval(loadVipsToCache, 10000);
-
-        // 🖼️ 슬롯머신 실제 당첨 후보로 "선택된" 리액션 이미지만 릴에 표시하도록 수집
-        initPollingFallback();
     </script>
     
 </body>

@@ -1971,7 +1971,7 @@
                 // 💡 [퇴근전쟁 감지] 후원 승인으로 목표 달성(퇴근 성공) 시 알림센터에 '퇴근 성공!' 카드 추가
                 let targetGoal = gd.target_goal || 0;
                 let homeGoal = (gd.home_goals && gd.home_goals[targetList[bjIdx].name]) || 0;
-                if ((targetGoal > 0 && targetList[bjIdx].contribution >= targetGoal) || (homeGoal > 0 && targetList[bjIdx].contribution >= homeGoal)) {
+                if ((targetGoal > 0 && targetList[bjIdx].score >= targetGoal) || (homeGoal > 0 && targetList[bjIdx].score >= homeGoal)) {
                     addOffWorkPendingCard(targetList[bjIdx].name);
                 }
 
@@ -2299,7 +2299,7 @@
                 let goalVal = gd.home_goals[bj.name] || 0;
                 html += `<div style="display:flex; align-items:center; gap:10px; padding:4px 0;">
                     <span style="flex:1; font-size:13px; font-weight:700; color:#fff;">${escapeHTML(bj.name)}</span>
-                    <input type="number" class="home-race-goal-input" data-name="${escapeHTML(bj.name)}" value="${goalVal}" placeholder="목표 기여도" style="width:110px; height:32px; font-size:12px;" onchange="updateHomeRaceGoal(${escapeHTML(JSON.stringify(bj.name))}, this.value)">
+                    <input type="number" class="home-race-goal-input" data-name="${escapeHTML(bj.name)}" value="${goalVal}" placeholder="목표 점수" style="width:110px; height:32px; font-size:12px;" onchange="updateHomeRaceGoal(${escapeHTML(JSON.stringify(bj.name))}, this.value)">
                     <button class="bj-btn" style="background:linear-gradient(90deg, #ffd700, #ff8c00); color:#000; font-weight:900; font-size:11px; padding:4px 10px; border:none; cursor:pointer;" onclick="addOffWorkPendingCard(${escapeHTML(JSON.stringify(bj.name))})">🎉 퇴근 대기 등록</button>
                 </div>`;
             });
