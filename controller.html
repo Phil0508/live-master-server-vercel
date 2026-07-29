@@ -9,6 +9,7 @@
             window.location.href = '/controller?mode=mobile';
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <title>💻 마스터 웹 컨트롤러 V12 (다이내믹 이펙트 매니저 탑재)</title>
     <style>@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');</style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -3259,8 +3260,100 @@
 
         let pollInterval = null;
         let lastPollData = null;
+        let isRealtimeActive = false;
         window.userInitiatedEnd = false;
         window.restorePromptShown = false;
+
+        async function initSupabaseRealtime() {
+            try {
+                const configRes = await fetch('/api/supabase-config');
+                if (!configRes.ok) return false;
+                const config = await configRes.json();
+                if (!config.supabase_url || !config.supabase_anon_key) {
+                    console.log("Supabase Realtime config missing. Using HTTP polling fallback.");
+                    return false;
+                }
+
+                if (typeof window.supabase === 'undefined') {
+                    console.warn("Supabase SDK not loaded.");
+                    return false;
+                }
+
+                const supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
+                
+                let fetchThrottleTimeout = null;
+                async function triggerDataFetch() {
+                    if (fetchThrottleTimeout) return;
+                    fetchThrottleTimeout = setTimeout(async () => {
+                        fetchThrottleTimeout = null;
+                        try {
+                            const res = await fetch('/api/data');
+                            if (res.ok) {
+                                const newData = await res.json();
+                                if (isPushing || (Date.now() - lastPushTime < 200)) return;
+                                handleStreamData(newData);
+                            }
+                        } catch(e) {
+                            console.error("Error fetching data on realtime trigger:", e);
+                        }
+                    }, 50);
+                }
+
+                supabase
+                    .channel('controller-changes')
+                    .on(
+                        'postgres_changes',
+                        { event: 'UPDATE', schema: 'public', table: 'kv_store' },
+                        payload => {
+                            console.log('Realtime kv_store update:', payload);
+                            triggerDataFetch();
+                        }
+                    )
+                    .on(
+                        'postgres_changes',
+                        { event: '*', schema: 'public', table: 'players' },
+                        payload => {
+                            console.log('Realtime players update:', payload);
+                            triggerDataFetch();
+                        }
+                    )
+                    .subscribe((status) => {
+                        console.log("Supabase Realtime subscription status:", status);
+                        if (status === 'SUBSCRIBED') {
+                            isRealtimeActive = true;
+                            updateConnectionStatus('connected');
+                            initPollingFallback(15000);
+                        } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+                            isRealtimeActive = false;
+                            updateConnectionStatus('disconnected');
+                            initPollingFallback(1500);
+                        }
+                    });
+
+                return true;
+            } catch (e) {
+                console.error("Failed to init Supabase Realtime:", e);
+                return false;
+            }
+        }
+
+        function initPollingFallback(intervalMs = 1500) {
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/data');
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const newData = await res.json();
+                    updateConnectionStatus('connected');
+                    if (isPushing || (Date.now() - lastPushTime < 200)) return;
+                    handleStreamData(newData);
+                } catch (err) {
+                    console.error("Poll error:", err);
+                    updateConnectionStatus('disconnected');
+                }
+            }, intervalMs);
+        }
+
         async function initSSE() {
             updateConnectionStatus('connecting');
             loadVipList().catch(e => console.error("VIP list initial load failed:", e));
@@ -3278,21 +3371,12 @@
                 console.error("Poll error:", err);
                 updateConnectionStatus('disconnected');
             }
-            // 폴링 시작 (1.5초 간격)
-            if (pollInterval) clearInterval(pollInterval);
-            pollInterval = setInterval(async () => {
-                try {
-                    const res = await fetch('/api/data');
-                    if (!res.ok) throw new Error('HTTP ' + res.status);
-                    const newData = await res.json();
-                    updateConnectionStatus('connected');
-                    if (isPushing || (Date.now() - lastPushTime < 200)) return;
-                    handleStreamData(newData);
-                } catch (err) {
-                    console.error("Poll error:", err);
-                    updateConnectionStatus('disconnected');
+            
+            initSupabaseRealtime().then(success => {
+                if (!success) {
+                    initPollingFallback(1500);
                 }
-            }, 1500);
+            });
         }
 
         function handleStreamData(newData) {

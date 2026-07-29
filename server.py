@@ -486,6 +486,23 @@ def init_db():
                     cursor.execute("ALTER TABLE snapshots ADD COLUMN summary TEXT")
             except Exception:
                 pass
+            
+            # Supabase Realtime 활성화 및 REPLICA IDENTITY 설정
+            try:
+                cursor.execute("SELECT pubname FROM pg_publication WHERE pubname = 'supabase_realtime'")
+                if not cursor.fetchone():
+                    cursor.execute("CREATE PUBLICATION supabase_realtime")
+                
+                for tbl in ['kv_store', 'players']:
+                    cursor.execute("""
+                        SELECT tablename FROM pg_publication_tables 
+                        WHERE pubname = 'supabase_realtime' AND tablename = %s
+                    """, (tbl,))
+                    if not cursor.fetchone():
+                        cursor.execute(f"ALTER PUBLICATION supabase_realtime ADD TABLE {tbl}")
+                    cursor.execute(f"ALTER TABLE {tbl} REPLICA IDENTITY FULL")
+            except Exception as e:
+                print(f"[Supabase Realtime Enable warning] {e}")
     INIT_DB_DONE = True
 
 LAST_LOAD_TIME = 0
@@ -863,6 +880,33 @@ def sse_stream():
     resp.headers['Cache-Control'] = 'no-cache'
     resp.headers['Connection'] = 'keep-alive'
     return resp
+
+def get_supabase_project_id():
+    url = os.environ.get('DATABASE_URL')
+    if not url:
+        return None
+    try:
+        if '@' in url:
+            creds = url.split('@')[0]
+            if ':' in creds:
+                userpass = creds.split('//')[-1]
+                username = userpass.split(':')[0]
+                if '.' in username:
+                    return username.split('.')[-1]
+    except Exception:
+        pass
+    return None
+
+@app.route('/api/supabase-config')
+def api_supabase_config():
+    project_id = get_supabase_project_id()
+    supabase_url = os.environ.get("SUPABASE_URL")
+    if not supabase_url and project_id:
+        supabase_url = f"https://{project_id}.supabase.co"
+    return jsonify({
+        "supabase_url": supabase_url,
+        "supabase_anon_key": os.environ.get("SUPABASE_ANON_KEY")
+    })
 
 @app.route('/api/ping')
 def api_ping():

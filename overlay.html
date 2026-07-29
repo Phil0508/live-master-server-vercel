@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>🚀 라이브 마스터 오버레이 (새로고침 방어막 패치)</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&family=Orbitron:wght@900&display=swap');
@@ -3494,11 +3495,82 @@
         // 서버리스 환경(Vercel)에서 실시간 SSE(EventSource) 연결이 끊겼을 때를 대비하여
         // 1.5초 간격으로 서버 데이터를 긁어와 화면을 100% 끊김 없이 동기화시킵니다.
         let fallbackInterval = null;
-        function initPollingFallback() {
+        let isRealtimeActive = false;
+
+        async function initSupabaseRealtime() {
+            try {
+                const configRes = await fetch('/api/supabase-config');
+                if (!configRes.ok) return false;
+                const config = await configRes.json();
+                if (!config.supabase_url || !config.supabase_anon_key) {
+                    console.log("Supabase Realtime config missing. Using HTTP polling fallback.");
+                    return false;
+                }
+
+                if (typeof window.supabase === 'undefined') {
+                    console.warn("Supabase SDK not loaded.");
+                    return false;
+                }
+
+                const supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
+                
+                let fetchThrottleTimeout = null;
+                async function triggerDataFetch() {
+                    if (fetchThrottleTimeout) return;
+                    fetchThrottleTimeout = setTimeout(async () => {
+                        fetchThrottleTimeout = null;
+                        try {
+                            const res = await fetch('/api/data');
+                            if (res.ok) {
+                                const newData = await res.json();
+                                handleData(newData);
+                            }
+                        } catch(e) {
+                            console.error("Error fetching data on realtime trigger:", e);
+                        }
+                    }, 50);
+                }
+
+                supabase
+                    .channel('overlay-changes')
+                    .on(
+                        'postgres_changes',
+                        { event: 'UPDATE', schema: 'public', table: 'kv_store' },
+                        payload => {
+                            console.log('Realtime kv_store update:', payload);
+                            triggerDataFetch();
+                        }
+                    )
+                    .on(
+                        'postgres_changes',
+                        { event: '*', schema: 'public', table: 'players' },
+                        payload => {
+                            console.log('Realtime players update:', payload);
+                            triggerDataFetch();
+                        }
+                    )
+                    .subscribe((status) => {
+                        console.log("Supabase Realtime subscription status:", status);
+                        if (status === 'SUBSCRIBED') {
+                            isRealtimeActive = true;
+                            initPollingFallback(10000);
+                        } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+                            isRealtimeActive = false;
+                            initPollingFallback(250);
+                        }
+                    });
+
+                return true;
+            } catch (e) {
+                console.error("Failed to init Supabase Realtime:", e);
+                return false;
+            }
+        }
+
+        function initPollingFallback(intervalMs = 250) {
             if (fallbackInterval) clearInterval(fallbackInterval);
             fallbackInterval = setInterval(async () => {
                 try {
-                    // 📡 1초 간격 상시 데이터 연동 (SSE 연결 상태와 무관하게 100% 무조건 동기화 보장)
                     const streamUrl = (!window.location.protocol.startsWith('http')) ? 'http://localhost:5000/api/data' : '/api/data';
                     const res = await fetch(streamUrl);
                     if (res.ok) {
@@ -3508,12 +3580,18 @@
                 } catch (e) {
                     console.error("Polling sync error:", e);
                 }
-            }, 250);
+            }, intervalMs);
         }
+
         if (window.INITIAL_DATA) {
             handleData(window.INITIAL_DATA);
         }
-        initPollingFallback();
+        
+        initSupabaseRealtime().then(success => {
+            if (!success) {
+                initPollingFallback(250);
+            }
+        });
         setInterval(loadVipsToCache, 10000);
 
         // 🖼️ 슬롯머신 실제 당첨 후보로 "선택된" 리액션 이미지만 릴에 표시하도록 수집
