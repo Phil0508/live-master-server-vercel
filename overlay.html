@@ -999,6 +999,7 @@
 
             // 🏃‍♀️ 퇴근전쟁 모드가 켜져 있으면 기존 랭킹판을 감추고 그 자리에 퇴근빵 위젯을 표시 (스르륵 크로스페이드)
             if (isActive) {
+                const rankingEl = document.getElementById('ranking-container');
                 const homeRaceContainerEl = document.getElementById('home-race-container');
                 if (d.home_race_enabled) {
                     if (rankingEl) { rankingEl.style.opacity = '0'; rankingEl.style.visibility = 'hidden'; }
