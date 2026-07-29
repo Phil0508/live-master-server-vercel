@@ -197,6 +197,7 @@ DEFAULT_STATE = {
     "goal_event_pending": False,
     "goal_event_approved": False,
     "theme": "default",
+    "reaction_mode": False,
     "popup_enabled": True,
     "takeover_enabled": True,
     "ticker_enabled": True,

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -433,6 +433,40 @@
         }
         
         /* 🟢 리액션 모드 진입 미니 알림 토스트 (조종실용) */
+        .reaction-toast {
+            position: fixed;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(156, 39, 176, 0.9);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(156, 39, 176, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 10000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .reaction-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .reaction-toast-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #00ffcc;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ffcc;
+            animation: blink 1s infinite;
+        }
 
         /* 탭 백그라운드 재생을 위한 visibility 기반 숨김 스타일 */
         .tab-content {
@@ -603,6 +637,10 @@
     </style>
 </head>
 <body>
+    <div id="reaction-toast" class="reaction-toast">
+        <div class="reaction-toast-dot"></div>
+        <span>🟢 화면내에서 리액션 모드로 진입했습니다.</span>
+    </div>
     <div class="header">
         <h1>
             <i class="fa-solid fa-layer-group"></i> 방송 제어 센터 V12
@@ -632,6 +670,10 @@
             </div>
 
             <button onclick="window.location.href='/controller?mode=mobile'" style="height: 42px; background: rgba(0, 191, 255, 0.1); border-color: rgba(0, 191, 255, 0.3); color: #00bfff; font-weight: bold;"><i class="fa-solid fa-mobile-screen-button"></i> 모바일 버전</button>
+            <label class="toggle-row" id="lbl-reaction-wrapper" style="border-color: rgba(156, 39, 176, 0.4); background: rgba(156, 39, 176, 0.05); height: 42px; padding: 0 15px; box-sizing: border-box;">
+                <span class="toggle-label" id="lbl-reaction" style="color:#fff; font-weight:bold; font-size: 14px;"><i class="fa-solid fa-eye"></i> 수동 리액션 켜기</span>
+                <div class="apple-switch"><input type="checkbox" id="chk-reaction" onchange="toggleOption('reaction_mode')"><span class="apple-slider"></span></div>
+            </label>
             <button onclick="triggerServerLogout()" style="height: 42px; background: rgba(255, 69, 58, 0.1); border-color: rgba(255, 69, 58, 0.3); color: var(--danger); font-weight: bold;"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
         </div>
     </div>
@@ -1320,6 +1362,65 @@
 
 
 
+        function applyReactionModeEffects(isReactionOn) {
+            const audio = document.getElementById('bgm-audio');
+            const md = gd ? gd.match_data : null;
+            const volSlider = document.getElementById('yt-volume-slider') || document.querySelector('.ios-slider-volume');
+            const restoreVolume = volSlider ? parseFloat(volSlider.value) : 50;
+
+            if (isReactionOn) {
+                if (audio) {
+                    if (audio.paused) {
+                        audio.dataset.wasPlaying = "false";
+                    } else {
+                        audio.dataset.wasPlaying = "true";
+                        fadeAudioVolume(audio, 0.05, 500);
+                    }
+                }
+
+                try {
+                    if (ytPlayer && typeof ytPlayer.getPlayerState === 'function' && ytPlayer.getPlayerState() === 1) {
+                        ytWasPlaying = true;
+                        fadeYoutubeVolume(ytPlayer, 5, 500);
+                    } else {
+                        ytWasPlaying = false;
+                    }
+                } catch (ytErr) {
+                    console.error("ytPlayer reaction-mode fade error:", ytErr);
+                    ytWasPlaying = false;
+                }
+
+                if (md && md.is_running) {
+                    md.time_left_ms = Math.max(0, md.end_time_ms - (Date.now() + serverTimeOffset));
+                    md.is_running = false;
+                    md.was_running_before_reaction = true;
+                }
+
+                showReactionToast();
+            } else {
+                if (audio && audio.dataset.wasPlaying === "true") {
+                    if (audio.paused) audio.play().catch(() => {});
+                    fadeAudioVolume(audio, 0.5, 800);
+                }
+
+                try {
+                    if (ytWasPlaying && ytPlayer) {
+                        if (typeof ytPlayer.playVideo === 'function') ytPlayer.playVideo();
+                        fadeYoutubeVolume(ytPlayer, restoreVolume, 800);
+                        ytWasPlaying = false;
+                    }
+                } catch (ytErr) {
+                    console.error("ytPlayer reaction-mode restore error:", ytErr);
+                }
+
+                if (md && md.was_running_before_reaction) {
+                    if (md.time_left_ms <= 0) md.time_left_ms = md.paused_time_left || 180000;
+                    md.end_time_ms = (Date.now() + serverTimeOffset) + md.time_left_ms;
+                    md.is_running = true;
+                    md.was_running_before_reaction = false;
+                }
+            }
+        }
         async function fetchAPI() {
             if (isPushing || (Date.now() - lastPushTime < 200)) return; 
             try { 
@@ -1330,7 +1431,11 @@
                 if (newData && newData.server_time) {
                     serverTimeOffset = newData.server_time - Date.now();
                 }
+                const oldReactionMode = gd ? gd.reaction_mode : false;
                 gd = newData;
+                if (oldReactionMode !== newData.reaction_mode && typeof applyReactionModeEffects === 'function') {
+                    applyReactionModeEffects(newData.reaction_mode);
+                }
                 if(!gd.bjs) { gd.bjs = []; }
                 else { gd.bjs.forEach(bj => { if(bj.contribution === undefined) bj.contribution = bj.score > 0 ? bj.score : 0; }); }
                 if(!gd.match_data) gd.match_data = { active: false, fire_effect: false, is_running: false, time_left_ms: 180000, end_time_ms: 0, players: [{name:'팀 A', score:0}, {name:'팀 B', score:0}] };
@@ -1406,6 +1511,12 @@
             setVal('in-goal', gd.target_goal);
             renderGoalAchievementNotice();
             
+            setChk('chk-reaction', gd.reaction_mode);
+            const reactLbl = gd.reaction_mode ? "<i class='fa-solid fa-eye-slash'></i> 위젯 숨김 (리액션 ON)" : "<i class='fa-solid fa-eye'></i> 수동 리액션 켜기";
+            setHtml('lbl-reaction', reactLbl);
+            const reactionLabel = document.getElementById('lbl-reaction');
+            if (reactionLabel) reactionLabel.style.color = gd.reaction_mode ? "var(--danger)" : "var(--text-main)";
+
             setChk('chk-popup', gd.popup_enabled);
             setChk('chk-takeover', gd.takeover_enabled);
             setChk('chk-match', gd.match_data.active);
@@ -2098,6 +2209,9 @@
         
         function toggleOption(key) { 
             gd[key] = !gd[key]; 
+            if (key === 'reaction_mode' && typeof applyReactionModeEffects === 'function') {
+                applyReactionModeEffects(gd.reaction_mode);
+            }
             pushAPI(); 
         }
 
@@ -2197,6 +2311,13 @@
         }
         function triggerNeon(color) {
             gd.effect_trigger = {time: Date.now(), color: color, infinite: true};
+            if (color !== 'OFF') {
+                if (!gd.reaction_mode) {
+                    gd.reaction_mode = true;
+                    if (typeof applyReactionModeEffects === 'function') applyReactionModeEffects(true);
+                }
+                gd.reaction_enter_alert = { time: Date.now() };
+            }
             pushAPI();
         }
         
