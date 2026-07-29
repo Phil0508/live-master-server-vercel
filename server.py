@@ -42,12 +42,14 @@ import urllib.request
 import urllib.parse
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MEDIA_CACHE_DIR = os.path.join(BASE_DIR, 'media_cache')
-if not os.path.exists(MEDIA_CACHE_DIR):
-    try:
-        os.makedirs(MEDIA_CACHE_DIR, exist_ok=True)
-    except Exception:
-        pass
+IS_VERCEL = bool(os.environ.get('VERCEL'))
+if not IS_VERCEL:
+    MEDIA_CACHE_DIR = os.path.join(BASE_DIR, 'media_cache')
+    if not os.path.exists(MEDIA_CACHE_DIR):
+        try:
+            os.makedirs(MEDIA_CACHE_DIR, exist_ok=True)
+        except Exception:
+            pass
 
 def db_query(query):
     if IS_POSTGRES:
