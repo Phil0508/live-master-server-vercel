@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Streamer Reaction Alert Layer</title>
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background: transparent;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            user-select: none;
+        }
+
+
+
+        /* 🎵 리액션 팝업 오버레이 */
+        .reaction-screen-overlay {
+            width: 900px;
+            max-width: 90%;
+            background: rgba(10, 10, 15, 0.85);
+            border: 3px solid rgba(255, 215, 0, 0.4);
+            backdrop-filter: blur(15px);
+            border-radius: 36px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.7);
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85), 0 0 50px rgba(255, 215, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.05);
+            z-index: 100010;
+        }
+        .reaction-screen-overlay.show {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+        }
+        .reaction-screen-overlay img {
+            max-width: 100%;
+            max-height: 550px;
+            object-fit: contain;
+            border-radius: 24px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        .reaction-text-donator {
+            margin-top: 30px;
+            font-size: 56px;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 3px 3px 0 #000, -3px 3px 0 #000, 3px -3px 0 #000, -3px -3px 0 #000, 0 5px 25px rgba(255, 215, 0, 0.6);
+            text-align: center;
+            letter-spacing: -0.5px;
+            white-space: nowrap;
+            word-break: keep-all;
+        }
+        .reaction-text-message {
+            margin-top: 24px;
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2.5px solid rgba(255, 255, 255, 0.25);
+            padding: 16px 45px;
+            border-radius: 24px;
+            text-shadow: 1.5px 1.5px 3px rgba(0, 0, 0, 0.85);
+            text-align: center;
+            max-width: 780px;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+            line-height: 1.5;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75);
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+
+
+    <!-- 🎵 리액션 음원/사진 송출 전광판 및 오디오 객체 -->
+    <div id="reaction-screen-overlay" class="reaction-screen-overlay">
+        <img id="reaction-screen-image" crossorigin="anonymous" src="" alt="Reaction Image">
+        <div id="reaction-donator-info" class="reaction-text-donator"></div>
+        <div id="reaction-message-info" class="reaction-text-message"></div>
+    </div>
+
+
+    <script>
+        // API Token
+        window.apiToken = "";
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('token')) {
+                window.apiToken = urlParams.get('token');
+                console.log("Token detected from URL parameter.");
+            }
+        } catch(tokenErr) {
+            console.error("Token parse error:", tokenErr);
+        }
+
+        // Fetch wrapper to handle API token
+        const originalFetch = window.fetch;
+        window.fetch = function(resource, init) {
+            if (typeof resource === 'string' && resource.startsWith('/api/')) {
+                if (!window.location.protocol.startsWith('http')) {
+                    resource = 'http://localhost:5000' + resource;
+                }
+                if (window.apiToken) {
+                    init = init || {};
+                    init.headers = init.headers || {};
+                    if (init.headers instanceof Headers) {
+                        init.headers.set('Authorization', 'Bearer ' + window.apiToken);
+                    } else {
+                        init.headers['Authorization'] = 'Bearer ' + window.apiToken;
+                    }
+                }
+            }
+            return originalFetch(resource, init);
+        };
+
+        // State variables
+        let globalData = null;
+        let currentPlayingId = null;
+        let isEndingReaction = false;
+        let reactionTimeout = null;
+        let reactionImgClearTimeout = null;
+
+        // XSS defense helper
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatNum(n) {
+            return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function checkReactionQueue() {
+            if (window.isReactionCurrentlyActive) return;
+            
+            if (!globalData || !globalData.reaction_mode || !globalData.reaction_queue || globalData.reaction_queue.length === 0) {
+                if (currentPlayingId !== null) {
+                    currentPlayingId = null;
+                    stopReactionVisuals();
+                }
+                return;
+            }
+            
+            const firstItem = globalData.reaction_queue[0];
+            if (currentPlayingId !== firstItem.id) {
+                currentPlayingId = firstItem.id;
+                playReaction(firstItem);
+            }
+        }
+
+        function stopReactionVisuals() {
+            const overlay = document.getElementById('reaction-screen-overlay');
+            const img = document.getElementById('reaction-screen-image');
+
+            if (overlay) {
+                overlay.classList.remove('show');
+            }
+            if (reactionTimeout) {
+                clearTimeout(reactionTimeout);
+                reactionTimeout = null;
+            }
+            
+            if (reactionImgClearTimeout) clearTimeout(reactionImgClearTimeout);
+            reactionImgClearTimeout = setTimeout(() => { if (img) img.src = ""; }, 500);
+            
+            window.isReactionCurrentlyActive = false;
+        }
+
+        function playReaction(data) {
+            console.log('Playing reaction (visual only, no audio):', data);
+            window.isReactionCurrentlyActive = true;
+            
+            const overlay = document.getElementById('reaction-screen-overlay');
+            const img = document.getElementById('reaction-screen-image');
+            const donatorEl = document.getElementById('reaction-donator-info');
+            const messageEl = document.getElementById('reaction-message-info');
+            
+            if (!overlay || !img) return;
+            
+            // 1. Reset any playing timers
+            isEndingReaction = false;
+            img.onload = null;
+            if (reactionTimeout) clearTimeout(reactionTimeout);
+            if (reactionImgClearTimeout) { clearTimeout(reactionImgClearTimeout); reactionImgClearTimeout = null; }
+            
+            // 2. Set donator and amount information
+            let donatorName = data.donator;
+            if (!donatorName || donatorName === '익명' || data.slot_machine) {
+                donatorName = data.slot_machine ? '🎰 슬롯머신' : (data.donator || '슬롯머신');
+            }
+            let donationAmount = data.amount ? formatNum(data.amount) + '원' : '';
+            
+            if (donatorEl) {
+                donatorEl.innerText = donatorName + (donationAmount ? ' · ' + donationAmount : '');
+            }
+            
+            let msgText = data.message || '';
+            if (messageEl) {
+                if (msgText && msgText !== '수동 후원 송출') {
+                    messageEl.innerText = msgText;
+                    messageEl.style.display = 'block';
+                } else {
+                    messageEl.innerText = '';
+                    messageEl.style.display = 'none';
+                }
+            }
+            
+            // 3. Set image URL
+            if (data.image_url) {
+                let imgUrl = data.image_url;
+                if (!imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
+                    imgUrl = '/' + imgUrl;
+                }
+                img.src = imgUrl;
+                img.style.display = 'block';
+            } else {
+                img.src = '';
+                img.style.display = 'none';
+            }
+            
+            // 4. Reveal widget (always centered, no minimize timeout!)
+            overlay.classList.add('show');
+            
+            // 5. No audio on this page - visual display stays until overlay page finishes audio
+            //    and sends onReactionEnded via SSE. Use a safety timeout of 120s as fallback.
+            reactionTimeout = setTimeout(() => {
+                onReactionEnded();
+            }, 120000);
+        }
+
+        function onReactionEnded() {
+            if (isEndingReaction) return;
+            isEndingReaction = true;
+            
+            stopReactionVisuals();
+            
+            const popId = currentPlayingId;
+            currentPlayingId = null;
+            
+            fetch('/api/reaction/next', { 
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: popId})
+            }).then(res => res.json()).then(() => {
+                return fetch('/api/data');
+            }).then(res => res.json()).then(data => {
+                globalData = data;
+                isEndingReaction = false;
+                checkReactionQueue();
+            }).catch(err => {
+                console.error("Queue advance error:", err);
+                isEndingReaction = false;
+            });
+        }
+
+
+
+        // SSE Real-time connection
+        let sseSource = null;
+        function initSSE() {
+            if (sseSource) sseSource.close();
+            sseSource = new EventSource('/api/stream');
+            
+            sseSource.addEventListener('init', function(e) {
+                const newData = JSON.parse(e.data);
+                globalData = newData;
+                checkReactionQueue();
+            });
+            
+            sseSource.addEventListener('update', function(e) {
+                const newData = JSON.parse(e.data);
+                globalData = newData;
+                checkReactionQueue();
+            });
+
+            sseSource.addEventListener('reaction_stop', function(e) {
+                try {
+                    const data = e.data ? JSON.parse(e.data) : {};
+                    if (data.id && data.id !== currentPlayingId) return;
+                    currentPlayingId = null;
+                    isEndingReaction = false;
+                    stopReactionVisuals();
+                } catch(err) {
+                    console.error("Reaction stop error:", err);
+                    currentPlayingId = null;
+                    isEndingReaction = false;
+                    stopReactionVisuals();
+                }
+            });
+
+            sseSource.addEventListener('reaction_skip', function(e) {
+                currentPlayingId = null;
+                isEndingReaction = false;
+                onReactionEnded();
+            });
+            
+            sseSource.onerror = function(err) {
+                console.error("SSE connection error. Reconnecting in 3s...", err);
+                sseSource.close();
+                setTimeout(initSSE, 3000);
+            };
+        }
+        initSSE();
+
+        // 2-way backup polling fallback
+        let fallbackInterval = setInterval(async () => {
+            try {
+                let res = await fetch('/api/data');
+                if (res.ok) {
+                    let d = await res.json();
+                    globalData = d;
+                    checkReactionQueue();
+                }
+            } catch(e) {
+                console.warn("Polling fallback issue:", e);
+            }
+        }, 1500);
+
+    </script>
+</body>
+</html>
