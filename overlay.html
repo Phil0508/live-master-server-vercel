@@ -998,7 +998,7 @@
 
 
             // 🏃‍♀️ 퇴근전쟁 모드가 켜져 있으면 기존 랭킹판을 감추고 그 자리에 퇴근빵 위젯을 표시 (스르륵 크로스페이드)
-            if (isActive && !cg.active) {
+            if (isActive) {
                 const homeRaceContainerEl = document.getElementById('home-race-container');
                 if (d.home_race_enabled) {
                     if (rankingEl) { rankingEl.style.opacity = '0'; rankingEl.style.visibility = 'hidden'; }
@@ -1124,7 +1124,7 @@
                 }
 
                 // 💡 아우디 라이트
-                let shouldAudiShow = globalAudi && d.reaction_mode;
+                let shouldAudiShow = globalAudi;
                 let audiEl = document.getElementById('audi-overlay');
                 
                 if (shouldAudiShow) {
@@ -1141,7 +1141,7 @@
                 }
 
                 // 네온 라이트
-                let shouldNeonShow = (globalNeon !== 'OFF') && d.reaction_mode;
+                let shouldNeonShow = (globalNeon !== 'OFF');
                 let neonEl = document.getElementById('neon-overlay');
                 if (neonEl) {
                     neonEl.className = 'neon-layer'; 
@@ -1410,12 +1410,12 @@
                     }
                 }
 
-                let curTick = d.ticker_text + "_" + d.ticker_speed + "_" + d.ticker_enabled + "_" + d.reaction_mode;
+                let curTick = d.ticker_text + "_" + d.ticker_speed + "_" + d.ticker_enabled;
                 if (lastTickerState !== curTick) { 
                     lastTickerState = curTick; 
                     ['ticker_top', 'ticker_bottom'].forEach(id => { 
                         let c = document.getElementById(id + '-container'); 
-                        if (d.ticker_enabled && d.reaction_mode) { 
+                        if (d.ticker_enabled) { 
                             c.style.opacity = '1'; 
                             c.style.visibility = 'visible';
                             let t = document.getElementById(id + '-text'); 
