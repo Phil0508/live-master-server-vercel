@@ -7,6 +7,11 @@ IS_VERCEL = os.environ.get('VERCEL') == '1' or 'VERCEL' in os.environ
 DATABASE_URL = os.environ.get('DATABASE_URL').strip() if os.environ.get('DATABASE_URL') else None
 IS_POSTGRES = bool(DATABASE_URL)
 
+try:
+    import psycopg2
+except ImportError:
+    psycopg2 = None
+
 # GUI 모드(console=False)에서 발생하는 모든 에러를 파일로 로깅하여 크래시 분석
 if getattr(sys, 'frozen', False):
     try:
@@ -60,17 +65,41 @@ def _pg_binary(data):
 
 IS_VERCEL = bool(os.environ.get('VERCEL'))
 
+def connect_pg(db_url):
+    try:
+        import psycopg2
+        return psycopg2.connect(db_url)
+    except Exception as e1:
+        print(f"⚠️ [psycopg2 연결 실패, pg8000으로 시도]: {e1}")
+    try:
+        import pg8000
+        import urllib.parse
+        parsed = urllib.parse.urlparse(db_url)
+        user = urllib.parse.unquote(parsed.username) if parsed.username else None
+        password = urllib.parse.unquote(parsed.password) if parsed.password else None
+        database = parsed.path.lstrip('/')
+        host = parsed.hostname
+        port = parsed.port or 5432
+        import ssl
+        ssl_ctx = ssl.create_default_context()
+        ssl_ctx.check_hostname = False
+        ssl_ctx.verify_mode = ssl.CERT_NONE
+        return pg8000.connect(user=user, password=password, host=host, port=port, database=database, ssl_context=ssl_ctx)
+    except Exception as e2:
+        print(f"❌ [pg8000 연결 실패]: {e2}")
+        raise e2
+
 _PG_CONN = None
 
 @contextmanager
 def get_db_connection():
     global _PG_CONN
     if IS_POSTGRES and DATABASE_URL:
-        import psycopg2
         conn = None
         if _PG_CONN is not None:
             try:
-                if _PG_CONN.closed == 0:
+                is_closed = getattr(_PG_CONN, 'closed', 1)
+                if is_closed == 0 or is_closed == False:
                     with _PG_CONN.cursor() as cur:
                         cur.execute("SELECT 1")
                     conn = _PG_CONN
@@ -84,7 +113,7 @@ def get_db_connection():
                 _PG_CONN = None
 
         if conn is None:
-            _PG_CONN = psycopg2.connect(DATABASE_URL)
+            _PG_CONN = connect_pg(DATABASE_URL)
             conn = _PG_CONN
 
         try:
@@ -428,7 +457,7 @@ LAST_LOAD_TIME = 0
 def load_data():
     global MEMORY_STATE, LAST_LOAD_TIME
     now = time.time()
-    if MEMORY_STATE is not None and (now - LAST_LOAD_TIME < 0.5):
+    if not IS_VERCEL and MEMORY_STATE is not None and (now - LAST_LOAD_TIME < 0.5):
         return MEMORY_STATE
     init_db()
     
@@ -487,7 +516,8 @@ def db_worker():
             print(f"❌ [비동기 DB 저장 백그라운드 오류] {e}")
             time.sleep(1)
 
-threading.Thread(target=db_worker, daemon=True).start()
+if not IS_VERCEL:
+    threading.Thread(target=db_worker, daemon=True).start()
 
 # 🏦 은행 입출금 통장 거래내역 기록 및 수학적 잔액 검증 엔진
 def record_bank_transaction(player_name, score_change, contrib_change=0, tx_type="CHANGE", description="", cursor=None):
@@ -590,8 +620,24 @@ def save_data_sync(new_data, is_initial=False):
                                 )
                             record_bank_transaction(p_name, score_diff, contrib_diff, "MANUAL_CHANGE", f"점수 변동 ({score_diff:+}점) / 기여도 변동 ({contrib_diff:+}점)", cursor=cursor)
             
-            # 2. 플레이어 점수 및 기여도 저장 (executemany로 1회 라운드트립 단축)
-            player_rows = [(bj["name"], int(bj.get("score") or 0), int(bj.get("contribution") or 0)) for bj in new_data.get("bjs", [])]
+            # 2. 플레이어 점수 및 기여도 동기화 (삭제된 플레이어 DB에서 삭제 후 갱신)
+            new_bjs = new_data.get("bjs", [])
+            valid_names = [bj["name"] for bj in new_bjs if bj.get("name")]
+            
+            if not is_initial:
+                try:
+                    if valid_names:
+                        if IS_POSTGRES:
+                            cursor.execute("DELETE FROM players WHERE NOT (name = ANY(%s))", (valid_names,))
+                        else:
+                            placeholders = ', '.join(['?'] * len(valid_names))
+                            cursor.execute(f"DELETE FROM players WHERE name NOT IN ({placeholders})", valid_names)
+                    else:
+                        cursor.execute("DELETE FROM players")
+                except Exception as del_err:
+                    print(f"⚠️ [플레이어 삭제 동기화 예외]: {del_err}")
+
+            player_rows = [(bj["name"], int(bj.get("score") or 0), int(bj.get("contribution") or 0)) for bj in new_bjs if bj.get("name")]
             if player_rows:
                 if IS_POSTGRES:
                     cursor.executemany(
@@ -757,77 +803,79 @@ def api_ping():
 def api_debug():
     """Vercel/Supabase 연결 디버그 엔드포인트"""
     import traceback
-    result = {
-        'is_vercel': IS_VERCEL,
-        'is_postgres': IS_POSTGRES,
-        'has_database_url': bool(DATABASE_URL),
-        'database_url_prefix': DATABASE_URL[:20] + '...' if DATABASE_URL else None,
-        'has_psycopg2': psycopg2 is not None,
-        'python_version': sys.version,
-    }
-    # DB 연결 테스트
     try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT 1")
-            result['db_connect'] = 'success'
-            # 테이블 목록 확인
-            try:
-                cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
-                tables = [row[0] for row in cursor.fetchall()]
-                result['tables'] = tables
-            except Exception as e:
-                result['tables_error'] = str(e)
-            # kv_store 데이터 확인
-            try:
-                cursor.execute("SELECT key FROM kv_store")
-                kv_keys = [row[0] for row in cursor.fetchall()]
-                result['kv_keys'] = kv_keys
-                result['kv_count'] = len(kv_keys)
-            except Exception as e:
-                result['kv_error'] = str(e)
-            # players 데이터 확인
-            try:
-                cursor.execute("SELECT COUNT(*) FROM players")
-                result['player_count'] = cursor.fetchone()[0]
-            except Exception as e:
-                result['players_error'] = str(e)
-            # 각 테이블의 실제 컬럼 구조 확인
-            try:
-                cursor.execute("""
-                    SELECT table_name, column_name, data_type 
-                    FROM information_schema.columns 
-                    WHERE table_schema = 'public' 
-                    ORDER BY table_name, ordinal_position
-                """)
-                schema_info = {}
-                for row in cursor.fetchall():
-                    tbl = row[0]
-                    if tbl not in schema_info:
-                        schema_info[tbl] = []
-                    schema_info[tbl].append({'col': row[1], 'type': row[2]})
-                result['schema'] = schema_info
-            except Exception as e:
-                result['schema_error'] = str(e)
-    except Exception as e:
-        result['db_connect'] = 'failed'
-        result['db_error'] = str(e)
-    # load_data() 테스트
-    try:
-        global MEMORY_STATE
-        old_state = MEMORY_STATE
-        MEMORY_STATE = None  # 강제 리로드
-        data = load_data()
-        result['load_data'] = 'success'
-        result['load_data_keys'] = list(data.keys()) if isinstance(data, dict) else str(type(data))
-        result['bjs_count'] = len(data.get('bjs', [])) if isinstance(data, dict) else 0
-    except Exception as e:
-        result['load_data'] = 'failed'
-        result['load_data_error'] = str(e)
-        result['load_data_traceback'] = traceback.format_exc()
-    finally:
-        MEMORY_STATE = old_state  # 디버그 조회가 라이브 메모리 상태를 바꾸지 않도록 복구
-    return jsonify(result)
+        result = {
+            'is_vercel': IS_VERCEL,
+            'is_postgres': IS_POSTGRES,
+            'has_database_url': bool(DATABASE_URL),
+            'database_url_prefix': DATABASE_URL[:20] + '...' if DATABASE_URL else None,
+            'has_psycopg2': psycopg2 is not None,
+            'python_version': sys.version,
+        }
+        # DB 연결 테스트
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+                result['db_connect'] = 'success'
+                # 테이블 목록 확인
+                try:
+                    cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
+                    tables = [row[0] for row in cursor.fetchall()]
+                    result['tables'] = tables
+                except Exception as e:
+                    result['tables_error'] = str(e)
+                # kv_store 데이터 확인
+                try:
+                    cursor.execute("SELECT key FROM kv_store")
+                    kv_keys = [row[0] for row in cursor.fetchall()]
+                    result['kv_keys'] = kv_keys
+                    result['kv_count'] = len(kv_keys)
+                except Exception as e:
+                    result['kv_error'] = str(e)
+                # players 데이터 확인
+                try:
+                    cursor.execute("SELECT COUNT(*) FROM players")
+                    result['player_count'] = cursor.fetchone()[0]
+                except Exception as e:
+                    result['players_error'] = str(e)
+                # 각 테이블의 실제 컬럼 구조 확인
+                try:
+                    cursor.execute("""
+                        SELECT table_name, column_name, data_type 
+                        FROM information_schema.columns 
+                        WHERE table_schema = 'public' 
+                        ORDER BY table_name, ordinal_position
+                    """)
+                    schema_info = {}
+                    for row in cursor.fetchall():
+                        tbl = row[0]
+                        if tbl not in schema_info:
+                            schema_info[tbl] = []
+                        schema_info[tbl].append({'col': row[1], 'type': row[2]})
+                    result['schema'] = schema_info
+                except Exception as e:
+                    result['schema_error'] = str(e)
+        except Exception as e:
+            result['db_connect'] = 'failed'
+            result['db_error'] = str(e)
+        # load_data() 테스트
+        try:
+            global MEMORY_STATE
+            old_state = MEMORY_STATE
+            MEMORY_STATE = None  # 강제 리로드
+            data = load_data()
+            result['load_data'] = 'success'
+            result['load_data_keys'] = list(data.keys()) if isinstance(data, dict) else str(type(data))
+            result['bjs_count'] = len(data.get('bjs', [])) if isinstance(data, dict) else 0
+            MEMORY_STATE = old_state
+        except Exception as e:
+            result['load_data'] = 'failed'
+            result['load_data_error'] = str(e)
+            result['load_data_traceback'] = traceback.format_exc()
+        return jsonify(result)
+    except Exception as outer_e:
+        return jsonify({'status': 'fatal_error', 'error': str(outer_e), 'traceback': traceback.format_exc()}), 500
 
 # ==========================================
 # 👥 BJ 일괄 등록 API

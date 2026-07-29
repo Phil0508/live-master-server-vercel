@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -1671,7 +1671,7 @@
                         <td class="score-display">${bj.score.toLocaleString()}</td>
                         <td class="score-display contrib-cell" style="color:var(--gold); position: relative;" onclick="editContrib(${i}, this, event)" title="클릭해서 기여도 수정"><span>${(bj.contribution||0).toLocaleString()}</span></td>
                         <td><input type="number" id="rank-add-${i}" placeholder="+ 점수" onkeydown="if(event.key==='Enter') addScore('rank', ${i})"></td>
-                        <td><button onclick="gd.${listKey}.splice(${i},1); pushAPI();" disabled><i class="fa-solid fa-trash-can"></i></button></td>
+                        <td><button onclick="deletePlayer(${i})" disabled><i class="fa-solid fa-trash-can"></i></button></td>
                     </tr>`; 
                 } else {
                     rHtml += `<tr>
@@ -1684,7 +1684,7 @@
                         <td class="score-display">${bj.score.toLocaleString()}</td>
                         <td class="score-display contrib-cell" style="color:var(--gold); position: relative;" onclick="editContrib(${i}, this, event)" title="클릭해서 기여도 수정"><span>${(bj.contribution||0).toLocaleString()}</span></td>
                         <td><input type="number" id="rank-add-${i}" placeholder="+ 점수" onkeydown="if(event.key==='Enter') addScore('rank', ${i})"></td>
-                        <td><button onclick="gd.${listKey}.splice(${i},1); pushAPI();"><i class="fa-solid fa-trash-can"></i></button></td>
+                        <td><button onclick="deletePlayer(${i})"><i class="fa-solid fa-trash-can"></i></button></td>
                     </tr>`; 
                 }
             });
@@ -2203,6 +2203,17 @@
                 pushAPI();
             } else {
                 renderUI();
+            }
+        }
+
+        function deletePlayer(idx) {
+            let isExtra = gd.extra_game_active || false;
+            let listKey = isExtra ? 'extra_bjs' : 'bjs';
+            if (gd[listKey] && gd[listKey][idx]) {
+                gd[listKey].splice(idx, 1);
+                lastRHtml = "";
+                renderUI();
+                pushAPI();
             }
         }
         async function triggerUpText() { let txt = document.getElementById('in-up-text').value; if (txt.trim() === "") { await premiumAlert("화면에 띄울 문구를 먼저 입력해주세요!", "입력 오류", "warning"); return; } gd.up_trigger = { time: Date.now(), text: txt }; pushAPI(); }
