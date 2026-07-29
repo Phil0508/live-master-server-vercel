@@ -46,61 +46,29 @@ except ImportError:
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
 IS_POSTGRES = bool(DATABASE_URL)
-IS_VERCEL = bool(os.environ.get('VERCEL'))
 
 def db_query(query):
     if IS_POSTGRES:
         return query.replace('?', '%s')
     return query
 
-_PG_CONN = None
-
 @contextmanager
 def get_db_connection():
-    global _PG_CONN
     if IS_POSTGRES:
         if psycopg2 is None:
             raise ImportError("psycopg2 is not installed but DATABASE_URL is set.")
-        conn = None
-        if _PG_CONN is not None:
-            try:
-                if _PG_CONN.closed == 0:
-                    with _PG_CONN.cursor() as cur:
-                        cur.execute("SELECT 1")
-                    conn = _PG_CONN
-                else:
-                    _PG_CONN = None
-            except Exception:
-                try:
-                    _PG_CONN.close()
-                except Exception:
-                    pass
-                _PG_CONN = None
-
-        if conn is None:
-            _PG_CONN = psycopg2.connect(DATABASE_URL)
-            conn = _PG_CONN
-
-        try:
-            yield conn
-            conn.commit()
-        except Exception:
-            try:
-                conn.rollback()
-            except Exception:
-                pass
-            raise
+        conn = psycopg2.connect(DATABASE_URL)
     else:
         conn = sqlite3.connect(DB_FILE)
-        try:
-            yield conn
-            conn.commit()
-        except Exception:
-            conn.rollback()
-            raise
-        finally:
-            conn.close()
-from flask import Flask, jsonify, request, send_from_directory, redirect, url_for, session, make_response
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+from flask import Flask, jsonify, request, send_from_directory, redirect, url_for, session
 from flask_cors import CORS
 try:
     import tkinter as tk
@@ -264,34 +232,9 @@ def get_or_create_totp_secret():
 
 def serve_html_file(filename):
     local_path = os.path.join(BASE_DIR, filename)
-    target_dir = BASE_DIR if os.path.exists(local_path) else BUNDLE_DIR
-    
-    if filename.endswith('.html'):
-        full_path = os.path.join(target_dir, filename)
-        if os.path.exists(full_path):
-            try:
-                with open(full_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                data = load_data()
-                if isinstance(data, dict):
-                    data = data.copy()
-                    data['server_time'] = int(time.time() * 1000)
-                inject_script = f"<script>window.INITIAL_DATA = {json.dumps(data, ensure_ascii=False)};</script>\n<head>"
-                content = content.replace('<head>', inject_script, 1)
-                res = make_response(content)
-                res.headers['Content-Type'] = 'text/html; charset=utf-8'
-                res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-                res.headers['Pragma'] = 'no-cache'
-                res.headers['Expires'] = '0'
-                return res
-            except Exception as e:
-                print(f"[Initial Data Injection Warning] {e}")
-
-    res = make_response(send_from_directory(target_dir, filename))
-    res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    res.headers['Pragma'] = 'no-cache'
-    res.headers['Expires'] = '0'
-    return res
+    if os.path.exists(local_path):
+        return send_from_directory(BASE_DIR, filename)
+    return send_from_directory(BUNDLE_DIR, filename)
 
 DEFAULT_STATE = {
     "bjs": [],
@@ -519,11 +462,10 @@ def save_data_sync(new_data, is_initial=False):
 
 def save_data(new_data, is_initial=False):
     global MEMORY_STATE
+    # 메모리 상의 캐시 상태는 즉시 최신화하여 조종실과 오버레이에 즉시 전송되게 함 (0ms 레이턴시)
     MEMORY_STATE = new_data
-    if IS_VERCEL or IS_POSTGRES:
-        save_data_sync(new_data, is_initial)
-    else:
-        db_write_queue.put((new_data, is_initial))
+    # 실제 원격 DB 저장은 백그라운드 큐에 넣어 비동기로 처리
+    db_write_queue.put((new_data, is_initial))
 
 def time_machine_recovery():
     try:

@@ -13,313 +13,27 @@
     <style>@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');</style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { 
-            --bg-body: #0d0d0f; 
-            --bg-panel: #141416; 
-            --bg-card: #1c1c1e; 
-            --bg-input: #08080a; 
-            --border-light: rgba(255, 255, 255, 0.06); 
-            --text-main: #f5f5f7; 
-            --text-muted: #86868b; 
-            --accent: #00ffcc; 
-            --accent-glow: rgba(0, 255, 204, 0.25); 
-            --danger: #ff453a; 
-            --danger-glow: rgba(255, 69, 58, 0.25);
-            --gold: #FFD700; 
-            --gold-glow: rgba(255, 215, 0, 0.25);
-            --radius-lg: 16px; 
-            --radius-md: 10px; 
-            --radius-sm: 6px; 
-            --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        :root { --bg-body: #111113; --bg-panel: #18181b; --bg-card: #222225; --bg-input: #111113; --border-light: rgba(255, 255, 255, 0.08); --text-main: #f5f5f7; --text-muted: #8e8e93; --accent: #00ffcc; --accent-glow: rgba(0, 255, 204, 0.3); --danger: #ff453a; --gold: #FFD700; --radius-lg: 16px; --radius-md: 10px; --radius-sm: 6px; }
         body.theme-pink {
             --accent: #ff007f;
             --accent-glow: rgba(255, 0, 127, 0.3);
             --gold: #ff007f;
         }
         body { background: var(--bg-body); color: var(--text-main); font-family: 'Pretendard', sans-serif; margin: 0; padding: 25px; -webkit-font-smoothing: antialiased; letter-spacing: -0.3px; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #3a3a3c; border-radius: 4px; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid var(--border-light); } .header h1 { margin: 0; font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; } .header h1 i { color: var(--accent); filter: drop-shadow(0 0 3px var(--accent-glow)); } .header-buttons { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-        .tabs { 
-            display: inline-flex; 
-            gap: 6px; 
-            background: rgba(255, 255, 255, 0.02); 
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 6px; 
-            border-radius: 16px; 
-            margin-bottom: 25px; 
-            overflow-x: auto; 
-            white-space: nowrap; 
-            border: 1px solid var(--border-light); 
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.15); 
-        }
-        .tab-btn { 
-            background: transparent; 
-            color: var(--text-muted); 
-            border: 1px solid transparent; 
-            padding: 10px 18px; 
-            border-radius: 12px; 
-            font-size: 14.5px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            transition: var(--transition-smooth); 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 8px; 
-            letter-spacing: -0.2px;
-        } 
-        .tab-btn.active { 
-            background: rgba(255, 255, 255, 0.05); 
-            color: var(--accent); 
-            border-color: rgba(0, 255, 204, 0.4);
-            box-shadow: 0 4px 12px rgba(0, 255, 204, 0.1), inset 0 1px 1px rgba(255,255,255,0.05);
-            text-shadow: 0 0 10px var(--accent-glow);
-        } 
-        body.theme-pink .tab-btn.active {
-            color: var(--accent);
-            border-color: rgba(255, 0, 127, 0.4);
-            box-shadow: 0 4px 12px rgba(255, 0, 127, 0.1), inset 0 1px 1px rgba(255,255,255,0.05);
-            text-shadow: 0 0 10px var(--accent-glow);
-        }
-        .tab-btn:hover:not(.active) { 
-            color: #fff; 
-            background: rgba(255,255,255,0.04); 
-            transform: translateY(-1px);
-        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid var(--border-light); } .header h1 { margin: 0; font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; } .header h1 i { color: var(--accent); } .header-buttons { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .tabs { display: inline-flex; gap: 5px; background: rgba(255, 255, 255, 0.03); padding: 6px; border-radius: 14px; margin-bottom: 25px; overflow-x: auto; white-space: nowrap; border: 1px solid var(--border-light); box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); }
+        .tab-btn { background: transparent; color: var(--text-muted); border: none; padding: 10px 18px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px; } .tab-btn.active { background: #333336; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.3); } .tab-btn:hover:not(.active) { color: #fff; background: rgba(255,255,255,0.05); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .group-box { 
-            background: linear-gradient(135deg, rgba(28, 28, 32, 0.8), rgba(20, 20, 22, 0.8)); 
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-light); 
-            border-top: 1px solid rgba(255, 255, 255, 0.07);
-            border-radius: var(--radius-lg); 
-            padding: 24px; 
-            margin-bottom: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
-            transition: var(--transition-smooth);
-        } 
-        .group-box:hover {
-            box-shadow: 0 12px 35px rgba(0,0,0,0.35);
-        }
-        .group-title { 
-            color: var(--text-main); 
-            font-weight: 800; 
-            font-size: 16.5px; 
-            margin-bottom: 20px; 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            border-bottom: 1px solid var(--border-light); 
-            padding-bottom: 12px; 
-            letter-spacing: -0.3px;
-        } 
-        .group-title i { 
-            color: var(--accent); 
-            filter: drop-shadow(0 0 4px var(--accent-glow));
-        }
+        .group-box { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); } .group-title { color: var(--text-main); font-weight: 800; font-size: 17px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-light); padding-bottom: 12px; } .group-title i { color: var(--accent); }
         .control-group { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
-        button { 
-            background: rgba(255, 255, 255, 0.05); 
-            color: #f5f5f7; 
-            border: 1px solid var(--border-light); 
-            border-top: 1px solid rgba(255,255,255,0.08);
-            border-radius: var(--radius-md); 
-            padding: 10px 16px; 
-            font-weight: 700; 
-            font-size: 14px; 
-            cursor: pointer; 
-            transition: var(--transition-smooth); 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 8px; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-        } 
-        button:hover { 
-            background: rgba(255, 255, 255, 0.08); 
-            border-color: rgba(255, 255, 255, 0.15);
-            transform: translateY(-1.5px) scale(1.02); 
-            box-shadow: 0 6px 15px rgba(0,0,0,0.25);
-            color: #fff;
-        } 
-        button:active {
-            transform: translateY(0.5px) scale(0.98);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-        }
-        button.primary { 
-            background: var(--accent); 
-            color: #000; 
-            border-color: var(--accent); 
-            border-top: 1px solid rgba(255,255,255,0.2);
-            text-shadow: none;
-        } 
-        button.primary:hover {
-            background: #26ffd5;
-            border-color: #26ffd5;
-            box-shadow: 0 0 15px var(--accent-glow);
-        }
-        body.theme-pink button.primary:hover {
-            background: #ff2692;
-            border-color: #ff2692;
-            box-shadow: 0 0 15px var(--accent-glow);
-        }
-        button.danger { 
-            background: var(--danger); 
-            color: #fff; 
-            border-color: var(--danger); 
-            border-top: 1px solid rgba(255,255,255,0.15);
-        }
-        button.danger:hover {
-            background: #ff5b52;
-            border-color: #ff5b52;
-            box-shadow: 0 0 15px var(--danger-glow);
-        }
-        input[type="text"], input[type="number"], select, textarea { 
-            background: var(--bg-input); 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            border-radius: var(--radius-md); 
-            padding: 10px 14px; 
-            color: white; 
-            font-size: 14px; 
-            font-weight: 500; 
-            font-family: 'Pretendard', sans-serif; 
-            transition: var(--transition-smooth); 
-        } 
-        input:focus, select:focus, textarea:focus { 
-            outline: none; 
-            border-color: var(--accent); 
-            box-shadow: 0 0 10px var(--accent-glow); 
-            background: #000;
-        }
-        .toggle-row { 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            gap: 12px; 
-            background: rgba(255, 255, 255, 0.02); 
-            padding: 12px 18px; 
-            border-radius: var(--radius-md); 
-            cursor: pointer; 
-            user-select: none; 
-            border: 1px solid var(--border-light); 
-            transition: var(--transition-smooth);
-        }
-        .toggle-row:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-        .apple-switch { position: relative; display: inline-block; width: 52px; height: 30px; flex-shrink: 0; } 
-        .apple-switch input { opacity: 0; width: 0; height: 0; } 
-        .apple-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #2c2c2e; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 30px; } 
-        .apple-slider:before { position: absolute; content: ""; height: 24px; width: 24px; left: 3px; top: 3px; background-color: white; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.3); } 
-        .apple-switch input:checked + .apple-slider { background-color: #34C759; box-shadow: 0 0 10px rgba(52, 199, 89, 0.4); } 
-        .apple-switch input:checked + .apple-slider:before { transform: translateX(22px); }
-        .table-responsive { 
-            width: 100%; 
-            overflow-x: auto; 
-            border-radius: var(--radius-lg); 
-            border: 1px solid var(--border-light); 
-            background: rgba(24, 24, 27, 0.5); 
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            margin-bottom: 20px; 
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-        } 
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            min-width: 650px; 
-        } 
-        th, td { 
-            padding: 14px 16px; 
-            text-align: center; 
-            border-bottom: 1px solid var(--border-light); 
-        } 
-        th { 
-            background: rgba(0,0,0,0.35); 
-            color: var(--text-muted); 
-            font-weight: 700; 
-            font-size: 13px; 
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        } 
-        tr {
-            transition: var(--transition-smooth);
-        }
-        tr:hover {
-            background: rgba(255, 255, 255, 0.015);
-        }
-        td input { 
-            width: 85%; 
-            text-align: center; 
-            background: rgba(0, 0, 0, 0.3); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            border-radius: 8px;
-            padding: 6px 12px;
-            color: #fff;
-            font-size: 14px;
-            font-weight: 600;
-            transition: var(--transition-smooth);
-        } 
-        td input:focus { 
-            border-color: var(--accent); 
-            background: #000; 
-            box-shadow: 0 0 8px var(--accent-glow);
-            outline: none;
-        } 
-        .score-display { 
-            font-size: 18px; 
-            font-weight: 800; 
-            color: #fff; 
-        } 
-        td button { 
-            padding: 6px 12px; 
-            font-size: 13px; 
-            background: rgba(255,255,255,0.03); 
-            border: 1px solid rgba(255,255,255,0.08); 
-            border-radius: 8px;
-            box-shadow: none;
-            transition: var(--transition-smooth);
-        } 
-        td button:hover { 
-            background: rgba(255, 69, 58, 0.15); 
-            border-color: var(--danger); 
-            color: var(--danger); 
-            transform: scale(1.05);
-            box-shadow: 0 0 10px var(--danger-glow);
-        }
+        button { background: #333336; color: white; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 10px 16px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; } button:hover { background: #444448; transform: translateY(-1px); } button.primary { background: var(--accent); color: #000; border-color: var(--accent); } button.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        input[type="text"], input[type="number"], select, textarea { background: var(--bg-input); border: 1px solid #333; border-radius: var(--radius-sm); padding: 10px 14px; color: white; font-size: 14px; font-weight: 500; font-family: 'Pretendard', sans-serif; transition: 0.2s; } input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg-card); padding: 12px 18px; border-radius: var(--radius-md); cursor: pointer; user-select: none; border: 1px solid var(--border-light); }
+        .apple-switch { position: relative; display: inline-block; width: 52px; height: 30px; flex-shrink: 0; } .apple-switch input { opacity: 0; width: 0; height: 0; } .apple-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3a3a3c; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 30px; } .apple-slider:before { position: absolute; content: ""; height: 24px; width: 24px; left: 3px; top: 3px; background-color: white; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.15); } .apple-switch input:checked + .apple-slider { background-color: #34C759; } .apple-switch input:checked + .apple-slider:before { transform: translateX(22px); }
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: var(--bg-card); margin-bottom: 15px; } table { width: 100%; border-collapse: collapse; min-width: 650px; } th, td { padding: 14px 12px; text-align: center; border-bottom: 1px solid var(--border-light); } th { background: rgba(0,0,0,0.2); color: var(--text-muted); font-weight: 600; font-size: 13px; } td input { width: 85%; text-align: center; background: rgba(0,0,0,0.2); border: 1px solid transparent; } td input:focus { border-color: #555; background: #000; } .score-display { font-size: 18px; font-weight: 800; color: #fff; } td button { padding: 6px 10px; font-size: 13px; background: transparent; border: 1px solid #444; } td button:hover { background: var(--danger); border-color: var(--danger); color: #fff; }
         .contrib-cell span { display: inline-block; padding: 4px 10px; border-radius: 6px; transition: 0.2s; cursor: pointer; } .contrib-cell span:hover { background: rgba(255, 215, 0, 0.15); transform: scale(1.05); }
-
-        /* 🥇 순위별 배지 비주얼 스타일 추가 */
-        .rank-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            font-size: 12px;
-            font-weight: 800;
-            margin-right: 8px;
-        }
-        .badge-1st { background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; box-shadow: 0 0 10px rgba(255,215,0,0.4); }
-        .badge-2nd { background: linear-gradient(135deg, #C0C0C0, #808080); color: #000; box-shadow: 0 0 10px rgba(192,192,192,0.3); }
-        .badge-3rd { background: linear-gradient(135deg, #CD7F32, #8B4513); color: #fff; box-shadow: 0 0 10px rgba(205,127,50,0.3); }
-        .badge-normal { background: rgba(255,255,255,0.08); color: #aaa; }
-        .log-box {
-            background: #08080a;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: var(--radius-md);
-            padding: 18px;
-            height: 250px;
-            overflow-y: auto;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 12.5px;
-            color: #e5e5e7;
-            line-height: 1.7;
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.25);
-        }
+        .log-box { background: var(--bg-input); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 15px; height: 250px; overflow-y: auto; font-size: 13px; color: #aaa; line-height: 1.8; }
         .ml-filter-btn { padding: 6px 14px; font-size: 12px; font-weight: 600; background: transparent; border: none; color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all 0.2s; } .ml-filter-btn:hover { background: rgba(255,255,255,0.06); color: #fff; } .ml-filter-active { background: rgba(0, 255, 204, 0.15) !important; color: var(--accent) !important; }
         .ml-row { transition: background 0.15s; } .ml-row:hover { background: rgba(255,255,255,0.04) !important; } .ml-row td { padding: 9px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); } .ml-amount-plus { color: #4caf50; font-weight: 700; } .ml-amount-minus { color: #ff5252; font-weight: 700; } .ml-source-mobile { background: rgba(255, 152, 0, 0.12); color: #ff9800; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; } .ml-source-toonation { background: rgba(0, 191, 255, 0.12); color: #00bfff; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
         
@@ -532,91 +246,6 @@
             border-color: var(--accent) !important;
             transform: translateY(-1px);
         }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        @keyframes rainbowFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        .btn-rainbow-animated {
-            background: linear-gradient(90deg, #ff4d4d, #ffa64d, #ffff4d, #4dff4d, #4d4dff, #b34dff, #ff4dff) !important;
-            background-size: 300% 300% !important;
-            animation: rainbowFlow 4s linear infinite !important;
-            color: #000 !important;
-            font-weight: 800 !important;
-            text-shadow: none !important;
-            border: none !important;
-        }
-        .btn-rainbow-animated:hover {
-            box-shadow: 0 0 15px rgba(255, 77, 127, 0.6) !important;
-        }
-        .color-slot-btn {
-            transition: var(--transition-smooth);
-            cursor: pointer;
-            border: 1px solid var(--border-light);
-            border-radius: var(--radius-md);
-            padding: 10px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 13.5px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-        }
-        .color-slot-btn:hover {
-            transform: scale(1.05) translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-        }
-        
-        /* 🎰 Retro-Cyberpunk Roulette Winner Display & Danger Zone pulse */
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.65; }
-        }
-        .roulette-winner-arcade {
-            background: rgba(0, 255, 204, 0.05) !important;
-            border: 1.5px solid var(--accent) !important;
-            border-radius: var(--radius-md) !important;
-            box-shadow: 0 0 15px var(--accent-glow), inset 0 0 10px rgba(0, 255, 204, 0.1) !important;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 14px !important;
-            font-weight: 900 !important;
-            color: var(--accent) !important;
-            text-shadow: 0 0 8px var(--accent-glow) !important;
-            animation: blink 2s infinite ease-in-out;
-            letter-spacing: 0.5px;
-            padding: 14px !important;
-            text-align: center;
-            margin-top: 10px;
-        }
-        @keyframes dangerPulse {
-            0%, 100% {
-                box-shadow: 0 0 5px rgba(255, 69, 58, 0.3);
-                border-color: rgba(255, 69, 58, 0.4);
-            }
-            50% {
-                box-shadow: 0 0 15px rgba(255, 69, 58, 0.7);
-                border-color: rgba(255, 69, 58, 1);
-            }
-        }
-        .btn-danger-pulsate {
-            background: rgba(255, 69, 58, 0.08) !important;
-            border: 1.5px dashed rgba(255, 69, 58, 0.45) !important;
-            color: var(--danger) !important;
-            animation: dangerPulse 2s infinite ease-in-out !important;
-            font-weight: 800 !important;
-        }
-        .btn-danger-pulsate:hover {
-            background: rgba(255, 69, 58, 0.2) !important;
-            border-style: solid !important;
-            transform: scale(1.02) translateY(-1px);
-            box-shadow: 0 0 20px rgba(255, 69, 58, 0.8) !important;
-        }
     </style>
 </head>
 <body>
@@ -633,8 +262,8 @@
         </h1>
         <div class="header-buttons" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <!-- 📱 iOS 미니 미디어 제어센터 패널 -->
-            <div id="ios-mini-media-panel" style="display: flex; align-items: center; gap: 12px; background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-top: 1px solid rgba(255, 255, 255, 0.15); border-radius: 16px; padding: 6px 15px; height: 42px; box-sizing: border-box; box-shadow: inset 0 8px 16px rgba(255,255,255,0.03), 0 4px 12px rgba(0,0,0,0.3); max-width: 480px;">
-                <i class="fa-solid fa-music" id="yt-card-icon" style="font-size: 14px; color: var(--accent); flex-shrink: 0; filter: drop-shadow(0 0 4px var(--accent-glow));"></i>
+            <div id="ios-mini-media-panel" style="display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 6px 15px; height: 42px; box-sizing: border-box; box-shadow: inset 0 2px 4px rgba(255,255,255,0.03); max-width: 480px;">
+                <i class="fa-solid fa-music" id="yt-card-icon" style="font-size: 14px; color: var(--accent); flex-shrink: 0;"></i>
                 <div style="flex: 1; min-width: 80px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; font-weight: 700; color: #fff;" id="yt-video-title">재생 중인 미디어 없음</div>
                 
                 <div style="font-size: 11px; color: #8e8e93; font-weight: 600; white-space: nowrap;" id="yt-time-display">
@@ -644,21 +273,22 @@
                 <input type="range" id="yt-progress-bar" min="0" max="100" value="0" class="ios-slider-progress" oninput="seekYtVideo(this.value)" style="width: 60px; height: 4px; cursor: pointer; flex-shrink: 0;">
 
                 <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: 5px;">
-                    <button onclick="skipYtVideo(-10)" style="background: transparent; border: none; font-size: 12px; color: #aaa; cursor: pointer; padding: 4px; display: inline-flex; align-items: center; justify-content: center; box-shadow: none; transform: none;"><i class="fa-solid fa-backward-step"></i></button>
+                    <button onclick="skipYtVideo(-10)" style="background: transparent; border: none; font-size: 12px; color: #aaa; cursor: pointer; padding: 4px; display: inline-flex; align-items: center; justify-content: center;"><i class="fa-solid fa-backward-step"></i></button>
                     <button onclick="toggleYtPlay()" id="yt-play-btn" style="background: #fff; border: none; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: #000; cursor: pointer; box-shadow: 0 2px 6px rgba(255,255,255,0.2);"><i class="fa-solid fa-play"></i></button>
-                    <button onclick="skipYtVideo(10)" style="background: transparent; border: none; font-size: 12px; color: #aaa; cursor: pointer; padding: 4px; display: inline-flex; align-items: center; justify-content: center; box-shadow: none; transform: none;"><i class="fa-solid fa-forward-step"></i></button>
+                    <button onclick="skipYtVideo(10)" style="background: transparent; border: none; font-size: 12px; color: #aaa; cursor: pointer; padding: 4px; display: inline-flex; align-items: center; justify-content: center;"><i class="fa-solid fa-forward-step"></i></button>
                 </div>
 
                 <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: 5px;">
-                    <button onclick="toggleYtMute()" id="yt-mute-btn" style="background: transparent; border: none; color: #8e8e93; font-size: 12px; cursor: pointer; padding: 4px; display: inline-flex; align-items: center; justify-content: center; box-shadow: none; transform: none;"><i class="fa-solid fa-volume-high"></i></button>
+                    <button onclick="toggleYtMute()" id="yt-mute-btn" style="background: transparent; border: none; color: #8e8e93; font-size: 12px; cursor: pointer; padding: 4px; display: inline-flex; align-items: center; justify-content: center;"><i class="fa-solid fa-volume-high"></i></button>
                     <input type="range" id="yt-volume-slider" min="0" max="100" value="50" class="ios-slider-volume" oninput="setYtVolume(this.value)" style="width: 50px; height: 6px; cursor: pointer;">
                 </div>
             </div>
 
-            <label class="toggle-row" id="lbl-reaction-wrapper" style="border-color: rgba(156, 39, 176, 0.4); background: rgba(156, 39, 176, 0.05); height: 42px; padding: 0 15px; box-sizing: border-box;"><span class="toggle-label" id="lbl-reaction" style="color:#fff; font-weight:bold; font-size: 14px;"><i class="fa-solid fa-eye"></i> 수동 리액션 모드</span><div class="apple-switch"><input type="checkbox" id="chk-reaction" onchange="toggleOption('reaction_mode')"><span class="apple-slider"></span></div></label>
-            <button id="btn-editor" onclick="window.open('/admin', '_blank')" style="height: 42px; background: rgba(255,255,255,0.05); color: #fff; border-color: var(--border-light);"><i class="fa-solid fa-pen-ruler"></i> 에디터</button>
-            <button onclick="window.location.href='/controller?mode=mobile'" style="height: 42px; background: rgba(0, 191, 255, 0.1); border-color: rgba(0, 191, 255, 0.3); color: #00bfff; font-weight: bold;"><i class="fa-solid fa-mobile-screen-button"></i> 모바일 버전</button>
-            <button onclick="triggerServerLogout()" style="height: 42px; background: rgba(255, 69, 58, 0.1); border-color: rgba(255, 69, 58, 0.3); color: var(--danger); font-weight: bold;"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
+            <button id="btn-end-broadcast" onclick="endBroadcast()" style="display: none; background: var(--danger); border-color: var(--danger); color: #fff; height: 42px; font-weight: bold;"><i class="fa-solid fa-power-off"></i> 방송 종료</button>
+            <label class="toggle-row" id="lbl-reaction-wrapper" style="border-color: #9c27b0; height: 42px; padding: 0 15px; box-sizing: border-box;"><span class="toggle-label" id="lbl-reaction" style="color:#fff; font-weight:bold; font-size: 14px;"><i class="fa-solid fa-eye"></i> 수동 리액션 모드</span><div class="apple-switch"><input type="checkbox" id="chk-reaction" onchange="toggleOption('reaction_mode')"><span class="apple-slider"></span></div></label>
+            <button id="btn-editor" onclick="window.open('/admin', '_blank')" style="height: 42px;"><i class="fa-solid fa-pen-ruler"></i> 에디터</button>
+            <button onclick="window.location.href='/controller?mode=mobile'" style="height: 42px; background: rgba(0, 191, 255, 0.15); border-color: #00bfff; color: #00bfff; font-weight: bold;"><i class="fa-solid fa-mobile-screen-button"></i> 모바일 버전</button>
+            <button onclick="triggerServerLogout()" style="height: 42px; background: rgba(255, 69, 58, 0.15); border-color: var(--danger); color: var(--danger); font-weight: bold;"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
         </div>
     </div>
 
@@ -666,9 +296,10 @@
     <div class="tabs">
         <button class="tab-btn active" onclick="openTab(event, 'tab-ranking')"><i class="fa-solid fa-ranking-star"></i> 랭킹</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-match')"><i class="fa-solid fa-gamepad"></i> 대결</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-neon')"><i class="fa-solid fa-wand-magic-sparkles"></i> 이펙트/전광판</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-youtube')"><i class="fa-brands fa-youtube"></i> BGM / 유튜브</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-reaction')"><i class="fa-solid fa-compact-disc"></i> 리액션</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-neon')"><i class="fa-solid fa-wand-magic-sparkles"></i> 이펙트/조명</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-news')"><i class="fa-solid fa-bullhorn"></i> 전광판</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-bgm')"><i class="fa-solid fa-music"></i> BGM</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-youtube')"><i class="fa-brands fa-youtube"></i> 유튜브</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-roulette')"><i class="fa-solid fa-circle-notch"></i> 룰렛</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-logs')"><i class="fa-solid fa-list-ul"></i> 로그</button>
         <button class="tab-btn" onclick="openTab(event, 'tab-system')"><i class="fa-solid fa-server"></i> 시스템</button>
@@ -769,59 +400,28 @@
     </div>
     
     <div id="tab-neon" class="tab-content">
-        <div class="group-box" style="max-width: 600px; margin: 0 auto 20px auto;">
+
+
+
+        <div class="group-box" style="margin-top: 15px;">
             <div class="group-title"><i class="fa-solid fa-lightbulb"></i> 수동 리액션 조명 제어</div>
-            
-            <div class="control-group" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px;">
-                <button onclick="triggerNeon('OFF')" class="danger" style="justify-content: center; height: 46px; border-radius: 12px; font-size: 14px;"><i class="fa-solid fa-power-off"></i> 끄기</button>
-                <button id="btn-rainbow" onclick="triggerNeon('RAINBOW')" class="btn-rainbow-animated" style="justify-content: center; height: 46px; border-radius: 12px; font-size: 14px;"><i class="fa-solid fa-rainbow"></i> 무지개 (ON)!</button>
-                <button onclick="triggerNeon('AUDI')" style="justify-content: center; height: 46px; border-radius: 12px; font-size: 14px; background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.15); color: #fff;"><i class="fa-solid fa-car"></i> 아우디 라이트</button>
-            </div>
+            <div class="control-group"><button onclick="triggerNeon('OFF')" class="danger" style="flex: 1; justify-content: center;"><i class="fa-solid fa-power-off"></i> 끄기</button><button id="btn-rainbow" onclick="triggerNeon('RAINBOW')" style="flex: 1; justify-content: center; background: linear-gradient(90deg, #ff4d4d, #ffa64d, #ffff4d, #4dff4d, #4d4dff, #b34dff, #ff4dff); color: #000;"><i class="fa-solid fa-rainbow"></i> 무지개 (ON)!</button><button onclick="triggerNeon('AUDI')" style="flex: 1; justify-content: center; background: #e0e0e0; color: #000;"><i class="fa-solid fa-car"></i> 아우디 라이트</button></div>
             
             <div style="height: 1px; background: var(--border-light); margin: 20px 0;"></div>
-            
-            <div class="control-group" style="flex-direction: column; align-items: flex-start; gap: 8px; background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 12px; border: 1px solid var(--border-light);">
-                <label style="color: var(--text-muted); font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; width: 100%;">
-                    <span><i class="fa-solid fa-gauge-high" style="color: var(--accent); margin-right: 6px;"></i> 조명 회전/체이스 스피드</span>
-                    <span id="lbl-neon-speed" style="color: var(--accent); font-weight: 800; text-shadow: 0 0 5px var(--accent-glow);">1.5초</span>
-                </label>
-                <input type="range" id="in-neon-speed" min="0.3" max="5.0" step="0.1" value="1.5" onchange="updateNeonSpeed(this.value)" oninput="document.getElementById('lbl-neon-speed').innerText = this.value + '초'" style="width: 100%; accent-color: var(--accent); height: 6px; cursor: pointer;">
+            <div class="control-group" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                <label style="color:var(--text-muted); font-size: 13px;"><i class="fa-solid fa-gauge-high"></i> 조명 회전/체이스 스피드: <span id="lbl-neon-speed" style="color:var(--accent); font-weight:bold;">1.5초</span></label>
+                <input type="range" id="in-neon-speed" min="0.3" max="5.0" step="0.1" value="1.5" onchange="updateNeonSpeed(this.value)" style="width:100%; accent-color: var(--accent);">
             </div>
 
-            <div style="height: 1px; background: var(--border-light); margin: 25px 0;"></div>
-            
-            <p style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 15px;"><i class="fa-solid fa-palette" style="color: var(--accent); margin-right: 6px;"></i> 단색 슬롯 프리셋</p>
+            <div style="height: 1px; background: var(--border-light); margin: 20px 0;"></div>
+            <p style="font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 15px;"><i class="fa-solid fa-palette"></i> 단색 슬롯</p>
             <div id="color-slots" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;"></div>
-        </div>
-
-        <div class="group-box" style="max-width: 600px; margin: 0 auto;">
-            <div class="group-title"><i class="fa-solid fa-bullhorn"></i> 전광판 설정 및 송출</div>
-            
-            <div class="control-group" style="margin-bottom: 20px;">
-                <label class="toggle-row" style="flex: 1; height: 46px; border-radius: 12px;">
-                    <span class="toggle-label" style="font-weight: 700;"><i class="fa-solid fa-desktop" style="margin-right: 6px; color: var(--accent);"></i> 전광판 위젯 송출</span>
-                    <div class="apple-switch">
-                        <input type="checkbox" id="chk-ticker" onchange="toggleOption('ticker_enabled')">
-                        <span class="apple-slider"></span>
-                    </div>
-                </label>
-            </div>
-            
-            <div class="control-group" style="flex-direction: column; align-items: flex-start; gap: 8px; background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 12px; border: 1px solid var(--border-light);">
-                <label style="color: var(--text-muted); font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; width: 100%;">
-                    <span><i class="fa-solid fa-gauge-high" style="margin-right: 6px; color: var(--accent);"></i> 자막 이동 속도</span>
-                    <span id="lbl-speed" style="color: var(--accent); font-weight: 800; text-shadow: 0 0 5px var(--accent-glow);">70</span>
-                </label>
-                <input type="range" id="in-speed" min="1" max="100" onchange="updateSpeed(this.value)" oninput="document.getElementById('lbl-speed').innerText = this.value" style="width: 100%; accent-color: var(--accent); height: 6px; cursor: pointer;">
-            </div>
-            
-            <div style="margin-top: 20px;">
-                <label style="color: var(--text-muted); font-size: 13.5px; font-weight: 700; display: block; margin-bottom: 8px;"><i class="fa-solid fa-keyboard" style="margin-right: 6px;"></i> 송출 텍스트 편집 (엔터로 문구 구분)</label>
-                <textarea id="in-ticker" placeholder="전광판 문구를 입력하세요.&#10;예:&#10;홍길동님이 10,000원을 후원하셨습니다!&#10;룰렛 돌려돌려~" style="width: 100%; height: 150px; resize: none; box-sizing: border-box; background: var(--bg-input); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-md); padding: 12px 16px; color: #fff; font-size: 14px; font-family: inherit; line-height: 1.6; transition: var(--transition-smooth);" oninput="updateTickerText()"></textarea>
-            </div>
         </div>
     </div>
 
+    <div id="tab-news" class="tab-content"><div class="group-box"><div class="group-title"><i class="fa-solid fa-bullhorn"></i> 전광판 설정</div><div class="control-group"><label class="toggle-row" style="flex: 1;"><span class="toggle-label">화면에 표시하기</span><div class="apple-switch"><input type="checkbox" id="chk-ticker" onchange="toggleOption('ticker_enabled')"><span class="apple-slider"></span></div></label></div><div class="control-group" style="flex-direction: column; align-items: flex-start; gap: 8px;"><label style="color:var(--text-muted); font-size: 13px;">스크롤 속도: <span id="lbl-speed" style="color:#fff; font-weight:bold;">70</span></label><input type="range" id="in-speed" min="1" max="100" onchange="updateSpeed(this.value)" style="width:100%; accent-color: var(--accent);"></div><textarea id="in-ticker" placeholder="전광판 문구를 입력하세요. (엔터로 구분)" style="width: 100%; height: 120px; margin-top: 15px; resize: none;" oninput="updateTickerText()"></textarea></div></div>
+    <div id="tab-bgm" class="tab-content"><div class="group-box" style="text-align: center;"><div class="group-title" style="justify-content: center;"><i class="fa-solid fa-music"></i> 오디오 플레이어</div><input type="file" id="bgm-file" accept="audio/*" onchange="loadBGM(event)" style="margin-bottom: 20px; width:100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px dashed #555; border-radius: var(--radius-sm); cursor: pointer;"><audio id="bgm-audio" loop></audio><div class="control-group" style="justify-content: center; background: rgba(0,0,0,0.2); padding: 15px; border-radius: var(--radius-md);"><button class="primary" onclick="document.getElementById('bgm-audio').play()"><i class="fa-solid fa-play"></i> 재생</button><button onclick="document.getElementById('bgm-audio').pause()"><i class="fa-solid fa-pause"></i> 정지</button><i class="fa-solid fa-volume-high" style="color: #666; margin-left: 10px;"></i><input type="range" min="0" max="1" step="0.05" value="0.5" onchange="document.getElementById('bgm-audio').volume = this.value" style="width: 120px;"></div></div></div>
+    
     <div id="tab-youtube" class="tab-content">
         <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start;">
             <!-- 유튜브 검색창 및 리스트 영역 -->
@@ -834,7 +434,7 @@
                 </div>
                 
                 <!-- 검색 결과 리스트 스크롤 영역 -->
-                <div id="yt-search-results" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: rgba(0,0,0,0.15); box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);">
+                <div id="yt-search-results" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px;">
                     <div style="color: #666; font-size: 13px; text-align: center; padding: 50px 0;">
                         <i class="fa-brands fa-youtube" style="font-size: 40px; color: #444; margin-bottom: 10px; display: block;"></i>
                         검색어를 입력하시면 광고 없는 고속 리스트가 나타납니다.
@@ -842,164 +442,33 @@
                 </div>
             </div>
 
-            <!-- 우측 영역 (유튜브 플레이어 + BGM 통합) -->
-            <div style="display: flex; flex-direction: column; gap: 20px; box-sizing: border-box;">
-                <!-- 유튜브 재생 모니터 -->
-                <div class="group-box" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 0; min-height: unset; height: auto;">
-                    <div class="group-title"><i class="fa-solid fa-tv" style="color: var(--danger);"></i> 재생 모니터</div>
-                    <div style="aspect-ratio: 16/9; background: #000; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-light); box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; width: 100%;">
-                        <div id="yt-tab-player-element" style="width: 100%; height: 100%;">
-                            <div style="color: #666; font-size: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 15px;">
-                                <i class="fa-solid fa-video-slash" style="font-size: 32px; color: #444;"></i>
-                                <span>연결된 유튜브 영상이 없습니다.</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 영상 세부정보 확인용 iOS 미니 카드 -->
-                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-light); border-radius: 14px; padding: 15px; display: flex; align-items: center; gap: 12px; margin-top: 10px; box-shadow: inset 0 1px 3px rgba(255,255,255,0.02);">
-                        <div style="width: 40px; height: 40px; background: rgba(0,0,0,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-light);">
-                            <i class="fa-solid fa-compact-disc" id="yt-disc-icon" style="font-size: 16px; color: var(--accent); filter: drop-shadow(0 0 3px var(--accent-glow));"></i>
-                        </div>
-                        <div style="flex: 1; min-width: 0;">
-                            <div id="yt-tab-video-title" style="font-weight: bold; font-size: 14px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">선택된 동영상 없음</div>
-                            <div id="yt-tab-video-author" style="font-size: 12px; color: #8e8e93; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px;">연결 대기 중</div>
+            <!-- 플레이어 자체 화면 영역 -->
+            <div class="group-box" style="display: flex; flex-direction: column; gap: 15px; min-height: 520px; height: calc(100vh - 200px); max-height: 650px; box-sizing: border-box;">
+                <div class="group-title"><i class="fa-solid fa-tv" style="color: #ff0000;"></i> 재생 모니터</div>
+                <div style="aspect-ratio: 16/9; background: #000; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-light); box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; width: 100%;">
+                    <div id="yt-tab-player-element" style="width: 100%; height: 100%;">
+                        <div style="color: #666; font-size: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 15px;">
+                            <i class="fa-solid fa-video-slash" style="font-size: 32px; color: #444;"></i>
+                            <span>연결된 유튜브 영상이 없습니다.</span>
                         </div>
                     </div>
                 </div>
                 
-                <!-- 오디오 플레이어 (BGM) -->
-                <div class="group-box" style="margin-bottom: 0; text-align: center; display: flex; flex-direction: column; gap: 12px;">
-                    <div class="group-title" style="justify-content: center;"><i class="fa-solid fa-music"></i> 오디오 플레이어 (BGM)</div>
-                    
-                    <!-- Modern dashed dropzone file input wrapper -->
-                    <div style="position: relative; border: 2px dashed rgba(255, 255, 255, 0.12); border-radius: var(--radius-lg); padding: 15px 10px; background: rgba(255, 255, 255, 0.01); transition: var(--transition-smooth); cursor: pointer;" onmouseover="this.style.borderColor='var(--accent)'; this.style.background='rgba(0, 255, 204, 0.02)';" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.12)'; this.style.background='rgba(255, 255, 255, 0.01)';" onclick="document.getElementById('bgm-file').click()">
-                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 24px; color: var(--text-muted); margin-bottom: 6px; display: block;"></i>
-                        <span style="font-size: 13px; font-weight: bold; color: #fff; display: block; margin-bottom: 2px;">클릭하여 음악 파일 업로드</span>
-                        <span style="font-size: 11px; color: var(--text-muted); display: block;">MP3, WAV, M4A 등 오디오 파일 지원</span>
-                        <input type="file" id="bgm-file" accept="audio/*" onchange="loadBGM(event)" style="display: none;">
+                <!-- 영상 세부정보 확인용 iOS 미니 카드 -->
+                <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: 14px; padding: 15px; display: flex; align-items: center; gap: 12px; margin-top: 10px; box-shadow: inset 0 1px 3px rgba(255,255,255,0.02);">
+                    <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05);">
+                        <i class="fa-solid fa-compact-disc" id="yt-disc-icon" style="font-size: 16px; color: var(--accent);"></i>
                     </div>
-                    
-                    <audio id="bgm-audio" loop></audio>
-                    
-                    <!-- Metallic vinyl player deck -->
-                    <div style="background: rgba(0, 0, 0, 0.35); padding: 15px; border-radius: var(--radius-lg); border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);">
-                        <!-- Spinning Vinyl disc illustration -->
-                        <div id="bgm-vinyl-disc" style="width: 50px; height: 50px; background: radial-gradient(circle, #000 20%, #222 21%, #111 40%, #222 41%, #000 60%, #111 61%, #000 80%), url('/money.png'); background-size: cover; border-radius: 50%; border: 3px solid #141416; position: relative; transition: transform 0.5s ease; flex-shrink: 0;">
-                            <div style="position: absolute; width: 10px; height: 10px; background: #0d0d0f; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1.5px solid var(--accent);"></div>
-                        </div>
-                        
-                        <!-- Play status and file name -->
-                        <div style="text-align: left; flex: 1; min-width: 0;">
-                            <div id="bgm-filename" style="font-size: 13px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">선택된 오디오 파일 없음</div>
-                            <div id="bgm-status-text" style="font-size: 11px; color: var(--text-muted); font-weight: 600;">대기 중</div>
-                        </div>
-                        
-                        <div style="display: flex; gap: 6px; flex-shrink: 0;">
-                            <button class="primary" onclick="playBgmAudio()" style="width: 54px; height: 32px; justify-content: center; font-size: 11px; font-weight: bold; border-radius: 12px; padding: 0;"><i class="fa-solid fa-play"></i> 재생</button>
-                            <button class="danger" onclick="pauseBgmAudio()" style="width: 54px; height: 32px; justify-content: center; font-size: 11px; font-weight: bold; border-radius: 12px; padding: 0;"><i class="fa-solid fa-pause"></i> 정지</button>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(255,255,255,0.02); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-light); width: fit-content; margin: 0 auto;">
-                        <i class="fa-solid fa-volume-high" style="color: var(--accent); font-size: 11px;"></i>
-                        <input type="range" min="0" max="1" step="0.05" value="0.5" oninput="document.getElementById('bgm-audio').volume = this.value" class="ios-slider-volume" style="width: 80px; height: 6px; cursor: pointer;">
+                    <div style="flex: 1; min-width: 0;">
+                        <div id="yt-tab-video-title" style="font-weight: bold; font-size: 14px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">선택된 동영상 없음</div>
+                        <div id="yt-tab-video-author" style="font-size: 12px; color: #8e8e93; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px;">연결 대기 중</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <div id="tab-reaction" class="tab-content">
-        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; align-items: start;">
-            <!-- 좌측: 리액션 상태 제어 및 수동 후원, 대기열 -->
-            <div class="group-box" style="display: flex; flex-direction: column; gap: 15px;">
-                <div class="group-title"><i class="fa-solid fa-sliders" style="color: var(--accent);"></i> 리액션 제어 센터</div>
-                
-                <!-- 1. 리액션 오디오 볼륨 및 중단 -->
-                <div style="display: flex; flex-direction: column; gap: 10px; padding: 10px; background: rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 13px; font-weight: bold; color: #fff;"><i class="fa-solid fa-volume-high"></i> 리액션 볼륨</span>
-                        <span id="reaction-vol-text" style="font-size: 12px; font-weight: bold; color: var(--accent);">50%</span>
-                    </div>
-                    <input type="range" id="reaction-volume-slider" min="0" max="1" step="0.05" value="0.5" oninput="changeReactionVolume(this.value)" style="width: 100%; accent-color: var(--accent);">
-                    
-                    <button onclick="stopReaction()" class="danger" style="height: 38px; font-weight: bold; font-size: 13px; border-radius: 8px; justify-content: center; width: 100%; margin-top: 5px;">
-                        <i class="fa-solid fa-circle-stop"></i> 리액션 긴급 중단
-                    </button>
-                    <button id="skip-reaction-btn-main" onclick="skipCurrentReaction()" style="height: 38px; font-weight: bold; font-size: 13px; border-radius: 8px; justify-content: center; width: 100%; margin-top: 5px; background: #ff9500; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: opacity 0.2s;">
-                        <i class="fa-solid fa-forward-step"></i> 다음 후원 넘기기 (Skip)
-                    </button>
-                </div>
-
-                <!-- 2. 수동 후원 송출 (금액 입력 시 리액션 연동) -->
-                <div style="display: flex; flex-direction: column; gap: 10px; padding: 12px; background: rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
-                    <div style="font-size: 13px; font-weight: bold; color: #fff; margin-bottom: 2px;"><i class="fa-solid fa-coins" style="color: #ffd700;"></i> 수동 후원 (리액션 자동 매칭)</div>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="manual-donator" placeholder="후원자명" style="width: 40%; height: 34px; font-size: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: #fff; padding: 0 10px; box-sizing: border-box;">
-                        <input type="number" id="manual-amount" placeholder="후원금액" style="width: 60%; height: 34px; font-size: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: #fff; padding: 0 10px; box-sizing: border-box;">
-                    </div>
-                    <input type="text" id="manual-message" placeholder="후원 메시지 입력 (선택사항)" style="width: 100%; height: 34px; font-size: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: #fff; padding: 0 10px; box-sizing: border-box;">
-                    <button onclick="triggerManualDonation()" class="primary" style="height: 34px; font-weight: bold; font-size: 12px; border-radius: 8px; justify-content: center; width: 100%;">
-                        <i class="fa-solid fa-paper-plane"></i> 후원 리액션 즉시 송출
-                    </button>
-                </div>
-
-                <!-- 3. 쌓인 리액션 목록 (대기열) -->
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <div style="font-size: 13px; font-weight: bold; color: #fff; display: flex; justify-content: space-between; align-items: center;">
-                        <span><i class="fa-solid fa-list-ol" style="color: var(--accent);"></i> 대기 중인 리액션 큐</span>
-                        <div style="display: flex; align-items: center; gap: 6px;">
-                            <button id="skip-reaction-btn" onclick="skipCurrentReaction()" style="font-size: 10px; background: rgba(255,149,0,0.15); color: #ff9500; border: 1px solid rgba(255,149,0,0.3); padding: 2px 8px; border-radius: 6px; cursor: pointer; font-weight: bold; display: none;" title="현재 재생 중인 후원을 건너뛰고 다음으로 넘깁니다">
-                                <i class="fa-solid fa-forward-step"></i> 넘기기
-                            </button>
-                            <span id="reaction-queue-count" style="font-size: 11px; background: rgba(0,255,204,0.15); color: var(--accent); padding: 2px 6px; border-radius: 10px; font-weight: bold;">0개</span>
-                        </div>
-                    </div>
-                    <div id="reaction-queue-container" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 2px;">
-                        <!-- 대기 목록이 스크립트로 렌더링됨 -->
-                    </div>
-                </div>
-
-                <!-- 4. 템퍼몽키 투네이션 연동 가이드 카드 -->
-                <div style="display: flex; flex-direction: column; gap: 10px; padding: 12px; background: rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
-                    <div style="font-size: 13px; font-weight: bold; color: #fff; margin-bottom: 2px;"><i class="fa-solid fa-plug" style="color: var(--accent);"></i> 투네이션 템퍼몽키 자동 연동</div>
-                    <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">
-                        투네이션 알림창 위젯과 실시간 연동되어 1천 원 이상의 후원 시 지정된 금액의 리액션이 자동 송출됩니다. (최저 금액 1,000원 적용 완료)
-                    </div>
-                    <div style="display: flex; gap: 8px; margin-top: 5px;">
-                        <a href="/toonation_tampermonkey.user.js" target="_blank" style="flex: 1; text-decoration: none;">
-                            <button class="primary" style="height: 32px; font-weight: bold; font-size: 11px; border-radius: 8px; justify-content: center; width: 100%; cursor: pointer;">
-                                <i class="fa-solid fa-download"></i> 스크립트 설치
-                            </button>
-                        </a>
-                        <button onclick="copyTampermonkeyCode()" class="secondary" style="flex: 1; height: 32px; font-weight: bold; font-size: 11px; border-radius: 8px; justify-content: center; cursor: pointer;">
-                            <i class="fa-solid fa-copy"></i> 코드 복사
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 우측: 등록된 리액션 리스트 -->
-            <div class="group-box" style="display: flex; flex-direction: column; gap: 15px; min-height: 500px;">
-                <div class="group-title" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span><i class="fa-solid fa-compact-disc" style="color: var(--accent);"></i> 등록된 리액션 음원/사진 라이브러리</span>
-                    <button onclick="loadReactionList()" class="secondary" style="height: 28px; font-size: 11px; padding: 0 10px; border-radius: 8px;"><i class="fa-solid fa-rotate"></i> 새로고침</button>
-                </div>
-                
-                <div id="reaction-list-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; max-height: 520px; overflow-y: auto; padding: 5px;">
-                    <!-- 리액션 카드 로딩 상태 -->
-                    <div style="color: #666; text-align: center; grid-column: 1 / -1; padding: 50px 0;">
-                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 28px; color: var(--accent); margin-bottom: 10px; display: block;"></i>
-                        불러오는 중...
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div id="tab-roulette" class="tab-content">
-        <div id="roulette-grid-container" style="display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start;">
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; align-items: start;">
             <!-- 룰렛 제어/설정 카드 -->
             <div class="group-box" style="display: flex; flex-direction: column; gap: 15px;">
                 <div class="group-title"><i class="fa-solid fa-gear" style="color: var(--accent);"></i> 룰렛 설정 & 동작 제어</div>
@@ -1039,7 +508,7 @@
                     </select>
                 </div>
 
-                <div id="roulette-winner-display" class="roulette-winner-arcade" style="display: none;">
+                <div id="roulette-winner-display" style="display: none; background: rgba(0, 255, 204, 0.1); border: 1px solid var(--accent); border-radius: var(--radius-md); padding: 12px; font-size: 14px; text-align: center; margin-top: 10px;">
                     최근 당첨자: -
                 </div>
 
@@ -1049,13 +518,12 @@
                     <button class="primary" id="btn-roulette-spin" onclick="controlRoulette('spin')" style="width: 100%; justify-content: center; height: 50px; font-size: 16px; font-weight: 800;"><i class="fa-solid fa-play"></i> 룰렛 회전 시작</button>
                     <button class="danger" id="btn-roulette-stop" onclick="controlRoulette('stop')" style="width: 100%; justify-content: center; height: 50px; font-size: 16px; font-weight: 800; display: none; animation: shake-y 0.2s linear infinite;"><i class="fa-solid fa-stop"></i> 정지!!</button>
                     <button onclick="controlRoulette('reset')" style="width: 100%; justify-content: center; background: #222; border-color: #444;"><i class="fa-solid fa-rotate-right"></i> 회전판 초기화</button>
-                    <button onclick="toggleRouletteRemote(this)" style="width: 100%; justify-content: center; background: rgba(255, 215, 0, 0.08); border-color: rgba(255, 215, 0, 0.25); color: var(--gold); height: 40px; font-weight: bold;"><i class="fa-solid fa-square-check"></i> 선관위</button>
                 </div>
             </div>
 
             <!-- 당첨 조작 리모컨 카드 -->
-            <div class="group-box" id="roulette-remote-card" style="display: none; flex-direction: column; gap: 15px; min-height: 380px;">
-                <div class="group-title" style="color: var(--gold); border-bottom-color: rgba(255, 215, 0, 0.2);"><i class="fa-solid fa-square-check"></i> 선거관리위원회 콘솔</div>
+            <div class="group-box" style="display: flex; flex-direction: column; gap: 15px; min-height: 380px;">
+                <div class="group-title" style="color: var(--gold); border-bottom-color: rgba(255, 215, 0, 0.2);"><i class="fa-solid fa-user-gear"></i> 당첨 조작 콘솔 (리모컨 내장)</div>
                 <p style="color: var(--text-muted); font-size: 13px; margin: 0; line-height: 1.5;">
                     * 룰렛을 회전시키고 정지하기 전에 아래에서 우승자를 미리 터치하여 지정할 수 있습니다.<br>
                     * 지정 시 룰렛판이 해당 슬롯의 각도 영역으로 <b>자연스럽고 부드럽게 감속되어</b> 멈춥니다.
@@ -1133,7 +601,7 @@
     </div>
 
     <div id="tab-system" class="tab-content">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
             <div class="group-box" style="margin-bottom: 0;">
                 <div class="group-title"><i class="fa-solid fa-shield-halved"></i> OTP 보안 설정</div>
                 <div style="display: flex; flex-direction: column; gap: 15px;">
@@ -1172,7 +640,6 @@
                             <span style="color: #fff; font-weight: bold;" id="sys-player-count">0명</span>
                         </div>
                     </div>
-                    <button id="btn-end-broadcast" onclick="endBroadcast()" style="display: none; width: 100%; justify-content: center; background: var(--danger); border-color: var(--danger); color: #fff; height: 42px; font-weight: bold; margin-bottom: 10px;"><i class="fa-solid fa-power-off"></i> 방송 종료</button>
                     <button style="width: 100%; justify-content: center; background: rgba(255, 69, 58, 0.1); border-color: rgba(255, 69, 58, 0.3); color: var(--danger);" onclick="triggerServerLogout()"><i class="fa-solid fa-right-from-bracket"></i> 제어 센터 로그아웃</button>
                 </div>
             </div>
@@ -1233,29 +700,16 @@
                             </button>
                         </div>
                         
-                        <button onclick="triggerDatabaseReset()" class="btn-danger-pulsate" style="width: 100%; justify-content: center; height: 38px; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 13px; margin-top: 15px;">
+                        <button onclick="triggerDatabaseReset()" style="width: 100%; justify-content: center; height: 38px; display: inline-flex; align-items: center; gap: 8px; font-weight: bold; background: rgba(255, 69, 58, 0.12); border: 1px solid rgba(255, 69, 58, 0.35); color: var(--danger); border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 13px; margin-top: 15px;" onmouseover="this.style.background='rgba(255,69,58,0.2)';" onmouseout="this.style.background='rgba(255,69,58,0.12)';">
                             <i class="fa-solid fa-triangle-exclamation"></i> 전체 데이터베이스 공장 초기화
                         </button>
                     </div>
                 </div>
                 
                 <!-- Live Log Console -->
-                <div style="display: flex; flex-direction: column; gap: 10px; height: 230px;">
-                    <div style="font-size: 13px; color: var(--text-muted); font-weight: bold; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-terminal"></i> 서버 트랜잭션 로그 콘솔 (최근 30건)</div>
-                    <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); overflow: hidden; background: #08080a; box-shadow: inset 0 2px 8px rgba(0,0,0,0.8), 0 10px 20px rgba(0,0,0,0.35);">
-                        <!-- Terminal Header -->
-                        <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding: 8px 15px; font-family: 'Consolas', monospace; font-size: 11px; color: var(--text-muted);">
-                            <div style="display: flex; gap: 6px; align-items: center;">
-                                <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff453a;"></span>
-                                <span style="width: 10px; height: 10px; border-radius: 50%; background: #ffcc00;"></span>
-                                <span style="width: 10px; height: 10px; border-radius: 50%; background: #34c759;"></span>
-                                <span style="margin-left: 10px; font-weight: bold; color: #aaa;">sh - transaction.log</span>
-                            </div>
-                            <div>UTF-8</div>
-                        </div>
-                        <!-- Console area -->
-                        <div id="sys-console-logs" style="flex: 1; padding: 15px; font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; overflow-y: auto; color: #00ffcc; white-space: pre-wrap; line-height: 1.5; outline: none; border: none; background: transparent;">[대기 중] 서버 데이터를 불러오고 있습니다...</div>
-                    </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;"><i class="fa-solid fa-terminal"></i> 서버 트랜잭션 로그 콘솔 (최근 30건)</div>
+                    <div id="sys-console-logs" style="flex: 1; min-height: 180px; height: 180px; background: #08080a; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 15px; font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; overflow-y: auto; color: #00ffcc; white-space: pre-wrap; line-height: 1.5; box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);">[대기 중] 서버 데이터를 불러오고 있습니다...</div>
                 </div>
             </div>
         </div>
@@ -1294,36 +748,9 @@
     </div>
 
     <script>
-        // HTML 특수기호 이스케이프 (XSS 방어 및 기호 깨짐 방지)
-        function escapeHTML(str) {
-            if (!str) return '';
-            return str
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
-
-        // 전역 fetch 인터셉터 (인증 토큰 자동 주입)
-        const originalFetch = window.fetch;
-        window.fetch = function(resource, init) {
-            if (window.apiToken && typeof resource === 'string' && resource.startsWith('/api/')) {
-                init = init || {};
-                init.headers = init.headers || {};
-                if (init.headers instanceof Headers) {
-                    init.headers.set('Authorization', 'Bearer ' + window.apiToken);
-                } else {
-                    init.headers['Authorization'] = 'Bearer ' + window.apiToken;
-                }
-            }
-            return originalFetch(resource, init);
-        };
-
-        function openTab(evt, tabId) { document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(tabId).classList.add('active'); evt.currentTarget.classList.add('active'); if (tabId === 'tab-system') { refreshSystemStatus(); } if (tabId === 'tab-logs') { loadManualLogs(1); } if (tabId === 'tab-reaction') { loadReactionList(); } }
+        function openTab(evt, tabId) { document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(tabId).classList.add('active'); evt.currentTarget.classList.add('active'); if (tabId === 'tab-system') { refreshSystemStatus(); } if (tabId === 'tab-logs') { loadManualLogs(1); } }
         let gd = null; let isPushing = false; let lastPushTime = 0;
         let lastReactionToastTime = 0;
-        let serverTimeOffset = 0;
         function showReactionToast() {
             if (Date.now() - lastReactionToastTime < 1000) return;
             lastReactionToastTime = Date.now();
@@ -1343,12 +770,6 @@
             if (isPushing || (Date.now() - lastPushTime < 200)) return; 
             try { 
                 const res = await fetch('/api/data'); const newData = await res.json(); 
-                if (newData && newData.api_token) {
-                    window.apiToken = newData.api_token;
-                }
-                if (newData && newData.server_time) {
-                    serverTimeOffset = newData.server_time - Date.now();
-                }
                 if (gd && gd.reaction_mode !== newData.reaction_mode) {
                     let audio = document.getElementById('bgm-audio');
                     if (newData.reaction_mode) { 
@@ -1389,45 +810,12 @@
             } catch (e) { console.error("⚠️ fetchAPI Error:", e); }
         }
 
-        async function pushAPI() {
+        function pushAPI() {
             if(!gd) return;
-            lastPushTime = Date.now();
+            lastPushTime = Date.now(); // 🚀 푸시 타임 기록으로 SSE 덮어쓰기 무력화
             isPushing = true; gd.bjs.sort((a, b) => (b.contribution || 0) - (a.contribution || 0)); renderUI(); 
-            try {
-                const res = await fetch('/api/data', { 
-                    method: 'POST', 
-                    headers:{'Content-Type':'application/json'}, 
-                    body: JSON.stringify(gd) 
-                });
-                if (res.status === 409) {
-                    // 🔄 버전 충돌 시 최신 데이터를 받아와서 버전만 갱신 후 자동 재전송
-                    console.warn("⚠️ 버전 충돌 감지, 자동 동기화 후 재전송...");
-                    isPushing = false;
-                    lastPushTime = 0;
-                    const freshRes = await fetch('/api/data');
-                    const freshData = await freshRes.json();
-                    gd.version = freshData.version; // 서버 최신 버전으로 갱신
-                    // 즉시 재전송
-                    lastPushTime = Date.now();
-                    isPushing = true;
-                    const retryRes = await fetch('/api/data', {
-                        method: 'POST',
-                        headers:{'Content-Type':'application/json'},
-                        body: JSON.stringify(gd)
-                    });
-                    if (retryRes.status === 409) {
-                        // 두 번째 충돌 시에만 조용히 전체 동기화
-                        console.warn("⚠️ 재시도에서도 충돌, 전체 동기화 수행");
-                        isPushing = false;
-                        lastPushTime = 0;
-                        await fetchAPI();
-                        return;
-                    }
-                }
-            } catch(e) {
-                console.error("⚠️ pushAPI Error:", e);
-            }
-            setTimeout(() => { isPushing = false; }, 80);
+            fetch('/api/data', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(gd) }).catch(e => console.error("⚠️ pushAPI Error:", e));
+            setTimeout(() => { isPushing = false; }, 80); // 락 해제를 80ms로 최소화하여 즉시 클릭 가능
         }
 
         function renderUI() {
@@ -1486,11 +874,9 @@
             if (gd.pending_donations && gd.pending_donations.length > 0) {
                 if(pbox.style.display !== 'block') pbox.style.display = 'block';
                 let pHtml = '';
-                let isExtra = gd.extra_game_active || false;
-                let activeBjs = isExtra ? (gd.extra_bjs || []) : (gd.bjs || []);
                 gd.pending_donations.forEach(don => {
-                    let bjBtns = activeBjs.map((bj, idx) => `<button class="bj-btn" onclick="assignPending('${don.id}', ${idx})">${escapeHTML(bj.name)}</button>`).join('');
-                    pHtml += `<div class="pending-item"><div class="pending-info"><span style="color:#888;">[${don.time}]</span> <b style="color:#fff; font-size:15px;">${escapeHTML(don.name)}</b>님 - <span class="pending-amount">${don.amount.toLocaleString()}원</span><br><span style="color:#aaa; font-style:italic;">"${escapeHTML(don.message)}"</span></div><div class="bj-buttons"><span style="font-size:12px; color:#888;"><i class="fa-solid fa-hand-holding-dollar"></i> 지급:</span>${bjBtns}<button class="bj-btn" style="background:rgba(255, 215, 0, 0.15); color:var(--gold); border-color:var(--gold);" onclick="assignHalf('${don.id}')">🌓 반반</button><button class="bj-btn" style="background:rgba(0, 191, 255, 0.15); color:#00bfff; border-color:#00bfff;" onclick="assignSplitEqual('${don.id}')">🔢 N분할</button><button class="delete-btn" onclick="deletePending('${don.id}')"><i class="fa-solid fa-trash-can"></i> 무시</button></div></div>`;
+                    let bjBtns = gd.bjs.map((bj, idx) => `<button class="bj-btn" onclick="assignPending('${don.id}', ${idx})">${bj.name}</button>`).join('');
+                    pHtml += `<div class="pending-item"><div class="pending-info"><span style="color:#888;">[${don.time}]</span> <b style="color:#fff; font-size:15px;">${don.name}</b>님 - <span class="pending-amount">${don.amount.toLocaleString()}원</span><br><span style="color:#aaa; font-style:italic;">"${don.message}"</span></div><div class="bj-buttons"><span style="font-size:12px; color:#888;"><i class="fa-solid fa-hand-holding-dollar"></i> 지급:</span>${bjBtns}<button class="bj-btn" style="background:rgba(255, 215, 0, 0.15); color:var(--gold); border-color:var(--gold);" onclick="assignHalf('${don.id}')">🌓 반반</button><button class="bj-btn" style="background:rgba(0, 191, 255, 0.15); color:#00bfff; border-color:#00bfff;" onclick="assignSplitEqual('${don.id}')">🔢 N분할</button><button class="delete-btn" onclick="deletePending('${don.id}')"><i class="fa-solid fa-trash-can"></i> 무시</button></div></div>`;
                 });
                 if (lastPendingHtml !== pHtml) { document.getElementById('pending-list').innerHTML = pHtml; lastPendingHtml = pHtml; }
             } else {
@@ -1512,7 +898,7 @@
                 }
             }
 
-            if (!gd.saved_colors) gd.saved_colors = ['#ff0055', '#00e5ff', '#ff9100', '#d500f9', '#00ff00', '#ffff00', '#ff0000', '#0000ff', '#ffffff']; 
+            if (!gd.saved_colors) gd.saved_colors = ['#ff0055', '#00e5ff', '#ff9100', '#d500f9', '#00ff00', '#ffff00']; 
             let colorHtml = ''; 
             gd.saved_colors.forEach((col, i) => { let isAct = (currentNeon === col); let btnText = isAct ? "현재 ON" : "켜기"; let btnStyle = isAct ? `background:#222; color:${col}; border: 1px solid ${col};` : `background:${col}; color:#fff; border: none;`; colorHtml += `<div style="display:flex; flex-direction:column; align-items:center; gap:8px; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; border:1px solid #333;"><input type="color" value="${col}" onchange="gd.saved_colors[${i}]=this.value; pushAPI();"><button style="${btnStyle} width:100%; justify-content:center; padding:8px 0; font-size:12px;" onclick="triggerNeon('${col}')">${btnText}</button></div>`; }); 
             if (lastColorHtml !== colorHtml) { document.getElementById('color-slots').innerHTML = colorHtml; lastColorHtml = colorHtml; }
@@ -1578,22 +964,9 @@
             // 2. 바디 동적 렌더링
             let rHtml = '';
             targetList.forEach((bj, i) => { 
-                let badgeClass = '';
-                if (i === 0) badgeClass = 'badge-1st';
-                else if (i === 1) badgeClass = 'badge-2nd';
-                else if (i === 2) badgeClass = 'badge-3rd';
-                else badgeClass = 'badge-normal';
-                
-                let badgeHtml = `<span class="rank-badge ${badgeClass}">${i + 1}</span>`;
-                
                 if (isExtra) {
                     rHtml += `<tr>
-                        <td>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
-                                ${badgeHtml}
-                                <input type="text" value="${bj.name}" onchange="gd.${listKey}[${i}].name=this.value; pushAPI();" disabled style="flex: 1; text-align: left; padding-left: 10px;">
-                            </div>
-                        </td>
+                        <td><input type="text" value="${bj.name}" onchange="gd.${listKey}[${i}].name=this.value; pushAPI();" disabled></td>
                         <td class="score-display">${bj.score.toLocaleString()}</td>
                         <td class="score-display contrib-cell" style="color:var(--gold); position: relative;" onclick="editContrib(${i}, this, event)" title="클릭해서 기여도 수정"><span>${(bj.contribution||0).toLocaleString()}</span></td>
                         <td><input type="number" id="rank-add-${i}" placeholder="+ 점수" onkeydown="if(event.key==='Enter') addScore('rank', ${i})"></td>
@@ -1601,12 +974,7 @@
                     </tr>`; 
                 } else {
                     rHtml += `<tr>
-                        <td>
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
-                                ${badgeHtml}
-                                <input type="text" value="${bj.name}" onchange="gd.${listKey}[${i}].name=this.value; pushAPI();" style="flex: 1; text-align: left; padding-left: 10px;">
-                            </div>
-                        </td>
+                        <td><input type="text" value="${bj.name}" onchange="gd.${listKey}[${i}].name=this.value; pushAPI();"></td>
                         <td class="score-display">${bj.score.toLocaleString()}</td>
                         <td class="score-display contrib-cell" style="color:var(--gold); position: relative;" onclick="editContrib(${i}, this, event)" title="클릭해서 기여도 수정"><span>${(bj.contribution||0).toLocaleString()}</span></td>
                         <td><input type="number" id="rank-add-${i}" placeholder="+ 점수" onkeydown="if(event.key==='Enter') addScore('rank', ${i})"></td>
@@ -1615,18 +983,7 @@
                 }
             });
             if (!isExtra) {
-                rHtml += `<tr style="background:rgba(255,255,255,0.035);">
-                    <td>
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
-                            <span class="rank-badge badge-normal" style="background:rgba(0, 255, 204, 0.1); color:var(--accent); border: 1px dashed rgba(0, 255, 204, 0.3);"><i class="fa-solid fa-anchor" style="font-size:10px;"></i></span>
-                            <input type="text" value="${gd.bottom_fixed.name}" onchange="gd.bottom_fixed.name=this.value; pushAPI();" style="flex: 1; text-align: left; padding-left: 10px;">
-                        </div>
-                    </td>
-                    <td class="score-display" style="color:var(--accent);">${gd.bottom_fixed.score.toLocaleString()}</td>
-                    <td class="score-display" style="color:var(--gold);">-</td>
-                    <td><input type="number" id="rank-add-bot" placeholder="+ 점수" onkeydown="if(event.key==='Enter') addScore('bot', 0)"></td>
-                    <td><i class="fa-solid fa-lock" style="color:var(--text-muted);"></i></td>
-                </tr>`; 
+                rHtml += `<tr style="background:rgba(255,255,255,0.03);"><td><input type="text" value="${gd.bottom_fixed.name}" onchange="gd.bottom_fixed.name=this.value; pushAPI();"></td><td class="score-display" style="color:var(--accent);">${gd.bottom_fixed.score.toLocaleString()}</td><td class="score-display" style="color:var(--gold);">-</td><td><input type="number" id="rank-add-bot" placeholder="+ 점수" onkeydown="if(event.key==='Enter') addScore('bot', 0)"></td><td><i class="fa-solid fa-lock" style="color:var(--text-muted);"></i></td></tr>`; 
             }
             if (lastRHtml !== rHtml) { document.getElementById('ranking-tbody').innerHTML = rHtml; lastRHtml = rHtml; }
 
@@ -1641,7 +998,7 @@
                 timerBtn.className = md.is_running ? "danger" : "primary";
             }
             
-            let totalSec = Math.max(0, Math.ceil((md.is_running ? Math.max(0, md.end_time_ms - (Date.now() + serverTimeOffset)) : md.time_left_ms) / 1000)); 
+            let totalSec = Math.max(0, Math.floor((md.is_running ? Math.max(0, md.end_time_ms - Date.now()) : md.time_left_ms) / 1000)); 
             if (totalSec <= 0) {
                 setHtml('disp-timer-box', '시간종료');
             } else {
@@ -1666,23 +1023,13 @@
             setVal('in-ticker', (gd.ticker_text||'').replace(/ \/ /g, '\n')); 
 
             if (gd.logs) {
-                let rankLogHtml = gd.logs.map(log => `<div style="margin-bottom:6px; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 4px; display: flex; align-items: center; gap: 8px;"><span style="color:#888;">&gt;</span> <span style="color:#666; font-size: 11px;">[${log.time}]</span> <span style="color:#fff; font-weight: bold;">${log.name}</span>님 <span style="color:var(--accent); font-weight: bold;">${log.val > 0 ? '+'+log.val.toLocaleString() : log.val.toLocaleString()}점</span></div>`).join('');
+                let rankLogHtml = gd.logs.map(log => `<div style="margin-bottom:6px;"><span style="color:#666;">[${log.time}]</span> <span style="color:#fff; font-weight:bold;">${log.name}</span>님 <span style="color:var(--accent);">${log.val > 0 ? '+'+log.val.toLocaleString() : log.val.toLocaleString()}점</span></div>`).join('');
                 if (lastRankLogHtml !== rankLogHtml) { document.getElementById('log-box-ranking').innerHTML = rankLogHtml; lastRankLogHtml = rankLogHtml; }
             }
             if (gd.match_logs) {
-                let matchLogHtml = gd.match_logs.map(log => `<div style="margin-bottom:6px; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 4px; display: flex; align-items: center; gap: 8px;"><span style="color:#888;">&gt;</span> <span style="color:#666; font-size: 11px;">[${log.time}]</span> <i class="fa-solid fa-bolt" style="color:var(--gold); font-size: 10px;"></i> <span style="color:#fff; font-weight: bold;">${log.name}</span> <span style="color:var(--accent); font-weight: bold;">${log.val > 0 ? '+'+log.val.toLocaleString() : log.val.toLocaleString()}점</span></div>`).join('');
+                let matchLogHtml = gd.match_logs.map(log => `<div style="margin-bottom:6px;"><span style="color:#666;">[${log.time}]</span> <i class="fa-solid fa-bolt" style="color:var(--gold); font-size:10px;"></i> <span style="color:#fff; font-weight:bold;">${log.name}</span> <span style="color:var(--accent);">${log.val > 0 ? '+'+log.val.toLocaleString() : log.val.toLocaleString()}점</span></div>`).join('');
                 if (lastMatchLogHtml !== matchLogHtml) { document.getElementById('log-box-match').innerHTML = matchLogHtml; lastMatchLogHtml = matchLogHtml; }
             }
-            
-            // 🎵 리액션 큐 및 슬라이더 렌더링
-            if (document.getElementById('reaction-volume-slider')) {
-                if (document.activeElement.id !== 'reaction-volume-slider') {
-                    document.getElementById('reaction-volume-slider').value = gd.reaction_volume !== undefined ? gd.reaction_volume : 0.5;
-                }
-                document.getElementById('reaction-vol-text').innerText = Math.round((gd.reaction_volume !== undefined ? gd.reaction_volume : 0.5) * 100) + '%';
-            }
-            renderReactionQueue();
-
             renderRouletteTab();
         }
 
@@ -1760,14 +1107,13 @@
             
             // 🎯 랜덤 (무조작) 옵션
             let isRandomChecked = (gd.roulette.select_index === -1) ? 'checked' : '';
-            let randomBorder = (gd.roulette.select_index === -1) ? 'var(--accent)' : 'rgba(255, 255, 255, 0.08)';
-            let randomText = (gd.roulette.select_index === -1) ? 'var(--accent)' : '#aaa';
-            let randomBg = (gd.roulette.select_index === -1) ? 'rgba(0, 255, 204, 0.1)' : 'rgba(255, 255, 255, 0.02)';
-            let randomShadow = (gd.roulette.select_index === -1) ? '0 0 10px var(--accent-glow)' : 'none';
+            let randomBorder = (gd.roulette.select_index === -1) ? 'var(--accent)' : 'var(--border-light)';
+            let randomText = (gd.roulette.select_index === -1) ? 'var(--accent)' : '#ccc';
+            let randomBg = (gd.roulette.select_index === -1) ? 'rgba(0, 255, 204, 0.05)' : 'transparent';
             
             targetListHtml += `
-                <label class="toggle-row" style="padding: 12px; font-size: 13.5px; cursor: pointer; border-color: ${randomBorder}; background: ${randomBg}; box-shadow: ${randomShadow}; transition: all 0.2s;" onmouseover="if(gd.roulette.select_index !== -1) {this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='scale(1.03)';}" onmouseout="if(gd.roulette.select_index !== -1) {this.style.borderColor='rgba(255,255,255,0.08)'; this.style.transform='none';}" onclick="setRouletteTarget(-1, '')">
-                    <span style="color: ${randomText}; font-weight: bold; display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-crosshairs"></i> 랜덤 (무조작)</span>
+                <label class="toggle-row" style="padding: 10px; font-size: 13px; cursor: pointer; border-color: ${randomBorder}; background: ${randomBg};" onclick="setRouletteTarget(-1, '')">
+                    <span style="color: ${randomText}; font-weight: bold;">🎯 랜덤 (무조작)</span>
                     <input type="radio" name="roulette-target" value="-1" ${isRandomChecked} style="display: none;">
                 </label>
             `;
@@ -1788,21 +1134,19 @@
                 let percent = weightSum > 0 ? ((weight / weightSum) * 100).toFixed(1) : 0;
                 let dispText = `${bj.name} (${percent}%)`;
                 
-                let borderCol = (gd.roulette.select_index === idx) ? 'var(--accent)' : 'rgba(255, 255, 255, 0.08)';
+                let borderCol = (gd.roulette.select_index === idx) ? 'var(--accent)' : 'var(--border-light)';
                 let textCol = (gd.roulette.select_index === idx) ? 'var(--accent)' : '#fff';
-                let itemBg = (gd.roulette.select_index === idx) ? 'rgba(0, 255, 204, 0.1)' : 'rgba(255, 255, 255, 0.02)';
-                let itemShadow = (gd.roulette.select_index === idx) ? '0 0 10px var(--accent-glow)' : 'none';
+                let itemBg = (gd.roulette.select_index === idx) ? 'rgba(0, 255, 204, 0.05)' : 'transparent';
                 
                 targetListHtml += `
-                    <label class="toggle-row" style="padding: 12px; font-size: 13.5px; cursor: pointer; border-color: ${borderCol}; background: ${itemBg}; box-shadow: ${itemShadow}; transition: all 0.2s;" onmouseover="if(gd.roulette.select_index !== ${idx}) {this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='scale(1.03)';}" onmouseout="if(gd.roulette.select_index !== ${idx}) {this.style.borderColor='rgba(255,255,255,0.08)'; this.style.transform='none';}" onclick="setRouletteTarget(${idx}, '${bj.name}')">
-                        <span style="color: ${textCol}; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><i class="fa-solid fa-user-tag" style="margin-right: 5px; opacity: 0.7;"></i> ${dispText}</span>
+                    <label class="toggle-row" style="padding: 10px; font-size: 13px; cursor: pointer; border-color: ${borderCol}; background: ${itemBg};" onclick="setRouletteTarget(${idx}, '${bj.name}')">
+                        <span style="color: ${textCol}; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${dispText}</span>
                         <input type="radio" name="roulette-target" value="${idx}" ${isChecked} style="display: none;">
                     </label>
                 `;
             });
             
             document.getElementById('roulette-target-list').innerHTML = targetListHtml;
-
             
             // 당첨자 렌더링
             const winDisplay = document.getElementById('roulette-winner-display');
@@ -1862,23 +1206,9 @@
                 gd.roulette.select_index = -1;
                 gd.roulette.select_name = '';
             } else if (cmd === 'stop') {
-                gd.roulette.is_spinning = false;
+                // Keep is_spinning as true until overlay tells us it ended
             }
             pushAPI();
-        }
-
-        function toggleRouletteRemote(btn) {
-            const remoteCard = document.getElementById('roulette-remote-card');
-            const gridContainer = document.getElementById('roulette-grid-container');
-            if (remoteCard.style.display === 'none') {
-                remoteCard.style.display = 'flex';
-                gridContainer.style.gridTemplateColumns = '1fr 1.5fr';
-                btn.innerHTML = '<i class="fa-solid fa-square-check"></i> 선관위 (닫기)';
-            } else {
-                remoteCard.style.display = 'none';
-                gridContainer.style.gridTemplateColumns = '1fr';
-                btn.innerHTML = '<i class="fa-solid fa-square-check"></i> 선관위';
-            }
         }
 
 
@@ -1889,23 +1219,15 @@
             let don = gd.pending_donations[donIdx];
 
             let addPoint = Math.round(don.amount / 10000);
-            
-            let isExtra = gd.extra_game_active || false;
-            let targetList = isExtra ? gd.extra_bjs : gd.bjs;
 
-            if (targetList[bjIdx]) {
-                targetList[bjIdx].score += addPoint;
-                if(targetList[bjIdx].contribution === undefined) targetList[bjIdx].contribution = 0;
-                targetList[bjIdx].contribution += addPoint;
+            gd.bjs[bjIdx].score += addPoint;
+            if(gd.bjs[bjIdx].contribution === undefined) gd.bjs[bjIdx].contribution = 0;
+            gd.bjs[bjIdx].contribution += addPoint;
 
-                targetList.sort((a, b) => (b.contribution || 0) - (a.contribution || 0));
-                if (isExtra) gd.extra_bjs = targetList; else gd.bjs = targetList;
-
-                let timeStr = new Date().toLocaleTimeString('ko-KR', { hour12: false });
-                if (!gd.logs) gd.logs = [];
-                gd.logs.unshift({time: timeStr, name: targetList[bjIdx].name, val: addPoint});
-                if(gd.logs.length > 200) gd.logs.pop();
-            }
+            let timeStr = new Date().toLocaleTimeString('ko-KR', { hour12: false });
+            if (!gd.logs) gd.logs = [];
+            gd.logs.unshift({time: timeStr, name: gd.bjs[bjIdx].name, val: addPoint});
+            if(gd.logs.length > 200) gd.logs.pop();
 
             gd.pending_donations.splice(donIdx, 1);
             pushAPI();
@@ -1927,11 +1249,8 @@
             let timeStr = new Date().toLocaleTimeString('ko-KR', { hour12: false });
             if (!gd.logs) gd.logs = [];
 
-            let isExtra = gd.extra_game_active || false;
-            let targetList = isExtra ? gd.extra_bjs : gd.bjs;
-
             names.forEach(n => {
-                let targetBj = targetList.find(b => b.name === n);
+                let targetBj = gd.bjs.find(b => b.name === n);
                 if(targetBj) {
                     targetBj.score += addPoint;
                     if(targetBj.contribution === undefined) targetBj.contribution = 0;
@@ -1939,9 +1258,6 @@
                     gd.logs.unshift({time: timeStr, name: targetBj.name, val: addPoint});
                 }
             });
-
-            targetList.sort((a, b) => (b.contribution || 0) - (a.contribution || 0));
-            if (isExtra) gd.extra_bjs = targetList; else gd.bjs = targetList;
 
             if(gd.logs.length > 200) gd.logs.splice(200);
             gd.pending_donations.splice(donIdx, 1);
@@ -2209,12 +1525,12 @@
         function toggleTimer() { 
             let md = gd.match_data; 
             if(md.is_running) { 
-                md.time_left_ms = Math.max(0, md.end_time_ms - (Date.now() + serverTimeOffset)); 
+                md.time_left_ms = Math.max(0, md.end_time_ms - Date.now()); 
                 md.is_running = false; 
                 md.was_running_before_reaction = false; 
             } else { 
                 if(md.time_left_ms <= 0) md.time_left_ms = md.paused_time_left; 
-                md.end_time_ms = (Date.now() + serverTimeOffset) + md.time_left_ms; 
+                md.end_time_ms = Date.now() + md.time_left_ms; 
                 md.is_running = true; 
                 md.was_running_before_reaction = false; 
             } 
@@ -2228,29 +1544,7 @@
 
         function updateSpeed(val) { gd.ticker_speed = parseInt(val); document.getElementById('lbl-speed').innerText = val; pushAPI(); }
         function updateTickerText() { gd.ticker_text = document.getElementById('in-ticker').value.replace(/\n/g, ' / '); pushAPI(); }
-        function playBgmAudio() {
-            const audio = document.getElementById('bgm-audio');
-            audio.play().catch(e => console.error("BGM Play Error:", e));
-            document.getElementById('bgm-vinyl-disc').style.animation = 'spin 3s linear infinite';
-            document.getElementById('bgm-status-text').innerText = '재생 중';
-            document.getElementById('bgm-status-text').style.color = 'var(--accent)';
-        }
-        function pauseBgmAudio() {
-            const audio = document.getElementById('bgm-audio');
-            audio.pause();
-            document.getElementById('bgm-vinyl-disc').style.animation = '';
-            document.getElementById('bgm-status-text').innerText = '정지됨';
-            document.getElementById('bgm-status-text').style.color = 'var(--text-muted)';
-        }
-        function loadBGM(event) { 
-            const file = event.target.files[0]; 
-            if (file) { 
-                document.getElementById('bgm-audio').src = URL.createObjectURL(file); 
-                playBgmAudio();
-                document.getElementById('bgm-filename').innerText = file.name;
-            } 
-        }
-
+        function loadBGM(event) { const file = event.target.files[0]; if (file) { document.getElementById('bgm-audio').src = URL.createObjectURL(file); document.getElementById('bgm-audio').play(); } }
 
         function assignSplitEqual(donId) {
             let donIdx = gd.pending_donations.findIndex(d => d.id === donId);
@@ -2269,11 +1563,8 @@
             let timeStr = new Date().toLocaleTimeString('ko-KR', { hour12: false });
             if (!gd.logs) gd.logs = [];
 
-            let isExtra = gd.extra_game_active || false;
-            let targetList = isExtra ? gd.extra_bjs : gd.bjs;
-
             names.forEach(n => {
-                let targetBj = targetList.find(b => b.name === n);
+                let targetBj = gd.bjs.find(b => b.name === n);
                 if(targetBj) {
                     targetBj.score += addPoint;
                     if(targetBj.contribution === undefined) targetBj.contribution = 0;
@@ -2281,9 +1572,6 @@
                     gd.logs.unshift({time: timeStr, name: targetBj.name, val: addPoint});
                 }
             });
-
-            targetList.sort((a, b) => (b.contribution || 0) - (a.contribution || 0));
-            if (isExtra) gd.extra_bjs = targetList; else gd.bjs = targetList;
 
             if(gd.logs.length > 200) gd.logs.splice(200);
             gd.pending_donations.splice(donIdx, 1);
@@ -2420,9 +1708,6 @@
         }
 
         function handleStreamData(newData) {
-            if (newData && newData.server_time) {
-                serverTimeOffset = newData.server_time - Date.now();
-            }
             if (gd && gd.reaction_mode !== newData.reaction_mode) {
                 let audio = document.getElementById('bgm-audio');
                 if (newData.reaction_mode) { 
@@ -3164,36 +2449,7 @@
             }
         }
 
-        function updateControllerTimer() {
-            if (!gd || !gd.match_data) return;
-            let md = gd.match_data;
-            
-            let timerBtn = document.getElementById('btn-timer-toggle');
-            if (timerBtn) {
-                let newTimerHtml = md.is_running ? "<i class='fa-solid fa-pause'></i> 정지" : "<i class='fa-solid fa-play'></i> 시작";
-                if (timerBtn.innerHTML !== newTimerHtml) {
-                    timerBtn.innerHTML = newTimerHtml;
-                    timerBtn.className = md.is_running ? "danger" : "primary";
-                }
-            }
-            
-            let totalSec = Math.max(0, Math.ceil((md.is_running ? Math.max(0, md.end_time_ms - (Date.now() + serverTimeOffset)) : md.time_left_ms) / 1000));
-            let dispBox = document.getElementById('disp-timer-box');
-            if (dispBox) {
-                let newHtml = "";
-                if (totalSec <= 0) {
-                    newHtml = '시간종료';
-                } else {
-                    newHtml = `<span id="disp-timer-m">${String(Math.floor(totalSec / 60)).padStart(2, '0')}</span>분 <span id="disp-timer-s">${String(totalSec % 60).padStart(2, '0')}</span>초`;
-                }
-                if (dispBox.innerHTML !== newHtml) {
-                    dispBox.innerHTML = newHtml;
-                }
-            }
-        }
-
         initSSE();
-        setInterval(updateControllerTimer, 100);
 
         document.addEventListener('mousedown', function(event) {
             let popover = document.getElementById('contrib-popover');
@@ -3262,10 +2518,10 @@
                     
                     html += `<tr class="ml-row">
                         <td style="text-align: left; color: var(--text-muted); white-space: nowrap; font-size: 12px;">${log.timestamp}</td>
-                        <td style="text-align: left; color: #fff; font-weight: 600;">${escapeHTML(log.name)}</td>
+                        <td style="text-align: left; color: #fff; font-weight: 600;">${log.name}</td>
                         <td style="text-align: right;" class="${amountClass}">${amountStr}</td>
                         <td style="text-align: right; color: #aaa;">${log.current_total.toLocaleString()}</td>
-                        <td style="text-align: left; color: #888; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHTML(msgDisplay)}">${escapeHTML(msgDisplay)}</td>
+                        <td style="text-align: left; color: #888; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${msgDisplay}">${msgDisplay}</td>
                         <td style="text-align: center;"><span class="${sourceClass}">${sourceLabel}</span></td>
                     </tr>`;
                 });
@@ -3512,312 +2768,6 @@
             } catch (e) {
                 window.userInitiatedEnd = false;
                 await premiumAlert("서버 통신 실패: " + e.message, "통신 실패", "warning");
-            }
-        }
-
-        // ==========================================
-        // 🎵 커스텀 리액션 플레이어 제어 스크립트
-        // ==========================================
-        function updateUploadLabel(inputId, labelId) {
-            const input = document.getElementById(inputId);
-            const label = document.getElementById(labelId);
-            if (input && input.files && input.files[0]) {
-                label.innerText = input.files[0].name;
-                label.style.color = 'var(--accent)';
-            } else {
-                label.innerText = "파일 선택 또는 드래그";
-                label.style.color = '#999';
-            }
-        }
-
-        async function handleReactionSubmit(event) {
-            event.preventDefault();
-            const title = document.getElementById('reaction-title').value.trim();
-            const amount = document.getElementById('reaction-amount').value || 0;
-            const audioFile = document.getElementById('reaction-audio-file').files[0];
-            const imageFile = document.getElementById('reaction-image-file').files[0];
-
-            if (!title) {
-                premiumAlert("제목을 입력해주세요.", "입력 오류", "warning");
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('amount', amount);
-            if (audioFile) formData.append('audio', audioFile);
-            if (imageFile) formData.append('image', imageFile);
-
-            try {
-                const submitBtn = event.target.querySelector('button[type="submit"]');
-                const origHtml = submitBtn.innerHTML;
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 업로드 중...';
-
-                let res = await fetch('/api/reaction/add', {
-                    method: 'POST',
-                    body: formData
-                });
-                let data = await res.json();
-                
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = origHtml;
-
-                if (data.status === 'success') {
-                    premiumAlert(data.message, "성공", "success");
-                    document.getElementById('reaction-upload-form').reset();
-                    document.getElementById('reaction-audio-label').innerText = "음원 파일 선택 또는 드래그";
-                    document.getElementById('reaction-audio-label').style.color = '#999';
-                    document.getElementById('reaction-image-label').innerText = "이미지 파일 선택 또는 드래그";
-                    document.getElementById('reaction-image-label').style.color = '#999';
-                    loadReactionList();
-                } else {
-                    premiumAlert("등록 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("서버 전송 실패: " + e.message, "통신 오류", "warning");
-            }
-        }
-
-        async function loadReactionList() {
-            const container = document.getElementById('reaction-list-container');
-            if (!container) return;
-
-            try {
-                let res = await fetch('/api/reaction/list');
-                let list = await res.json();
-                
-                if (list.status === 'error') {
-                    container.innerHTML = `<div style="color: var(--danger); text-align: center; grid-column: 1 / -1; padding: 50px 0;">목록 로드 실패: ${list.message}</div>`;
-                    return;
-                }
-
-                if (list.length === 0) {
-                    container.innerHTML = `
-                        <div style="color: #666; text-align: center; grid-column: 1 / -1; padding: 80px 0;">
-                            <i class="fa-solid fa-music" style="font-size: 36px; color: #333; margin-bottom: 10px; display: block;"></i>
-                            등록된 리액션이 없습니다. 좌측 폼에서 음원과 사진을 등록해 주세요!
-                        </div>
-                    `;
-                    return;
-                }
-
-                container.innerHTML = list.map(item => {
-                    const amountText = item.amount > 0 ? `${item.amount.toLocaleString()}원` : "수동 발동 전용";
-                    const thumbnail = item.image_url ? 
-                        `<div style="width: 100%; height: 110px; background: url('${item.image_url}') center/cover no-repeat; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);"></div>` :
-                        `<div style="width: 100%; height: 110px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
-                            <i class="fa-solid fa-image" style="font-size: 24px; color: #444;"></i>
-                            <span style="font-size: 11px; color: #666;">이미지 없음</span>
-                         </div>`;
-
-                    return `
-                        <div class="reaction-card" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-                            ${thumbnail}
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="font-weight: bold; font-size: 13px; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${item.title}</div>
-                                <div style="font-size: 11px; color: var(--accent); font-weight: 600; margin-top: 3px;">
-                                    <i class="fa-solid fa-coins"></i> ${amountText}
-                                </div>
-                            </div>
-                            <div style="display: flex; gap: 6px; margin-top: 5px;">
-                                <button class="primary" onclick="playReaction(${item.id})" style="flex: 1; height: 30px; font-size: 11px; font-weight: bold; border-radius: 8px; justify-content: center; padding: 0;">
-                                    <i class="fa-solid fa-play"></i> 방송 송출
-                                </button>
-                                <button class="danger" onclick="deleteReaction(${item.id}, '${item.title}')" style="width: 30px; height: 30px; border-radius: 8px; justify-content: center; padding: 0; flex-shrink: 0;">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } catch (e) {
-                container.innerHTML = `<div style="color: var(--danger); text-align: center; grid-column: 1 / -1; padding: 50px 0;">통신 실패: ${e.message}</div>`;
-            }
-        }
-
-        async function playReaction(itemId) {
-            try {
-                let res = await fetch(`/api/reaction/play/${itemId}`, { method: 'POST' });
-                let data = await res.json();
-                if (data.status === 'success') {
-                    showReactionToast();
-                } else {
-                    premiumAlert("송출 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("송출 실패: " + e.message, "통신 오류", "warning");
-            }
-        }
-
-        async function deleteReaction(itemId, title) {
-            let confirm = await premiumConfirm(`'${title}' 리액션을 정말로 삭제하시겠습니까?\n서버 DB 및 저장된 음원/사진 파일이 완전히 삭제됩니다.`, "리액션 삭제 확인", "danger");
-            if (!confirm) return;
-
-            try {
-                let res = await fetch(`/api/reaction/delete/${itemId}`, { method: 'POST' });
-                let data = await res.json();
-                if (data.status === 'success') {
-                    premiumAlert("리액션이 삭제되었습니다.", "삭제 성공", "success");
-                    loadReactionList();
-                } else {
-                    premiumAlert("삭제 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("삭제 실패: " + e.message, "통신 오류", "warning");
-            }
-        }
-
-        // ==========================================
-        // 🎵 리액션 큐 제어 스크립트
-        // ==========================================
-        function renderReactionQueue() {
-            const queue = gd.reaction_queue || [];
-            const container = document.getElementById('reaction-queue-container');
-            const countEl = document.getElementById('reaction-queue-count');
-            
-            if (!container || !countEl) return;
-            
-            countEl.innerText = queue.length + '개';
-            
-            // 넘기기 버튼: 큐에 재생 중인 아이템이 있을 때만 표시
-            const skipBtn = document.getElementById('skip-reaction-btn');
-            if (skipBtn) skipBtn.style.display = queue.length > 0 ? 'inline-flex' : 'none';
-            
-            const skipBtnMain = document.getElementById('skip-reaction-btn-main');
-            if (skipBtnMain) {
-                if (queue.length > 0) {
-                    skipBtnMain.disabled = false;
-                    skipBtnMain.style.opacity = '1';
-                    skipBtnMain.style.cursor = 'pointer';
-                } else {
-                    skipBtnMain.disabled = true;
-                    skipBtnMain.style.opacity = '0.4';
-                    skipBtnMain.style.cursor = 'not-allowed';
-                }
-            }
-            
-            if (queue.length === 0) {
-                container.innerHTML = `
-                    <div style="color: #666; font-size: 11px; text-align: center; padding: 25px 0;">
-                        대기 중인 리액션이 없습니다.
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = queue.map((item, idx) => {
-                const isPlaying = (idx === 0);
-                const borderStyle = isPlaying ? 'border: 1px solid var(--accent); background: rgba(0, 255, 204, 0.05);' : 'border: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.15);';
-                const badge = isPlaying ? '<span style="font-size:9px; background:var(--accent); color:#000; padding:1px 4px; border-radius:4px; font-weight:bold; margin-right:5px; vertical-align:middle;">재생중</span>' : `<span style="font-size:9px; background:#444; color:#ccc; padding:1px 4px; border-radius:4px; font-weight:bold; margin-right:5px; vertical-align:middle;">대기 ${idx}</span>`;
-                
-                return `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 8px; ${borderStyle}">
-                        <div style="flex: 1; min-width: 0; font-size: 12px; color: #fff;">
-                            ${badge}<span style="font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; display:inline-block; max-width:110px; vertical-align:middle;">${item.title}</span>
-                        </div>
-                        <button onclick="removeFromQueue('${item.id}')" style="background:none; border:none; color:#ff3b30; cursor:pointer; font-size:12px; padding: 0 4px; flex-shrink: 0; display: inline-flex; align-items: center;">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        async function changeReactionVolume(val) {
-            const vol = parseFloat(val);
-            const textEl = document.getElementById('reaction-vol-text');
-            if (textEl) textEl.innerText = Math.round(vol * 100) + '%';
-            gd.reaction_volume = vol;
-            pushAPI();
-        }
-
-        async function skipCurrentReaction() {
-            try {
-                let res = await fetch('/api/reaction/next', { method: 'POST' });
-                let data = await res.json();
-                if (data.status === 'success') {
-                    premiumAlert("다음 후원으로 넘겼습니다!", "넘기기 성공", "success");
-                } else {
-                    premiumAlert("넘기기 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("통신 실패: " + e.message, "오류", "warning");
-            }
-        }
-
-        async function stopReaction() {
-            try {
-                let res = await fetch('/api/reaction/stop', { method: 'POST' });
-                let data = await res.json();
-                if (data.status === 'success') {
-                    showReactionToast();
-                } else {
-                    premiumAlert("리액션 중단 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("통신 실패: " + e.message, "오류", "warning");
-            }
-        }
-
-        async function removeFromQueue(rqId) {
-            try {
-                let res = await fetch(`/api/reaction/queue/remove/${rqId}`, { method: 'POST' });
-                let data = await res.json();
-                if (data.status !== 'success') {
-                    premiumAlert("삭제 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("통신 실패: " + e.message, "오류", "warning");
-            }
-        }
-
-        async function triggerManualDonation() {
-            const name = document.getElementById('manual-donator').value.trim() || "수동후원";
-            const amountInput = document.getElementById('manual-amount');
-            const amount = parseInt(amountInput.value) || 0;
-            const messageInput = document.getElementById('manual-message');
-            const message = messageInput.value.trim() || "수동 후원 송출";
-
-            if (amount <= 0) {
-                premiumAlert("후원 금액을 입력해주세요.", "입력 오류", "warning");
-                return;
-            }
-
-            try {
-                let res = await fetch('/api/donation', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        name: name,
-                        amount: amount,
-                        message: message,
-                        tx_id: "manual_" + Date.now()
-                    })
-                });
-                let data = await res.json();
-                if (data.status === 'success') {
-                    amountInput.value = "";
-                    document.getElementById('manual-donator').value = "";
-                    messageInput.value = "";
-                } else {
-                    premiumAlert("송출 실패: " + data.message, "오류", "warning");
-                }
-            } catch (e) {
-                premiumAlert("통신 실패: " + e.message, "오류", "warning");
-            }
-        }
-
-        async function copyTampermonkeyCode() {
-            try {
-                let res = await fetch('/toonation_tampermonkey.user.js');
-                if (!res.ok) throw new Error("HTTP " + res.status);
-                let code = await res.text();
-                await navigator.clipboard.writeText(code);
-                premiumAlert("템퍼몽키 연동 스크립트가 클립보드에 복사되었습니다!\n템퍼몽키 [새 유저스크립트 추가] 화면에 붙여넣어주세요.", "복사 완료", "success");
-            } catch (err) {
-                console.error("복사 실패:", err);
-                premiumAlert("스크립트 코드 복사 실패: " + err.message, "오류", "warning");
             }
         }
     </script>
