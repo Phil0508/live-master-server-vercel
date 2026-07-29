@@ -1258,7 +1258,7 @@
             return originalFetch(resource, init);
         };
 
-        function openTab(evt, tabId) { document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(tabId).classList.add('active'); evt.currentTarget.classList.add('active'); if (tabId === 'tab-system') { refreshSystemStatus(); } if (tabId === 'tab-logs') { loadManualLogs(1); } if (tabId === 'tab-reaction') { loadReactionList(); } if (tabId === 'tab-vip') { loadVipList(); } }
+        function openTab(evt, tabId) { document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(tabId).classList.add('active'); evt.currentTarget.classList.add('active'); if (tabId === 'tab-system') { refreshSystemStatus(); } if (tabId === 'tab-logs') { loadManualLogs(1); } if (tabId === 'tab-vip') { loadVipList(); } }
         let gd = null; let isPushing = false; let lastPushTime = 0;
         let lastReactionToastTime = 0;
         let serverTimeOffset = 0;
@@ -1330,11 +1330,7 @@
                 if (newData && newData.server_time) {
                     serverTimeOffset = newData.server_time - Date.now();
                 }
-                const oldReactionMode = gd ? gd.reaction_mode : false;
                 gd = newData;
-                if (oldReactionMode !== newData.reaction_mode) {
-                    applyReactionModeEffects(newData.reaction_mode);
-                }
                 if(!gd.bjs) { gd.bjs = []; }
                 else { gd.bjs.forEach(bj => { if(bj.contribution === undefined) bj.contribution = bj.score > 0 ? bj.score : 0; }); }
                 if(!gd.match_data) gd.match_data = { active: false, fire_effect: false, is_running: false, time_left_ms: 180000, end_time_ms: 0, players: [{name:'팀 A', score:0}, {name:'팀 B', score:0}] };
@@ -1388,15 +1384,11 @@
         function renderUI() {
             if(document.activeElement.tagName === "INPUT" && !document.activeElement.id.startsWith("chk") && !document.activeElement.classList.contains("setup-player-input") || document.activeElement.tagName === "TEXTAREA") return;
             
-            ensureSlotMachineState();
             let isActive = gd.broadcast_active || false;
             document.getElementById('setup-broadcast-area').style.display = isActive ? 'none' : 'block';
             document.getElementById('active-broadcast-area').style.display = isActive ? 'block' : 'none';
             
             document.getElementById('btn-end-broadcast').style.display = isActive ? 'inline-flex' : 'none';
-            if (document.getElementById('lbl-reaction-wrapper')) {
-                document.getElementById('lbl-reaction-wrapper').style.display = isActive ? 'flex' : 'none';
-            }
             if (document.getElementById('btn-editor')) {
                 document.getElementById('btn-editor').style.display = isActive ? 'inline-flex' : 'none';
             }
@@ -1406,8 +1398,6 @@
                 return;
             }
             
-
-            
             const setVal = (id, val) => { let el = document.getElementById(id); if(el && el.value != val) el.value = val; };
             const setChk = (id, val) => { let el = document.getElementById(id); if(el && el.checked !== val) el.checked = val; };
             const setHtml = (id, val) => { let el = document.getElementById(id); if(el && el.innerHTML !== val) el.innerHTML = val; };
@@ -1415,11 +1405,6 @@
             setVal('sel-theme', gd.theme || 'default');
             setVal('in-goal', gd.target_goal);
             renderGoalAchievementNotice();
-            
-            setChk('chk-reaction', gd.reaction_mode);
-            let reactLbl = gd.reaction_mode ? "<i class='fa-solid fa-eye-slash'></i> 위젯 숨김 (리액션 ON)" : "<i class='fa-solid fa-eye'></i> 수동 리액션 켜기";
-            setHtml('lbl-reaction', reactLbl);
-            document.getElementById('lbl-reaction').style.color = gd.reaction_mode ? "var(--danger)" : "var(--text-main)";
             
             setChk('chk-popup', gd.popup_enabled);
             setChk('chk-takeover', gd.takeover_enabled);
@@ -1429,7 +1414,6 @@
             setChk('chk-roulette-enabled', gd.roulette_enabled || false);
             setChk('chk-home-race', gd.home_race_enabled || false);
             renderHomeRaceGoalInputs();
-            renderCardGameUI();
             // 조명 속도 슬라이더 갱신
             if (document.getElementById('in-neon-speed')) {
                 document.getElementById('in-neon-speed').value = gd.neon_speed || 1.5;
@@ -1653,10 +1637,6 @@
                 if (lastMatchLogHtml !== matchLogHtml) { document.getElementById('log-box-match').innerHTML = matchLogHtml; lastMatchLogHtml = matchLogHtml; }
             }
             
-            // 🎵 리액션 큐 및 슬라이더 렌더링
-            renderSlotMachinePanel();
-            renderSlotSpinQueue();
-
             renderRouletteTab();
         }
 
@@ -2118,9 +2098,6 @@
         
         function toggleOption(key) { 
             gd[key] = !gd[key]; 
-            if (key === 'reaction_mode') {
-                applyReactionModeEffects(gd.reaction_mode);
-            }
             pushAPI(); 
         }
 
@@ -2220,13 +2197,6 @@
         }
         function triggerNeon(color) {
             gd.effect_trigger = {time: Date.now(), color: color, infinite: true};
-            if (color !== 'OFF') {
-                if (!gd.reaction_mode) {
-                    gd.reaction_mode = true;
-                    applyReactionModeEffects(true);
-                }
-                gd.reaction_enter_alert = { time: Date.now() };
-            }
             pushAPI();
         }
         
@@ -2589,41 +2559,6 @@
         function handleStreamData(newData) {
             if (newData && newData.server_time) {
                 serverTimeOffset = newData.server_time - Date.now();
-            }
-            if (gd && gd.reaction_mode !== newData.reaction_mode) {
-                let audio = document.getElementById('bgm-audio');
-                if (newData.reaction_mode) { 
-                    if (!audio.paused) { 
-                        audio.dataset.wasPlaying = "true"; 
-                        audio.pause(); 
-                    } else { 
-                        audio.dataset.wasPlaying = "false"; 
-                    } 
-                    try {
-                        if (ytPlayer && typeof ytPlayer.getPlayerState === 'function' && ytPlayer.getPlayerState() === 1) {
-                            ytWasPlaying = true;
-                            ytPlayer.pauseVideo();
-                        } else {
-                            ytWasPlaying = false;
-                        }
-                    } catch(ytErr) {
-                        console.error("handleStreamData ytPlayer pause error:", ytErr);
-                        ytWasPlaying = false;
-                    }
-                    showReactionToast();
-                } else { 
-                    if (audio.dataset.wasPlaying === "true") { 
-                        audio.play().catch(e=>{}); 
-                    } 
-                    try {
-                        if (ytWasPlaying && ytPlayer && typeof ytPlayer.playVideo === 'function') {
-                            ytPlayer.playVideo();
-                            ytWasPlaying = false;
-                        }
-                    } catch(ytErr) {
-                        console.error("handleStreamData ytPlayer play error:", ytErr);
-                    }
-                }
             }
             // --- 신규 후원 도착 알림음 재생 ---
             if (gd && gd.pending_donations && newData.pending_donations) {
@@ -3373,12 +3308,6 @@
 
         initSSE();
         setInterval(updateControllerTimer, 100);
-        setInterval(() => {
-            if (gd && gd.slot_machine) renderSlotMachinePanel();
-        }, 1000);
-
-        // 🎰 [슬롯 스핀 대기열] 트리거 금액 후원 발생 시 대기 큐 렌더링 및 팝업 알림
-        let lastSlotSpinIds = new Set();
 
         document.addEventListener('mousedown', function(event) {
             let popover = document.getElementById('contrib-popover');

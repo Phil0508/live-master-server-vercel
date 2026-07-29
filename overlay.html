@@ -1181,17 +1181,10 @@
                 // 🎁 투네이션 팝업
                 if (d.latest_donation && d.latest_donation.time !== lastDonationTime && d.popup_enabled) { 
                     lastDonationTime = d.latest_donation.time;
-                    
-                    // 리액션 대기열에 포함된 후원인지 검사 (고유 id 우선 매칭, 없으면 이름+금액 폴백)
                     const donId = d.latest_donation.id;
-                    if (hasReaction) {
-                        console.log("Donation has matching reaction. Delaying popup to playReaction.");
-                    } else if (!donId || !shownDonationPopupIds.has(donId)) {
-                        // 일반 후원(리액션 없는 후원)인 경우 즉시 노출 (동일 id로 중복 노출 방지)
+                    if (!donId || !shownDonationPopupIds.has(donId)) {
                         if (donId) shownDonationPopupIds.add(donId);
-                        showToonPopup(d.latest_donation, () => {
-                            checkReactionQueue();
-                        });
+                        showToonPopup(d.latest_donation);
                     }
                 }
 
@@ -1434,8 +1427,6 @@
                 if (d.roulette) {
                     handleRouletteState(d);
                 }
-                
-                checkReactionQueue();
             } catch(e) { console.error("⚠️ handleData Error:", e); }
         }
 
