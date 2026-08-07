@@ -1349,7 +1349,17 @@
                             previousScores[id] = b.score;
                         } else if (b.score !== pv) { 
                             animateVal(scEl, pv, b.score, 800); 
-                            if(b.score > pv) popScore(scEl, b.score - pv); 
+                            if(b.score > pv) {
+                                popScore(scEl, b.score - pv);
+                                // 💡 [1등 및 순위 변동 시에도 통통 튀는 팝 이펙트 100% 보장]
+                                let parentRow = scEl.closest('.excel-row');
+                                if (parentRow) {
+                                    parentRow.classList.remove('score-scale-bounce');
+                                    void parentRow.offsetWidth;
+                                    parentRow.classList.add('score-scale-bounce');
+                                    setTimeout(() => parentRow.classList.remove('score-scale-bounce'), 600);
+                                }
+                            }
                             previousScores[id] = b.score; 
                         } 
                     }
