@@ -108,10 +108,13 @@
                     </div>
                 </div>
 
-                <div class="widget" id="match" data-id="match" style="left:50px; top:780px; display: none;">
+                <div class="widget" id="match" data-id="match" style="left:50px; top:780px; display: flex;">
                     <div class="match-wrapper">
-                        <div class="m-timer-pill" id="m-timer">00:00</div>
-                        <div class="m-team-container" id="m-players-area"></div>
+                        <div class="m-timer-pill" id="m-timer">03:00</div>
+                        <div class="m-team-container" id="m-players-area">
+                            <div class="m-team-box"><div class="m-score-box">100</div><div class="m-name-box" style="--team-color:#ff4d4d;">팀A</div></div>
+                            <div class="m-team-box"><div class="m-score-box">200</div><div class="m-name-box" style="--team-color:#00e676;">팀B</div></div>
+                        </div>
                     </div>
                 </div>
 
@@ -213,7 +216,13 @@
                             timerEl.style = ''; timerEl.classList.remove('timer-explode');
                             window._adminTimerExploded = false;
                         }
-                    } else document.getElementById('match').style.display = 'none';
+                    } else {
+                        document.getElementById('match').style.display = 'flex';
+                        let ma = document.getElementById('m-players-area');
+                        if (!ma.children.length) {
+                            ma.innerHTML = `<div class="m-team-box"><div class="m-score-box">100</div><div class="m-name-box" style="--team-color:#ff4d4d;">팀A</div></div><div class="m-team-box"><div class="m-score-box">200</div><div class="m-name-box" style="--team-color:#00e676;">팀B</div></div>`;
+                        }
+                    }
 
 
 
