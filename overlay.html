@@ -1113,7 +1113,7 @@
                 }
                 // 💡 [방어막 끝]
 
-                // 조명 컨트롤
+                // 조명 컨트롤 (0.01초 즉각 반응)
                 if (d.effect_trigger && d.effect_trigger.time !== lastEffectTime) {
                     lastEffectTime = d.effect_trigger.time;
                     let c = d.effect_trigger.color;
@@ -1122,9 +1122,11 @@
                         globalNeon = 'OFF';
                         globalAudi = false;
                     } else if (c === 'AUDI') {
-                        globalAudi = !globalAudi;
+                        globalAudi = true;
+                        globalNeon = 'OFF';
                     } else {
                         globalNeon = c; 
+                        globalAudi = false;
                     }
                 }
 
@@ -1150,7 +1152,6 @@
                 let neonEl = document.getElementById('neon-overlay');
                 if (neonEl) {
                     neonEl.className = 'neon-layer'; 
-                    
                     if (shouldNeonShow) {
                         neonEl.classList.add('active');
                         if (globalNeon === 'RAINBOW') {
