@@ -962,9 +962,26 @@ def serve_mobile():
 def serve_admin():
     return serve_html_file('admin.html')
 
-@app.route('/login')
-@app.route('/login.html')
+@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login.html', methods=['GET', 'POST'])
 def serve_login():
+    if request.method == 'POST':
+        data = (request.get_json(silent=True) or {}) if request.is_json else (request.form if request.form else {})
+        password = data.get('password', '')
+        otp_code = data.get('otp', '')
+        config = load_auth_config()
+        if password == config['admin_password']:
+            totp = pyotp.TOTP(config['totp_secret'])
+            if totp.verify(otp_code, valid_window=1):
+                session['authenticated'] = True
+                return jsonify({"status": "success", "redirect": "/controller"})
+            else:
+                return jsonify({"status": "error", "message": "2차 인증(OTP) 번호가 일치하지 않습니다."}), 401
+        else:
+            return jsonify({"status": "error", "message": "비밀번호가 일치하지 않습니다."}), 401
+            
+    if session.get('authenticated'):
+        return redirect('/controller')
     return serve_html_file('login.html')
 
 
