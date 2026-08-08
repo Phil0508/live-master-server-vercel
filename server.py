@@ -2,9 +2,21 @@ import sys
 import os
 import io
 
-# 🌐 Vercel 서버리스 및 Supabase PostgreSQL 환경 변수 감지
+# 🌐 Vercel/Render 서버리스 및 Supabase PostgreSQL 환경 변수 감지
 IS_VERCEL = os.environ.get('VERCEL') == '1' or 'VERCEL' in os.environ
 DATABASE_URL = os.environ.get('DATABASE_URL').strip() if os.environ.get('DATABASE_URL') else None
+
+if not DATABASE_URL:
+    try:
+        _cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'auth_config.json')
+        if os.path.exists(_cfg_path):
+            with open(_cfg_path, 'r', encoding='utf-8') as _f:
+                _cdata = json.load(_f)
+                if _cdata.get('database_url'):
+                    DATABASE_URL = _cdata.get('database_url').strip()
+    except Exception:
+        pass
+
 IS_POSTGRES = bool(DATABASE_URL)
 
 try:
